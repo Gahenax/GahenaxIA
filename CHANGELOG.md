@@ -3,10 +3,12 @@
 All notable changes to this project will be documented in this file.
 The project adheres to **Falsifiable Contractual Design (FCD)**.
 
-## [1.1.0] - 2026-02-19
-### Baseline Sealed 🛡️
-- **Snapshot Hash**: `bc67939def28...` (See `snapshots/gahenax_core_v1.1_baseline.snapshot.json`)
-- **Ledger State**: 1,005 records, 100% integrity verified.
+## [1.1.1] - 2026-02-19
+### Baseline Sealed & Birth Certificate Anexed 🛡️🧬
+- **Snapshot Hash**: `e0feed40b647...` (See `snapshots/gahenax_core_v1.1.1_baseline.snapshot.json`)
+- **Birth Certificate Hash**: `fb99e024c1fb...` (See `snapshots/gahenax_core_v1.1.1_acta_nacimiento.json`)
+- **Audit Mode**: Protocolo Semáforo v2.0 (Chronos-Hodge).
+- **Ledger State**: 1,005 records (cumulative), 100% integrity verified.
 - **FCD Criteria Active**:
   - A1: Entropy Reduction per UA.
   - A2: Schema Adherence & Latency Stability.

@@ -294,9 +294,15 @@ def main():
     gate_p.add_argument("--db", default="ua_ledger.sqlite")
     gate_p.add_argument("--window", type=int, default=100)
 
+    # (5) Semaforo
+    semaforo_p = subparsers.add_parser("semaforo", help="Protocolo de Auditoría Semáforo")
+    semaforo_p.add_argument("--db", default="ua_ledger.sqlite")
+    semaforo_p.add_argument("--window", type=int, default=20)
+
     args = parser.parse_args()
 
     if args.cmd == "bench":
+        from gahenax_app.core.gahenax_engine import GahenaxGovernor
         run_benchmark(get_engine(), args.cases, args.out, args.seed, 
                       baseline_path=args.baseline, 
                       ledger_db=args.ledger_db, 
@@ -330,6 +336,68 @@ def main():
             for v in violations:
                 print(f"  - {v}")
             sys.exit(1)
+
+    elif args.cmd == "semaforo":
+        db = args.db
+        window = args.window
+        if not os.path.exists(db):
+            print(f"ERROR: Database {db} not found.")
+            sys.exit(1)
+
+        con = sqlite3.connect(db)
+        con.row_factory = sqlite3.Row
+        try:
+            rows = con.execute(f"SELECT * FROM ua_ledger ORDER BY id DESC LIMIT ?", (window,)).fetchall()
+            if not rows:
+                print("No records found in ledger.")
+                return
+
+            print(f"\nAUDITORÍA SEMÁFORO (Chronos-Hodge v2.0) - Últimos {len(rows)} registros\n")
+            print(f"{'ID':<6} {'RIGIDEZ (H)':<15} {'FINGERPRINT':<10} {'ESTADO':<25}")
+            print("-" * 60)
+
+            stats = {"GREEN": 0, "YELLOW": 0, "ORANGE": 0, "RED": 0}
+
+            for r in rows:
+                h = r["h_rigidity"]
+                valid = bool(r["contract_valid"])
+                fid = (r["input_fingerprint"][:8]) if r["input_fingerprint"] else "n/a"
+                
+                # Semaforo Logic
+                if not valid or h > 1e-8:
+                    color = "RED"
+                    label = "FAIL: RED (GHOST)"
+                elif h <= 1e-14:
+                    color = "GREEN"
+                    label = "OK: GREEN (STRUCTURAL)"
+                elif h <= 1e-11:
+                    color = "YELLOW"
+                    label = "WARN: YELLOW (ISLAND-T)"
+                else:
+                    color = "ORANGE"
+                    label = "WARN: ORANGE (DRIFT-WARN)"
+
+                stats[color] += 1
+                print(f"{r['id']:<6} {h:<15.2e} {fid:<10} {label}")
+
+            print("\n" + "=" * 60)
+            print(f"RESUMEN SEMÁFORO:")
+            print(f"  VERDE:    {stats['GREEN']}")
+            print(f"  AMARILLO: {stats['YELLOW']}")
+            print(f"  NARANJA:  {stats['ORANGE']}")
+            print(f"  ROJO:     {stats['RED']}")
+            print("=" * 60)
+
+            if stats["RED"] > 0:
+                print("\nCRITICAL: Ghosts detected in the ledger. Integrity compromised.")
+                sys.exit(2)
+            elif stats["ORANGE"] > (len(rows) * 0.3):
+                print("\nWARNING: High drift detected. Recalibration recommended.")
+            else:
+                print("\nSYSTEM HEALTH: OPTIMAL (Chronos-Hodge Stable)")
+
+        finally:
+            con.close()
 
     else:
         parser.print_help()

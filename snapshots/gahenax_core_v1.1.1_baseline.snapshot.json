@@ -10,5 +10,6 @@
   "dsua_median": 0.0,
   "git_commit": "unknown",
   "snapshot_hash": "e0feed40b647ff09591395a6811104d0461a4bf5018b1604544034df3a75166e",
-  "prompt_version": "engine_v1.1.md#GEMv1"
+  "prompt_version": "engine_v1.1.md#GEMv1",
+  "birth_certificate_hash": "fb99e024c1fb5b7123243bd6413565497d8c248c9804faba23118fb9c8d1d07c"
 }
