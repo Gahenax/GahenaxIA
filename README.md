@@ -26,7 +26,18 @@ The engine treats reasoning as a high-dimensional lattice.
 - **Speed**: Optimized velocity by "calculating less garbage" through structural pruning.
 - **Termination**: If $\Delta S/UA$ drops below the threshold defined in `policy.yaml`, the optimization cycle terminates to prevent computational stall.
 
-## 5. Benchmarks & Evidence
+## 5. Operational Audit & Persistence (gahenax_ops)
+The system includes `gahenax_ops.py` for high-speed operational management:
+- **UA Persistence**: Redis (HOT) for real-time budgets and SQLite (COLD) for append-only audit logs.
+- **Falsifiability Ledger**: Every execution is hashed and recorded to prevent narrative drift.
+- **Rigor Console**: A unified contract that strips CoT and focus on falsifiable claims.
+
+To run the operational benchmark:
+```bash
+python gahenax_ops.py bench --cases benchmarks/bench_cases.jsonl --out benchmarks/results/gahenax_core_operational.json
+```
+
+## 6. Benchmarks & Evidence
 We do not publish claims without a ledger.
 - **Latency**: p50/p95 tracking of reduction cycles.
 - **Efficiency**: $\Delta S/UA$ distribution across the test suite.
