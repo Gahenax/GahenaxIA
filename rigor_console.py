@@ -136,10 +136,20 @@ def main() -> None:
     # Top metrics panel
     lat_p50, lat_p95, pass_rate, ua_med, dsua_med = metric_panel(df)
     c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("Latency p50 (ms)", f"{lat_p50:.2f}")
-    c2.metric("Latency p95 (ms)", f"{lat_p95:.2f}")
+    
+    # Latency formatting: use ms or µs
+    if lat_p50 < 1.0:
+        c1.metric("Latency p50", f"{lat_p50*1000:.0f} µs", help="Stored in ms, displayed in microseconds for precision.")
+    else:
+        c1.metric("Latency p50 (ms)", f"{lat_p50:.2f}")
+
+    if lat_p95 < 1.0:
+        c2.metric("Latency p95", f"{lat_p95*1000:.0f} µs")
+    else:
+        c2.metric("Latency p95 (ms)", f"{lat_p95:.2f}")
+
     c3.metric("Contract Pass-rate", f"{pass_rate:.3%}")
-    c4.metric("UA Median Cost", f"{ua_med:.2f}")
+    c4.metric("UA Median Cost", f"{ua_med:.2f} UA")
     c5.metric("ΔS/UA Efficiency", f"{dsua_med:.6f}" if pd.notna(dsua_med) else "n/a")
 
     st.divider()

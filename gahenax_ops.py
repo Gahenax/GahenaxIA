@@ -9,7 +9,7 @@ import random
 import sqlite3
 import time
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple
@@ -47,6 +47,7 @@ class GahenaxOutput(BaseModel):
 CONTRACT_VERSION = "GahenaxOutput-v1.0"
 
 from gahenax_app.core.cmr import CMR, CMRConfig, utc_now
+from gahenax_app.core.cmr_tools import CMRTools
 
 # =============================================================================
 # Engine Integration
@@ -137,13 +138,13 @@ def percentile(values: List[float], p: float) -> float:
     if f == c: return float(vals[f])
     return float(vals[f] + (vals[c] - vals[f]) * (k - f))
 
-def compute_summary(records: List[LedgerRecord], baseline_summary: Optional[BenchmarkSummary] = None) -> BenchmarkSummary:
+def compute_summary(records: List[Any], baseline_summary: Optional[BenchmarkSummary] = None) -> BenchmarkSummary:
     lat = [float(r.latency_ms) for r in records]
     work = [float(r.work_units) for r in records]
     ua = [float(r.ua_spend) for r in records]
     contract_ok = [1.0 if r.contract_valid else 0.0 for r in records]
-    dsua = [r.delta_s_per_ua for r in records if r.delta_s_per_ua is not None]
-    hvals = [r.h_rigidity for r in records if r.h_rigidity is not None]
+    dsua = [r.delta_s_per_ua for r in records if getattr(r, 'delta_s_per_ua', None) is not None]
+    hvals = [r.h_rigidity for r in records if getattr(r, 'h_rigidity', None) is not None]
 
     summ = BenchmarkSummary(
         engine_version=records[0].engine_version if records else "unknown",
@@ -257,14 +258,76 @@ def run_benchmark(engine, cases_path, out_path, seed, baseline_path=None, ledger
     
     print(f"DONE: cases={len(records)} pass={summary.contract_pass_rate:.2f} p95={summary.latency_p95_ms:.1f}ms")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("cmd")
-    parser.add_argument("--cases", required=True)
-    parser.add_argument("--out", required=True)
-    parser.add_argument("--seed", type=int, default=1337)
-    parser.add_argument("--ledger-db", default="ua_ledger.sqlite")
+# =============================================================================
+# CLI Main
+# =============================================================================
+
+def main():
+    parser = argparse.ArgumentParser(description="Gahenax Core Operational Suite (CMR/FCD)")
+    subparsers = parser.add_subparsers(dest="cmd")
+
+    # (1) Benchmark
+    bench_p = subparsers.add_parser("bench", help="Run benchmark suite")
+    bench_p.add_argument("--cases", required=True)
+    bench_p.add_argument("--out", required=True)
+    bench_p.add_argument("--seed", type=int, default=1337)
+    bench_p.add_argument("--baseline", help="Previous results JSON for delta check")
+    bench_p.add_argument("--ledger-db", help="SQLite path (default: ua_ledger.sqlite)")
+    bench_p.add_argument("--redis", action="store_true", help="Use Redis for UA tracking")
+
+    # (2) Verify
+    verify_p = subparsers.add_parser("verify", help="Verify CMR integrity")
+    verify_p.add_argument("--db", default="ua_ledger.sqlite")
+
+    # (3) Snapshot
+    snap_p = subparsers.add_parser("snapshot", help="Generate signed ledger snapshot")
+    snap_p.add_argument("--db", default="ua_ledger.sqlite")
+    snap_p.add_argument("--out", default="cmr_snapshot.json")
+
+    # (4) Gate
+    gate_p = subparsers.add_parser("gate", help="Evaluate FCD Hard Gates (CI/CD)")
+    gate_p.add_argument("--db", default="ua_ledger.sqlite")
+    gate_p.add_argument("--window", type=int, default=100)
+
     args = parser.parse_args()
-    
+
     if args.cmd == "bench":
-        run_benchmark(RealGahenaxEngine(), args.cases, args.out, args.seed, ledger_db=args.ledger_db)
+        run_benchmark(get_engine(), args.cases, args.out, args.seed, 
+                      baseline_path=args.baseline, 
+                      ledger_db=args.ledger_db, 
+                      use_redis=args.redis)
+    
+    elif args.cmd == "verify":
+        tools = CMRTools(CMRConfig(db_path=args.db))
+        code, msg = tools.verify_integrity()
+        print(msg)
+        sys.exit(code)
+
+    elif args.cmd == "snapshot":
+        tools = CMRTools(CMRConfig(db_path=args.db))
+        try:
+            snap = tools.generate_snapshot()
+            with open(args.out, "w") as f:
+                json.dump(asdict(snap), f, indent=2)
+            print(f"Snapshot created: {args.out} (hash: {snap.snapshot_hash[:12]}...)")
+        except Exception as e:
+            print(f"ERROR: {str(e)}")
+            sys.exit(1)
+
+    elif args.cmd == "gate":
+        tools = CMRTools(CMRConfig(db_path=args.db))
+        ok, violations = tools.evaluate_gates(window_n=args.window)
+        if ok:
+            print("GATES_PASSED: All FCD criteria met.")
+            sys.exit(0)
+        else:
+            print("GATES_FAILED (Violations):")
+            for v in violations:
+                print(f"  - {v}")
+            sys.exit(1)
+
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
