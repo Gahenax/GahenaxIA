@@ -46,7 +46,7 @@ class GahenaxOutput(BaseModel):
 
 CONTRACT_VERSION = "GahenaxOutput-v1.0"
 
-from gahenax_app.core.telemetry import UALedgerDB, LedgerRecord, compute_evidence_hash
+from gahenax_app.core.cmr import CMR, CMRConfig, utc_now
 
 # =============================================================================
 # Engine Integration
@@ -187,51 +187,73 @@ def run_benchmark(engine, cases_path, out_path, seed, baseline_path=None, ledger
     if baseline_path and os.path.exists(baseline_path):
         baseline = BenchmarkSummary(**json.loads(Path(baseline_path).read_text(encoding="utf-8")))
 
-    hot = UAHotStore() if use_redis else None
-    cold = UALedgerDB(ledger_db) if ledger_db else None
+    # CMR: Canonical Measurement Recorder
+    cmr = CMR(CMRConfig(db_path=ledger_db or "ua_ledger.sqlite"))
+    
     records = []
 
     for idx, bc in enumerate(cases):
         s = seed + idx
-        start = time.perf_counter()
+        t0 = time.perf_counter()
+        ts0 = utc_now()
+        
         ua_cost = int(bc.get("ua_cost", 10))
         
-        ua_ok = True
-        if hot:
-            hot.ensure_budget(bc.get("user_id", "bench"), 1000)
-            ua_ok, _ = hot.debit_budget(bc.get("user_id", "bench"), "session", ua_cost)
-        
-        if ua_ok:
-            eng_res = engine.run(bc["prompt"], s, 1000)
-            ua_spend = ua_cost
-        else:
-            eng_res = EngineResult(output={"reencuadre": "UA ERROR", "exclusiones": ["EXCL"], "interrogatorio": ["INT"]}, work_units=0, h_rigidity=1, delta_s=0)
-            ua_spend = 0
+        # Mode: Simple local execution for benchmarks
+        eng_res = engine.run(bc["prompt"], s, 1000)
+        ua_spend = ua_cost
             
-        latency = int((time.perf_counter() - start) * 1000)
+        latency = (time.perf_counter() - t0) * 1000.0
+        ts1 = utc_now()
+        
         contract_valid = True
         try: GahenaxOutput(**eng_res.output)
         except ValidationError: contract_valid = False
 
-        payload = {
-            "case_id": bc["case_id"], "timestamp": datetime.now(timezone.utc).isoformat(),
-            "engine_version": engine.engine_version, "contract_version": CONTRACT_VERSION,
-            "seed": s, "latency_ms": latency, "contract_valid": contract_valid,
-            "ua_spend": ua_spend, "delta_s": eng_res.delta_s,
+        evidence_hash = cmr.record_run(
+            user_id="bench",
+            session_id="bench_session",
+            request_id=bc["case_id"],
+            engine_version=engine.engine_version,
+            contract_version=CONTRACT_VERSION,
+            seed=s,
+            latency_ms=latency,
+            contract_valid=contract_valid,
+            contract_fail_reason=None,
+            ua_spend=ua_spend,
+            delta_s=eng_res.delta_s,
+            delta_s_per_ua=eng_res.delta_s / ua_spend if ua_spend > 0 else 0,
+            h_rigidity=eng_res.h_rigidity,
+            work_units=eng_res.work_units,
+            timestamp_start=ts0,
+            timestamp_end=ts1,
+            git_commit=os.getenv("GIT_COMMIT"),
+            host_id=os.getenv("HOSTNAME")
+        )
+
+        # Build local record for summary compute
+        # This is a bit redundant but keeps the summary logic working
+        records.append(type('Record', (object,), {
+            "engine_version": engine.engine_version,
+            "contract_version": CONTRACT_VERSION,
+            "latency_ms": latency,
+            "contract_valid": contract_valid,
+            "ua_spend": ua_spend,
             "delta_s_per_ua": eng_res.delta_s / ua_spend if ua_spend > 0 else 0,
-            "h_rigidity": eng_res.h_rigidity, "work_units": eng_res.work_units, "evidence_hash": ""
-        }
-        payload["evidence_hash"] = compute_evidence_hash(payload)
-        rec = LedgerRecord(**payload)
-        records.append(rec)
-        if cold: cold.append(user_id="bench", session_id="bench", request_id=bc["case_id"], rec=rec)
+            "h_rigidity": eng_res.h_rigidity,
+            "work_units": eng_res.work_units
+        }))
 
     summary = compute_summary(records, baseline)
     gates = evaluate_claims(summary)
     
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
-        json.dump({"summary": summary.model_dump(), "gates": [g.model_dump() for g in gates], "records": [r.model_dump() for r in records]}, f, indent=2)
+        json.dump({
+            "summary": summary.model_dump(),
+            "gates": [g.model_dump() for g in gates],
+            "records_count": len(records)
+        }, f, indent=2)
     
     print(f"DONE: cases={len(records)} pass={summary.contract_pass_rate:.2f} p95={summary.latency_p95_ms:.1f}ms")
 

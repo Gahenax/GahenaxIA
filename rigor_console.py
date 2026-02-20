@@ -26,7 +26,7 @@ def read_ledger(db: DBConfig, limit: int = 5000) -> pd.DataFrame:
         # Pull newest rows
         q = f"""
         SELECT
-            id, timestamp, user_id, session_id, request_id,
+            id, timestamp_start, timestamp_end, user_id, session_id, request_id,
             engine_version, contract_version,
             ua_spend, delta_s, delta_s_per_ua,
             latency_ms, contract_valid, h_rigidity, work_units, evidence_hash
@@ -42,7 +42,7 @@ def read_ledger(db: DBConfig, limit: int = 5000) -> pd.DataFrame:
         return df
 
     # Normalize types
-    df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce", utc=True)
+    df["timestamp_end"] = pd.to_datetime(df["timestamp_end"], errors="coerce", utc=True)
     df["contract_valid"] = df["contract_valid"].astype(int)
     df = df.sort_values("id")  # oldest -> newest for time plots
     return df
@@ -67,8 +67,8 @@ def metric_panel(df: pd.DataFrame) -> Tuple[float, float, float, float, float]:
 def fig_timeseries(df: pd.DataFrame, y: str, title: str) -> plt.Figure:
     fig = plt.figure(figsize=(10, 4))
     ax = fig.add_subplot(111)
-    d = df.dropna(subset=["timestamp", y])
-    ax.plot(d["timestamp"], d[y], marker='o', markersize=4, linestyle='-', alpha=0.7)
+    d = df.dropna(subset=["timestamp_end", y])
+    ax.plot(d["timestamp_end"], d[y], marker='o', markersize=4, linestyle='-', alpha=0.7)
     ax.set_title(title)
     ax.set_xlabel("time (UTC)")
     ax.set_ylabel(y)
@@ -177,7 +177,7 @@ def main() -> None:
     # Evidence viewer
     st.header("3. Immutable Raw Evidence")
     cols = [
-        "id", "timestamp", "user_id", "session_id", "request_id",
+        "id", "timestamp_start", "timestamp_end", "user_id", "session_id", "request_id",
         "ua_spend", "delta_s_per_ua", "latency_ms", "contract_valid",
         "h_rigidity", "work_units", "evidence_hash",
     ]

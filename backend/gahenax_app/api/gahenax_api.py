@@ -1,16 +1,16 @@
 from fastapi import APIRouter, HTTPException
 from gahenax_app.schemas.gahenax_contract import GahenaxRequest, GahenaxOutputSchema
 from gahenax_app.core.gahenax_engine import GahenaxGovernor, RenderProfile
-from gahenax_app.core.telemetry import UALedgerDB, LedgerRecord, compute_evidence_hash
+from gahenax_app.core.cmr import CMR, CMRConfig, utc_now
 from typing import Dict, Any
 import time
-from datetime import datetime, timezone
 import os
 
 router = APIRouter(prefix="/api/gahenax", tags=["Gahenax Core"])
 
-# CRM Persistence Layer
-LEDGER = UALedgerDB(os.path.join(os.getcwd(), "ua_ledger.sqlite"))
+# CMR: Canonical Measurement Recorder (FCD-1.0 compliant)
+cmr_cfg = CMRConfig(db_path=os.path.join(os.getcwd(), "ua_ledger.sqlite"))
+CMR_INST = CMR(cmr_cfg)
 
 # Persistent Governors (Mock Session Store)
 GOVERNORS: Dict[str, GahenaxGovernor] = {}
@@ -19,58 +19,56 @@ GOVERNORS: Dict[str, GahenaxGovernor] = {}
 async def infer(request: GahenaxRequest):
     """
     Main inference cycle for Gahenax Core.
-    Logs every interaction to the Rigor Console CRM.
+    Logs every interaction to the Canonical Measurement Recorder (CMR).
     """
-    start_time = time.perf_counter()
+    t0 = time.perf_counter()
+    ts0 = utc_now()
     session_id = request.session_id
     
     if request.turn_index == 1 or not session_id:
-        # Create a new governed instance
         gov = GahenaxGovernor(budget_ua=request.ua_budget)
         session_id = gov.session_id
         GOVERNORS[session_id] = gov
     else:
         if session_id not in GOVERNORS:
-            # Fallback or strict error
             gov = GahenaxGovernor(budget_ua=request.ua_budget)
             GOVERNORS[session_id] = gov
         else:
             gov = GOVERNORS[session_id]
             gov.turn = request.turn_index
 
-    # Run the cycle
     try:
         profile = RenderProfile(request.render_profile)
     except ValueError:
         profile = RenderProfile.DAILY
 
     output_obj = gov.run_inference_cycle(request.text, request.context_answers)
-    latency_ms = int((time.perf_counter() - start_time) * 1000)
+    
+    ts1 = utc_now()
+    latency_ms = (time.perf_counter() - t0) * 1000.0
 
-    # --- CRM LOGGING (FCD-1.0) ---
-    payload = {
-        "case_id": f"REQ_{int(time.time())}",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "engine_version": "GahenaxCore-v1.0",
-        "contract_version": "GahenaxOutput-v1.0",
-        "seed": 0,
-        "latency_ms": latency_ms,
-        "contract_valid": True, # Pydantic response_model ensures this
-        "ua_spend": int(gov.ua.spent),
-        "delta_s": float(gov.ua.efficiency * gov.ua.spent),
-        "delta_s_per_ua": float(gov.ua.efficiency),
-        "h_rigidity": 1e-15,
-        "work_units": int(gov.ua.spent * 2),
-        "evidence_hash": ""
-    }
-    payload["evidence_hash"] = compute_evidence_hash(payload)
-    LEDGER.append(
+    # --- CMR RECORDING (FCD-1.0) ---
+    CMR_INST.record_run(
         user_id="default_user",
         session_id=session_id,
-        request_id=payload["case_id"],
-        rec=LedgerRecord(**payload)
+        request_id=f"REQ_{int(time.time())}",
+        engine_version="GahenaxCore-v1.0",
+        contract_version="GahenaxOutput-v1.0",
+        seed=0,
+        latency_ms=latency_ms,
+        contract_valid=True,
+        contract_fail_reason=None,
+        ua_spend=int(gov.ua.spent),
+        delta_s=float(gov.ua.efficiency * gov.ua.spent),
+        delta_s_per_ua=float(gov.ua.efficiency),
+        h_rigidity=1e-15,
+        work_units=int(gov.ua.spent * 2),
+        timestamp_start=ts0,
+        timestamp_end=ts1,
+        git_commit=os.getenv("GIT_COMMIT"),
+        host_id=os.getenv("HOSTNAME")
     )
-    # -----------------------------
+    # -------------------------------
 
     return output_obj.to_dict()
 
