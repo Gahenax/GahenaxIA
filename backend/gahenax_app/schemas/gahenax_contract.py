@@ -73,6 +73,7 @@ class GahenaxRequest(BaseModel):
     text: str
     session_id: Optional[str] = None
     turn_index: int = 1
-    ua_budget: float = 1000.0
+    ua_budget: Optional[float] = None
+    mode: str = "everyday"
     context_answers: Dict[str, Any] = {}
     render_profile: str = "daily"

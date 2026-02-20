@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from gahenax_app.schemas.gahenax_contract import GahenaxRequest, GahenaxOutputSchema
-from gahenax_app.core.gahenax_engine import GahenaxGovernor, RenderProfile
+from gahenax_app.core.gahenax_engine import GahenaxGovernor, RenderProfile, EngineMode
 from gahenax_app.core.cmr import CMR, CMRConfig, utc_now
 from typing import Dict, Any
 import time
@@ -25,13 +25,18 @@ async def infer(request: GahenaxRequest):
     ts0 = utc_now()
     session_id = request.session_id
     
+    try:
+        mode = EngineMode(request.mode)
+    except ValueError:
+        mode = EngineMode.EVERYDAY
+
     if request.turn_index == 1 or not session_id:
-        gov = GahenaxGovernor(budget_ua=request.ua_budget)
+        gov = GahenaxGovernor(budget_ua=request.ua_budget, mode=mode)
         session_id = gov.session_id
         GOVERNORS[session_id] = gov
     else:
         if session_id not in GOVERNORS:
-            gov = GahenaxGovernor(budget_ua=request.ua_budget)
+            gov = GahenaxGovernor(budget_ua=request.ua_budget, mode=mode)
             GOVERNORS[session_id] = gov
         else:
             gov = GOVERNORS[session_id]

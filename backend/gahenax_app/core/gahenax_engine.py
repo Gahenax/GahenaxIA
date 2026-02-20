@@ -58,15 +58,16 @@ class FindingStatus(str, Enum):
     PROVISIONAL = "provisional"
     RIGOROUS = "rigorous"
 
-class ActionChoice(str, Enum):
-    REFRAME = "A) Reformulate Lattice"
-    GET_DATA = "B) Entropy Reduction"
-    DECIDE_ANYWAY = "C) Greedy Decision"
-    NOT_SURE = "D) Computational Stall"
+class EngineMode(str, Enum):
+    EVERYDAY = "everyday"    # GEM v1: High efficiency, minimal UA (default)
+    AUDIT = "audit"          # Deep precision, strict gates
+    EXPERIMENT = "experiment" # Exploratory, higher entropy tolerance
 
 # Hard System Limits
 MAX_CRITICAL_ASSUMPTIONS = 3
 IMPERATIVE_BLOCKLIST = ["deberías", "compra", "vende", "haz", "recomiendo", "invierte"]
+UA_BUDGET_EVERYDAY = 6.0
+UA_SPEND_TARGET_EVERYDAY = 4.0
 
 # =============================================================================
 # 2) Data Models (Gahenax Contract)
@@ -190,25 +191,34 @@ class GahenaxOptimizer:
 # =============================================================================
 
 class GahenaxGovernor:
-    def __init__(self, budget_ua: float = 1000.0):
+    def __init__(self, budget_ua: Optional[float] = None, mode: EngineMode = EngineMode.EVERYDAY):
+        self.mode = mode
+        if budget_ua is None:
+            budget_ua = UA_BUDGET_EVERYDAY if mode == EngineMode.EVERYDAY else 1000.0
+        
         self.ua = UAMetrics(budget=budget_ua)
         self.session_id = str(uuid.uuid4())
         self.turn = 1
 
     def run_inference_cycle(self, text: str, context: Dict[str, Any] = None) -> GahenaxOutput:
-        # Step 1: Ingest & Reframe (Cost: 10 UA)
-        self.ua.consume(10.0)
+        # Step 1: Ingest & Reframe (Cost depends on mode)
+        cost_ingest = 2.0 if self.mode == EngineMode.EVERYDAY else 10.0
+        self.ua.consume(cost_ingest)
         
         # Step 2: Search Lattice (Mock logic)
         assumptions = [
-            Assumption("A1", "El usuario acepta el riesgo de incertidumbre en P vs NP", "Cierre de veredicto filosófico", AssumptionStatus.OPEN, ["Q1"]),
-            Assumption("A2", "Existe una métrica de UA para este dominio", "Cuantificación de honestidad computacional", AssumptionStatus.OPEN, ["Q2"])
+            Assumption("A1", "El usuario acepta el riesgo de incertidumbre en P vs NP", "Cierre de veredicto filosófico", AssumptionStatus.OPEN, ["Q1"])
         ]
+        if self.mode != EngineMode.EVERYDAY:
+            assumptions.append(Assumption("A2", "Existe una métrica de UA para este dominio", "Cuantificación de honestidad computacional", AssumptionStatus.OPEN, ["Q2"]))
+        
         findings = []
         
         # Step 3: LLL Optimization (Reduction)
         reduced_a, enhanced_f, delta_e = GahenaxOptimizer.reduce_lattice(assumptions, findings)
-        self.ua.consume(len(assumptions) * 5.0) # LLL cost scales with dimensions
+        
+        cost_lll = 1.0 if self.mode == EngineMode.EVERYDAY else (len(assumptions) * 5.0)
+        self.ua.consume(cost_lll)
         
         self.ua.efficiency = delta_e / (self.ua.spent + 1e-9)
 

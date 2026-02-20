@@ -68,12 +68,11 @@ class RealGahenaxEngine:
     engine_version: str = "GahenaxCore-v1.0"
 
     def run(self, prompt: str, seed: int, ua_budget_hint: int) -> EngineResult:
-        # 1. Initialize Governor with budget
-        gov = GahenaxGovernor(budget_ua=float(ua_budget_hint))
+        # 1. Initialize Governor with budget (AUDIT mode for benchmarks)
+        from gahenax_app.core.gahenax_engine import EngineMode
+        gov = GahenaxGovernor(budget_ua=float(ua_budget_hint), mode=EngineMode.AUDIT)
         
         # 2. Run real inference cycle
-        # Note: seed is ignored for now as the core engine is deterministic mock, 
-        # but ready for LLM integration.
         out_obj = gov.run_inference_cycle(prompt)
         
         # 3. Map to UI/Contract Schema (GahenaxOutput -> FCD Contract)
