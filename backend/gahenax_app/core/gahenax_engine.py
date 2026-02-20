@@ -220,45 +220,86 @@ class GahenaxGovernor:
         self.turn = 1
 
     def run_inference_cycle(self, text: str, context: Dict[str, Any] = None) -> GahenaxOutput:
-        # Step 1: Ingest & Reframe (Cost depends on mode)
+        import os
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+        if api_key:
+            return self._run_real(text, api_key)
+        else:
+            return self._run_mock(text)
+
+    def _run_real(self, text: str, api_key: str) -> GahenaxOutput:
+        """Live path: Gemini API under Gahenax contract."""
+        # Import here to avoid circular import at module load
+        from gahenax_app.core.gahenax_llm_bridge import GahenaxLLMBridge
+
+        # UA: cost to engage the bridge
         cost_ingest = 2.0 if self.mode == EngineMode.EVERYDAY else 10.0
         self.ua.consume(cost_ingest)
-        
-        # Step 2: Search Lattice (Mock logic)
+
+        bridge = GahenaxLLMBridge(api_key=api_key)
+        result = bridge.call(
+            text=text,
+            ua_spent=self.ua.spent,
+            ua_budget=self.ua.budget,
+        )
+
+        # Deduct LLM call cost
+        cost_llm = 1.5 if self.mode == EngineMode.EVERYDAY else 3.0
+        self.ua.consume(cost_llm)
+
+        # Record compliance metrics
+        m = result.metrics
+        compliance = (
+            (1.0 if m.schema_complete else 0.0)
+            + (1.0 if len(m.imperatives_found) == 0 else 0.0)
+            + (1.0 if len(m.absolutes_found) == 0 else 0.0)
+        ) / 3.0
+        self.ua.efficiency = compliance / (self.ua.spent + 1e-9)
+
+        if not result.success:
+            print(f"[GAHENAX BRIDGE] Contract violation: {result.error_reason}")
+            print(f"[GAHENAX BRIDGE] Imperatives: {m.imperatives_found}")
+            print(f"[GAHENAX BRIDGE] Absolutes:   {m.absolutes_found}")
+
+        return result.output
+
+    def _run_mock(self, text: str) -> GahenaxOutput:
+        """Offline path: deterministic mock (no LLM call)."""
+        cost_ingest = 2.0 if self.mode == EngineMode.EVERYDAY else 10.0
+        self.ua.consume(cost_ingest)
+
         assumptions = [
-            Assumption("A1", "El usuario acepta el riesgo de incertidumbre en P vs NP", "Cierre de veredicto filosófico", AssumptionStatus.OPEN, ["Q1"])
+            Assumption("A1", "El usuario acepta el riesgo de incertidumbre en P vs NP",
+                       "Cierre de veredicto filosofico", AssumptionStatus.OPEN, ["Q1"])
         ]
         if self.mode != EngineMode.EVERYDAY:
-            assumptions.append(Assumption("A2", "Existe una métrica de UA para este dominio", "Cuantificación de honestidad computacional", AssumptionStatus.OPEN, ["Q2"]))
-        
-        findings = []
-        
-        # Step 3: LLL Optimization (Reduction)
-        reduced_a, enhanced_f, delta_e = GahenaxOptimizer.reduce_lattice(assumptions, findings)
-        
+            assumptions.append(Assumption(
+                "A2", "Existe una metrica de UA para este dominio",
+                "Cuantificacion de honestidad computacional", AssumptionStatus.OPEN, ["Q2"]))
+
+        reduced_a, enhanced_f, delta_e = GahenaxOptimizer.reduce_lattice(assumptions, [])
         cost_lll = 1.0 if self.mode == EngineMode.EVERYDAY else (len(assumptions) * 5.0)
         self.ua.consume(cost_lll)
-        
         self.ua.efficiency = delta_e / (self.ua.spent + 1e-9)
 
-        # Step 4: Final Emission
-        output = GahenaxOutput(
-            reframe=Reframe(statement=f"Optimización de sistema decisional bajo P over NP para: {text[:50]}..."),
-            exclusions=Exclusions(items=["No se prometen soluciones a problemas NP-completos.", "Veredicto limitado por presupuesto UA."]),
+        return GahenaxOutput(
+            reframe=Reframe(statement=f"[MOCK] Optimizacion de sistema decisional para: {text[:50]}..."),
+            exclusions=Exclusions(items=["No se prometen soluciones a problemas NP-completos.",
+                                         "Veredicto limitado por presupuesto UA."]),
             findings=enhanced_f,
             assumptions=reduced_a,
-            interrogatory=[
-                ValidationQuestion("Q1", "A1", "¿Aceptas que esta conclusión es solo 'la más rigurosa posible' y no 'la perfecta'?", ValidationAnswerType.BINARY)
-            ],
+            interrogatory=[ValidationQuestion(
+                "Q1", "A1", "Acepta que esta conclusion es solo la mas rigurosa posible?",
+                ValidationAnswerType.BINARY)],
             next_steps=[NextStep("Definir umbral de UA para el siguiente ciclo.", "Presupuesto declarado.")],
             verdict=FinalVerdict(
                 strength=VerdictStrength.CONDITIONAL,
-                statement="Veredicto suspendido. El shortest vector requiere validación de Q1.",
+                statement="[MOCK] Veredicto suspendido. Set GEMINI_API_KEY para inferencia real.",
                 ua_audit={"spent": self.ua.spent, "efficiency": self.ua.efficiency},
                 conditions=["Validar Q1 para cerrar el ciclo."]
             )
         )
-        return output
 
 # =============================================================================
 # 5) API Utilities
