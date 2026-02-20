@@ -1,10 +1,14 @@
 from fastapi import APIRouter, HTTPException
 from gahenax_app.schemas.gahenax_contract import GahenaxRequest, GahenaxOutputSchema
-from gahenax_app.core.gahenax_engine import GahenaxGovernor, RenderProfile, EngineMode
+from gahenax_app.core.gahenax_engine import GahenaxGovernor, RenderProfile, EngineMode, compute_cni_fingerprint
 from gahenax_app.core.cmr import CMR, CMRConfig, utc_now
 from typing import Dict, Any
 import time
 import os
+
+PROMPT_VERSION = "engine_v1.1.md#GEMv1"
+ENGINE_VERSION = "GahenaxCore-v1.1.1"
+Contract_VERSION = "GahenaxOutput-v1.0"
 
 router = APIRouter(prefix="/api/gahenax", tags=["Gahenax Core"])
 
@@ -25,6 +29,9 @@ async def infer(request: GahenaxRequest):
     ts0 = utc_now()
     session_id = request.session_id
     
+    # CNI v1: Canonical Normalized Input
+    input_fingerprint = compute_cni_fingerprint(request.model_dump())
+
     try:
         mode = EngineMode(request.mode)
     except ValueError:
@@ -52,13 +59,15 @@ async def infer(request: GahenaxRequest):
     ts1 = utc_now()
     latency_ms = (time.perf_counter() - t0) * 1000.0
 
-    # --- CMR RECORDING (FCD-1.0) ---
+    # --- CMR RECORDING (FCD-1.1.1) ---
     CMR_INST.record_run(
         user_id="default_user",
         session_id=session_id,
         request_id=f"REQ_{int(time.time())}",
-        engine_version="GahenaxCore-v1.0",
-        contract_version="GahenaxOutput-v1.0",
+        engine_version=ENGINE_VERSION,
+        contract_version=Contract_VERSION,
+        prompt_version=PROMPT_VERSION,
+        input_fingerprint=input_fingerprint,
         seed=0,
         latency_ms=latency_ms,
         contract_valid=True,

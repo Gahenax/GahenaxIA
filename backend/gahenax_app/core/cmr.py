@@ -48,6 +48,8 @@ class CMR:
 
                 engine_version TEXT NOT NULL,
                 contract_version TEXT NOT NULL,
+                prompt_version TEXT,
+                input_fingerprint TEXT,
                 git_commit TEXT,
                 host_id TEXT,
 
@@ -68,6 +70,7 @@ class CMR:
             )
             """)
             con.execute(f"CREATE INDEX IF NOT EXISTS idx_{self.cfg.table}_time ON {self.cfg.table}(timestamp_end)")
+            con.execute(f"CREATE INDEX IF NOT EXISTS idx_{self.cfg.table}_fingerprint ON {self.cfg.table}(input_fingerprint)")
             con.commit()
         finally:
             con.close()
@@ -92,6 +95,8 @@ class CMR:
         request_id: str,
         engine_version: str,
         contract_version: str,
+        prompt_version: Optional[str] = None,
+        input_fingerprint: Optional[str] = None,
         seed: Optional[int],
         latency_ms: float,
         contract_valid: bool,
@@ -116,6 +121,8 @@ class CMR:
             "request_id": request_id,
             "engine_version": engine_version,
             "contract_version": contract_version,
+            "prompt_version": prompt_version,
+            "input_fingerprint": input_fingerprint,
             "git_commit": git_commit,
             "host_id": host_id,
             "seed": seed,
@@ -138,17 +145,19 @@ class CMR:
                 f"""
                 INSERT INTO {self.cfg.table} (
                     timestamp_start, timestamp_end, user_id, session_id, request_id,
-                    engine_version, contract_version, git_commit, host_id,
+                    engine_version, contract_version, prompt_version, input_fingerprint,
+                    git_commit, host_id,
                     seed, latency_ms,
                     contract_valid, contract_fail_reason,
                     ua_spend, delta_s, delta_s_per_ua, h_rigidity, work_units,
                     prev_hash, evidence_hash
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     payload["timestamp_start"], payload["timestamp_end"],
                     payload["user_id"], payload["session_id"], payload["request_id"],
                     payload["engine_version"], payload["contract_version"],
+                    payload["prompt_version"], payload["input_fingerprint"],
                     payload["git_commit"], payload["host_id"],
                     payload["seed"], payload["latency_ms"],
                     1 if payload["contract_valid"] else 0, payload["contract_fail_reason"],

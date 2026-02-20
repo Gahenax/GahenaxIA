@@ -25,6 +25,7 @@ class Snapshot:
     dsua_median: float
     git_commit: str
     snapshot_hash: str
+    prompt_version: Optional[str] = None
 
 class CMRTools:
     """
@@ -63,6 +64,8 @@ class CMRTools:
                     "request_id": row["request_id"],
                     "engine_version": row["engine_version"],
                     "contract_version": row["contract_version"],
+                    "prompt_version": row["prompt_version"],
+                    "input_fingerprint": row["input_fingerprint"],
                     "git_commit": row["git_commit"],
                     "host_id": row["host_id"],
                     "seed": row["seed"],
@@ -113,7 +116,8 @@ class CMRTools:
                 "latency_p95": sorted(latencies)[int(len(latencies)*0.95)] if latencies else 0,
                 "ua_median": statistics.median(uas) if uas else 0,
                 "dsua_median": statistics.median(dsuas) if dsuas else 0,
-                "git_commit": os.getenv("GIT_COMMIT", "unknown")
+                "git_commit": os.getenv("GIT_COMMIT", "unknown"),
+                "prompt_version": rows[-1]["prompt_version"] if rows else None
             }
             
             # Sign the snapshot data

@@ -59,23 +59,30 @@ class EngineResult:
     work_units: int
     h_rigidity: float
     delta_s: float
+    input_fingerprint: Optional[str] = None
+    prompt_version: Optional[str] = None
 
 class RealGahenaxEngine:
     """
     Connected to backend/gahenax_app/core/gahenax_engine.py
     Extracts real UA metrics and maps to Falsifiability Ledger.
     """
-    engine_version: str = "GahenaxCore-v1.0"
+    engine_version: str = "GahenaxCore-v1.1.1"
+    prompt_version: str = "engine_v1.1.md#GEMv1"
 
     def run(self, prompt: str, seed: int, ua_budget_hint: int) -> EngineResult:
         # 1. Initialize Governor with budget (AUDIT mode for benchmarks)
-        from gahenax_app.core.gahenax_engine import EngineMode
+        from gahenax_app.core.gahenax_engine import EngineMode, compute_cni_fingerprint
         gov = GahenaxGovernor(budget_ua=float(ua_budget_hint), mode=EngineMode.AUDIT)
         
-        # 2. Run real inference cycle
+        # 2. Compute CNI fingerprint
+        input_data = {"text": prompt, "seed": seed, "ua_budget": ua_budget_hint}
+        fingerprint = compute_cni_fingerprint(input_data)
+
+        # 3. Run real inference cycle
         out_obj = gov.run_inference_cycle(prompt)
         
-        # 3. Map to UI/Contract Schema (GahenaxOutput -> FCD Contract)
+        # 4. Map to UI/Contract Schema (GahenaxOutput -> FCD Contract)
         mapped_output = {
             "reencuadre": out_obj.reframe.statement,
             "exclusiones": out_obj.exclusions.items,
@@ -85,21 +92,18 @@ class RealGahenaxEngine:
             "criterio_falsacion": f"Delta S/UA > 0.1 (Current: {gov.ua.efficiency:.4f})"
         }
         
-        # 4. Extract real UA metrics
-        # work_units: we use UA spent as a proxy for "computational garbage" avoided/processed
+        # 5. Extract real UA metrics
         work_units = int(gov.ua.spent * 2) 
-        
-        # h_rigidity: constant for successful governed cycle (1e-15)
         h_rigidity = 1e-15 
-        
-        # delta_s: Efficiency * UA spent = the absolute entropy reduction achieved
         delta_s = float(gov.ua.efficiency * gov.ua.spent)
         
         return EngineResult(
             output=mapped_output,
             work_units=work_units,
             h_rigidity=h_rigidity,
-            delta_s=delta_s
+            delta_s=delta_s,
+            input_fingerprint=fingerprint,
+            prompt_version=self.prompt_version
         )
 
 # =============================================================================
@@ -216,6 +220,8 @@ def run_benchmark(engine, cases_path, out_path, seed, baseline_path=None, ledger
             request_id=bc["case_id"],
             engine_version=engine.engine_version,
             contract_version=CONTRACT_VERSION,
+            prompt_version=eng_res.prompt_version,
+            input_fingerprint=eng_res.input_fingerprint,
             seed=s,
             latency_ms=latency,
             contract_valid=contract_valid,

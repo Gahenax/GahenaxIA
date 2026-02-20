@@ -9,13 +9,32 @@ from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
+import hashlib
+import json
 import time
 import uuid
-import hashlib
+from dataclasses import dataclass, field, asdict
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 # =============================================================================
-# 0) The Physics of Computation (P over NP & UA)
+# CNI v1 - Canonical Normalized Input
 # =============================================================================
+
+def compute_cni_fingerprint(payload: Dict[str, Any]) -> str:
+    """
+    Produces a stable SHA256 hash of the input payload.
+    Cleans strings and sorts keys for determinism.
+    """
+    def _clean(obj):
+        if isinstance(obj, str): return obj.strip()
+        if isinstance(obj, dict): return {k: _clean(v) for k, v in sorted(obj.items())}
+        if isinstance(obj, list): return [_clean(x) for x in obj]
+        return obj
+
+    canon = _clean(payload)
+    blob = json.dumps(canon, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
 
 @dataclass
 class UAMetrics:
