@@ -233,8 +233,8 @@ def run_benchmark(engine, cases_path, out_path, seed, baseline_path=None, ledger
             work_units=eng_res.work_units,
             timestamp_start=ts0,
             timestamp_end=ts1,
-            git_commit=os.getenv("GIT_COMMIT"),
-            host_id=os.getenv("HOSTNAME")
+            git_commit=None,
+            host_id=None
         )
 
         # Build local record for summary compute

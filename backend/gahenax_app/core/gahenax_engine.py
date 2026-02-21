@@ -220,13 +220,16 @@ class GahenaxGovernor:
         self.turn = 1
 
     def run_inference_cycle(self, text: str, context: Dict[str, Any] = None) -> GahenaxOutput:
+        from gahenax_app.core.sanitizer import sanitize_prompt
+        clean_text = sanitize_prompt(text)
+        
         import os
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
         if api_key:
-            return self._run_real(text, api_key)
+            return self._run_real(clean_text, api_key)
         else:
-            return self._run_mock(text)
+            return self._run_mock(clean_text)
 
     def _run_real(self, text: str, api_key: str) -> GahenaxOutput:
         """Live path: Gemini API under Gahenax contract."""

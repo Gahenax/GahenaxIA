@@ -37,12 +37,16 @@ class SingleWriterOrchestrator:
         eps_root: float = 1e-10,
         max_attempts: int = 3,
         checkpoint_every: int = 200,
+        payload_validator: Any = ResultPayload,
+        tolerance_checker: Optional[callable] = None,
     ):
         self.run_dir = run_dir
         self.run_id = run_id
         self.eps_root = eps_root
         self.max_attempts = max_attempts
         self.checkpoint_every = checkpoint_every
+        self.payload_validator = payload_validator
+        self.tolerance_checker = tolerance_checker
 
         os.makedirs(self.run_dir, exist_ok=True)
         os.makedirs(os.path.join(self.run_dir, "checkpoints"), exist_ok=True)
@@ -211,17 +215,24 @@ class SingleWriterOrchestrator:
           4. Atomic: append → mark → save
         """
         # Gate 1: Schema
-        if not ResultPayload.validate(payload):
+        if not self.payload_validator.validate(payload):
             self.state["rejected"] += 1
             self.save_state()
             return "REJECTED_SCHEMA"
 
-        # Gate 2: Tolerance
-        root_val = float(payload["root_val"])
-        if abs(root_val) > self.eps_root:
-            self.state["rejected"] += 1
-            self.save_state()
-            return "REJECTED_TOL"
+        # Gate 2: Tolerance (Optional)
+        if self.tolerance_checker:
+            if not self.tolerance_checker(payload, self.eps_root):
+                self.state["rejected"] += 1
+                self.save_state()
+                return "REJECTED_TOL"
+        elif "root_val" in payload:
+            # Default backward compatible behavior for Riemann
+            root_val = float(payload["root_val"])
+            if abs(root_val) > self.eps_root:
+                self.state["rejected"] += 1
+                self.save_state()
+                return "REJECTED_TOL"
 
         # Gate 3: Dedup
         ph = sha256_json(payload)
@@ -247,7 +258,7 @@ class SingleWriterOrchestrator:
         """
         accepted_since_ckpt = 0
 
-        while not self.stop_event.is_set():
+        while True:
             item = self.q.get()
             if item is None:
                 break

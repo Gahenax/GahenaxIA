@@ -82,8 +82,8 @@ def run():
         work_units=10,
         timestamp_start=ts0,
         timestamp_end=ts1,
-        git_commit=os.getenv("GIT_COMMIT"),
-        host_id=os.getenv("HOSTNAME"),
+        git_commit=None,
+        host_id=None,
     )
 
     print(f"  Evidence Hash: {evidence_hash[:32]}...")
