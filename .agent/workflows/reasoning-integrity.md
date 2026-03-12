@@ -1,11 +1,11 @@
 ---
 name: reasoning-integrity
-description: Workflow de activación secuencial de las 25 skills epistémicas para garantizar integridad estructural en razonamiento complejo.
+description: Workflow de activación secuencial de las 29 skills epistémicas para garantizar integridad estructural en razonamiento complejo.
 ---
 
 # 🧠 Reasoning Integrity Workflow
 
-Protocolo de ejecución secuencial para tareas de alta complejidad o alto riesgo epistémico. Integra las 25 skills derivadas de `Gahenax/OEDA_HodgeRigidity`, `Gahenax/P-ATLAS-NP`, `Gahenax/OEDA_Kernel`, `Gahenax/Gahenax-Yang-Mills`, `Gahenax/Gahenax-BSD`, y `Gahenax/OEDA_GahenaxIA`.
+Protocolo de ejecución secuencial para tareas de alta complejidad o alto riesgo epistémico. Integra las 29 skills derivadas de `Gahenax/OEDA_HodgeRigidity`, `Gahenax/P-ATLAS-NP`, `Gahenax/OEDA_Kernel`, `Gahenax/Gahenax-Yang-Mills`, `Gahenax/Gahenax-BSD`, `Gahenax/OEDA_GahenaxIA`, y `Gahenax/Mersenne-Gahen`.
 
 ## Orden de Ejecución
 
@@ -18,11 +18,11 @@ INPUT
   │
   ▼
 [2]  cni-fingerprint-integrity      ← ¿Esta tarea tiene historial en CMR?
-  │  fingerprint drift → flag; chain break → HALT
+  │  chain break → HALT; drift → flag
   │
   ▼
 [3]  semaforo-chronos-hodge         ← Salud poblacional histórica (ventana N)
-  │  RED detectado → HALT; ORANGE>30% → recalibrar antes de continuar
+  │  RED → HALT; ORANGE>30% → recalibrar
   │
   ▼
 [4]  phase-transition-detector      ← ¿EASY / FRONTIER / HARD?
@@ -46,73 +46,84 @@ INPUT
   ▼  (si FRONTIER o HARD)
 [10] descent-search-protocol        ← Local-to-global; rank(Sel) = cota superior
   │
+  ▼  (si la conclusión necesita verificar irreducibilidad)
+[11] lucas-lehmer-iterative-test    ← s₀=4, s_{i+1}=s_i²−2 mod M_p
+  │  residue=0 → irreducible; residue≠0 → composite → [13]
+  │
+  ▼  (durante y después de LL)
+[12] roundoff-error-budget          ← roundoff_max ≤ 0.40 por iteración
+  │  roundoff_max>0.40 → INVALID → reemplazar step contaminante
+  │
+  ▼  (si LL retornó composite)
+[13] mersenne-factor-structure      ← buscar q=2kp+1 que divida M_p
+  │  factor encontrado → sub-claim a k-ésimo armónico
+  │
+  ▼  (si se requiere certificación distribuida)
+[14] residue-hash-certification     ← two-session hash match; mismatch → error
+  │
   ▼  (si argumento multi-paso)
-[11] gauge-invariance-checker       ← ¿Invariante bajo reencuadres locales?
+[15] gauge-invariance-checker       ← ¿Invariante bajo reencuadres locales?
   │
   ▼  (si múltiples interpretaciones compiten)
-[12] yang-mills-energy-minimizer    ← Configuración de mínima energía interna
+[16] yang-mills-energy-minimizer    ← Configuración de mínima energía interna
   │
   ▼
-[13] ghost-loci-reasoning           ← ¿Conclusiones vecinas más correctas?
+[17] ghost-loci-reasoning           ← ¿Conclusiones vecinas más correctas?
   │
   ▼
-[14] monodromy-circuit-breaker      ← ¿Circularidad explícita? M≥1 → HALT
+[18] monodromy-circuit-breaker      ← ¿Circularidad? M≥1 → HALT
   │
-  ▼  (si argumento > 5 pasos con conceptos reutilizados)
-[15] wilson-loop-drift-detector     ← Deriva semántica acumulada
-  │  det(W)<0 → inversión de concepto → no_verdict
-  │
-  ▼
-[16] spectral-anomaly-alert         ← CR≥0.4 → evidencia comprimida
+  ▼  (si >5 pasos con conceptos reutilizados)
+[19] wilson-loop-drift-detector     ← Deriva semántica acumulada
   │
   ▼
-[17] hodge-rigidity-detector        ← H/M/S → Semáforo punto-en-tiempo
+[20] spectral-anomaly-alert         ← CR≥0.4 → evidencia comprimida
   │
-  ▼  (si algún step anterior falló K veces)
-[18] circuit-breaker-quarantine     ← ¿Patrón en cuarentena? BLOCKED → diagnosticar
+  ▼
+[21] hodge-rigidity-detector        ← H/M/S → Semáforo punto-en-tiempo
+  │
+  ▼  (si algún step falló K veces)
+[22] circuit-breaker-quarantine     ← ¿Patrón en cuarentena?
   │
   ▼  (si todos los componentes pasaron localmente)
-[19] sha-obstruction-detector       ← ¿Globalmente consistente o Sha-bloqueado?
-  │  Ш infinito → rechazar; Ш finito → restricción global faltante
+[23] sha-obstruction-detector       ← ¿Globalmente consistente?
   │
-  ▼  (si conclusión de alto alcance o cadena larga)
-[20] canonical-height-complexity    ← ĥ(C) = alcance vs. evidencia disponible
-  │  overleveraged (ratio<0.5) → bajar a provisional
+  ▼  (si conclusión de alto alcance)
+[24] canonical-height-complexity    ← ĥ(C) = alcance vs. evidencia
   │
   ▼
-[21] adversarial-gate-validator     ← 5 gates; <3/5 → REJECT
+[25] adversarial-gate-validator     ← 5 gates; <3/5 → REJECT
   │
-  ▼  (si conclusión usada como premisa downstream o Δ<0.3)
-[22] bsd-dual-measurement-checker   ← Dos métodos independientes
-  │  desacuerdo → el gap ES el hallazgo
+  ▼  (si conclusión usada como premisa o Δ<0.3)
+[26] bsd-dual-measurement-checker   ← Dos métodos independientes
   │
   ▼
-[23] mass-gap-estimator             ← Δ=E₁−E₀; Δ<0.05 → conditional
+[27] mass-gap-estimator             ← Δ=E₁−E₀
   │
   ▼  (si acción irreversible)
-[24] fail-closed-execution          ← 6 gates de autorización de acción
+[28] fail-closed-execution          ← 6 gates de autorización
   │
   ▼
-[25] gahenax-contract-emitter       ← 6 bloques + Imperative Filter + UA audit
+[29] gahenax-contract-emitter       ← 6 bloques + Imperative Filter + UA audit
   │
   ▼
-OUTPUT → CMR.record_run (evidence_hash, prev_hash chain)
+OUTPUT → CMR.record_run + residue_hash sealed
 ```
 
 ## Activación por Zona
 
 | Zona | Skills activas |
 |------|---------------|
-| EASY | [1]+[2]+[7]+[13]+[17]+[23]+[25] |
-| FRONTIER | [1]→[25] completo |
-| HARD | [1]→[25] + satisficing explícito |
-| OVER-CONSTRAINED | [1]+[4]+[5] → infeasible vía [25] |
-| Argumento largo (>5 pasos) | + [11]+[14] explícitos |
-| Síntesis multi-dominio | + [19] obligatorio |
-| Conclusión usada como premisa | + [22]+[23] obligatorios, Δ≥0.2 |
-| Acción irreversible | + [24] antes de [25] |
+| EASY | [1]+[2]+[7]+[17]+[27]+[29] |
+| FRONTIER | [1]→[29] completo |
+| HARD | [1]→[29] + satisficing + LL full pass |
+| OVER-CONSTRAINED | [1]+[4]+[5] → infeasible vía [29] |
+| Decriptado/Irreducibilidad | + [11]+[12]+[13]+[14] |
+| Síntesis multi-dominio | + [23] obligatorio |
+| Conclusión como premisa | + [14]+[26]+[27], Δ≥0.2 |
+| Acción irreversible | + [28] antes de [29] |
 | Tarea con historial CMR | + [2]+[3] al inicio |
-| Patrón fallando repetidamente | + [18] antes del siguiente intento |
+| Patrón fallando K veces | + [22] antes del siguiente intento |
 
 ## Formato de Audit Trail Completo
 
@@ -120,31 +131,35 @@ OUTPUT → CMR.record_run (evidence_hash, prev_hash chain)
 === REASONING INTEGRITY AUDIT ===
 BL scan:          [CLEAR | HIT BL-XX]
 CNI fingerprint:  [sha256[:12]] → [FIRST-RUN | STABLE | DRIFT | TAMPERED]
-Semáforo histórico: [OPTIMAL | RECALIBRATION | CRITICAL] (N=[N] sessions)
+Semáforo histórico: [OPTIMAL | RECALIBRATION | CRITICAL]
 Phase:            [EASY | FRONTIER | HARD | OVER-CONSTRAINED]
 UA budget:        [Nx baseline]
-Gateway:          [OK | BLOCKED ErrorClass | REPLAY request_id]
+Gateway:          [OK | BLOCKED ErrorClass | REPLAY]
 Assumptions:      [N open / N validated / N reduced / N invalidated]
 V-vector:         [stable | unstable]
 SV:               [shortest vector assumptions]
-Descent:          [rank(Sel)=N, lifted=M, Sha candidates=K]
-Gauge:            [INVARIANT | DEPENDENT — artifact at step k]
-YM energy:        [LOW | MEDIUM | HIGH | TOPOLOGICAL OBSTRUCTION]
+Descent:          [rank(Sel)=N, lifted=M, Sha=K]
+LL test:          [is_prime=T residue=0 | is_prime=F residue=[hash[:8]]]
+Roundoff:         [roundoff_max=[val] → VALID | MARGINAL | INVALID at step i=[X]]
+Factors:          [irreducible | q=2([k])[p]+1=[val] at k=[K]]
+Residue cert:     [CERTIFIED (A=B) | MISMATCH | SINGLE-SESSION]
+Gauge:            [INVARIANT | DEPENDENT step k]
+YM energy:        [LOW | MEDIUM | HIGH | TOPOLOGICAL]
 Ghosts:           [N scanned, N live]
-Monodromy:        M=[value] → [GREEN | ORANGE | RED]
-Wilson loop:      [TRIVIAL | W=[value] — drift type]
-Spectral:         CR=[value] → [NORMAL | WATCH | ALERT]
+Monodromy:        M=[val] → [GREEN | ORANGE | RED]
+Wilson loop:      [TRIVIAL | W=[val] — drift type]
+Spectral:         CR=[val] → [NORMAL | WATCH | ALERT]
 H/M/S:            H=[x] M=[x] S=[x] → [VERDE | NARANJA | ROJO]
-Circuit breakers: [ALL CLOSED | P_k QUARANTINED (Xs)]
-Sha:              [Ш=0 | finite | ∞ — obstruction type]
-Height ĥ(C):      [value] → [COMPLIANT | UNDERFUNDED | OVERLEVERAGED]
+Circuit breakers: [ALL CLOSED | P_k QUARANTINED]
+Sha:              [Ш=0 | finite | ∞]
+Height ĥ(C):      [val] → [COMPLIANT | UNDERFUNDED | OVERLEVERAGED]
 Gates (5-gate):   [N/5 passed]
-Dual measurement: [AGREEMENT | DISAGREEMENT gap=[value]]
-Mass gap Δ:       [value] → [LARGE | MODERATE | SMALL | NEAR-ZERO]
-Gates (fail-cls): [N/6 passed | N/A]
+Dual measurement: [AGREEMENT | DISAGREEMENT gap=[val]]
+Mass gap Δ:       [val] → [LARGE | MODERATE | SMALL | NEAR-ZERO]
+Gates (fail-cls): [N/6 | N/A]
 Verdict ceiling:  [no_verdict | conditional | rigorous]
 Verdict:          [COMMITTED | PROVISIONAL | HALTED | INFEASIBLE]
-CMR record:       [evidence_hash[:12]] chain=[prev_hash[:12] | GENESIS]
+CMR + residue:    evidence_hash=[sha256[:12]] residue_hash=[sha256[:12]]
 ==================================
 ```
 
@@ -158,3 +173,4 @@ CMR record:       [evidence_hash[:12]] chain=[prev_hash[:12] | GENESIS]
 | Gahenax-Yang-Mills | gauge-invariance-checker, yang-mills-energy-minimizer, wilson-loop-drift-detector, mass-gap-estimator |
 | Gahenax-BSD | bsd-dual-measurement-checker, sha-obstruction-detector, canonical-height-complexity, descent-search-protocol |
 | OEDA_GahenaxIA | execution-gateway-protocol, circuit-breaker-quarantine, cni-fingerprint-integrity, semaforo-chronos-hodge |
+| Mersenne-Gahen | lucas-lehmer-iterative-test, residue-hash-certification, roundoff-error-budget, mersenne-factor-structure |
