@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import time
 import sqlite3
 from dataclasses import dataclass
@@ -99,8 +100,6 @@ def hard_gates(df: pd.DataFrame) -> Tuple[bool, str]:
     if pass_rate < 1.0:
         return False, f"DEATH: Contract pass-rate < 100% (now {pass_rate:.3f})."
     return True, "OK: Contract pass-rate = 100%."
-
-import os
 
 def main() -> None:
     st.set_page_config(page_title="Gahenax Rigor Console", layout="wide")

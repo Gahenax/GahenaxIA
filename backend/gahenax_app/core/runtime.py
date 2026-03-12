@@ -4,7 +4,7 @@ import time
 from typing import Any, Dict, Optional, Tuple
 from pydantic import ValidationError
 
-from .gahenax_engine import GahenaxGovernor, GahenaxOutput
+from .gahenax_engine import GahenaxGovernor, GahenaxOutput, H_RIGIDITY_PERFECT
 from .cmr import CMR, utc_now
 
 class GahenaxRuntime:
@@ -45,7 +45,7 @@ class GahenaxRuntime:
         ua_spend = int(governor.ua.spent)
         delta_s = float(governor.ua.efficiency * governor.ua.spent)
         dsua = float(governor.ua.efficiency)
-        h_rigidity = 1e-15 # Target index for governed cycles
+        h_rigidity = H_RIGIDITY_PERFECT  # Target index for governed cycles
         work_units = int(governor.ua.spent * 2)
         
         contract_valid = True

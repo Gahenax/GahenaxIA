@@ -13,9 +13,6 @@ import hashlib
 import json
 import time
 import uuid
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
 
 # =============================================================================
 # CNI v1 - Canonical Normalized Input
@@ -87,6 +84,7 @@ MAX_CRITICAL_ASSUMPTIONS = 3
 IMPERATIVE_BLOCKLIST = ["deberías", "compra", "vende", "haz", "recomiendo", "invierte"]
 UA_BUDGET_EVERYDAY = 6.0
 UA_SPEND_TARGET_EVERYDAY = 4.0
+H_RIGIDITY_PERFECT = 1e-15   # Full structural rigidity (zero violations)
 
 # =============================================================================
 # 2) Data Models (Gahenax Contract)
@@ -146,6 +144,10 @@ class GahenaxOutput:
     interrogatory: List[ValidationQuestion]
     next_steps: List[NextStep]
     verdict: FinalVerdict
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return a JSON-serialisable dict (enum values as strings)."""
+        return _as_jsonable(self)
 
     def to_markdown(self, profile: RenderProfile) -> str:
         lines = []

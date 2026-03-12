@@ -1,27 +1,13 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Tuple, Any, Dict
-from enum import Enum
 
-class VerdictStrength(str, Enum):
-    NO_VERDICT = "no_verdict"
-    CONDITIONAL = "conditional"
-    RIGOROUS = "rigorous"
-
-class ValidationAnswerType(str, Enum):
-    BINARY = "binary"
-    NUMERIC = "numeric"
-    FACT = "fact"
-    CHOICE = "choice"
-
-class AssumptionStatus(str, Enum):
-    OPEN = "open"
-    VALIDATED = "validated"
-    INVALIDATED = "invalidated"
-    REDUCED = "reduced"
-
-class FindingStatus(str, Enum):
-    PROVISIONAL = "provisional"
-    RIGOROUS = "rigorous"
+# Single source of truth: enums live in the engine, schemas re-export them.
+from gahenax_app.core.gahenax_engine import (
+    VerdictStrength,
+    ValidationAnswerType,
+    AssumptionStatus,
+    FindingStatus,
+)
 
 class ReframeSchema(BaseModel):
     statement: str
