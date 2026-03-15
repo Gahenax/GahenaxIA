@@ -40,6 +40,7 @@ except ImportError:
     MCP_AVAILABLE = False
 
 from mcp_bridge.db import TaskDB
+from mcp_bridge.orchestrator_bridge import OrchestratorBridge, get_default_bridge
 
 # ── Tool schemas ───────────────────────────────────────────────────────────
 
@@ -83,6 +84,24 @@ TOOLS = [
                     "description": "1=low, 2=normal (default), 3=high",
                     "default": 2,
                 },
+                "project": {
+                    "type": "string",
+                    "description": (
+                        "Project name for multi-project routing. "
+                        "E.g. 'GahenaxIA', 'LimpiaMAX', 'TRIKSTER-ORACLE', 'Hotelpyct'. "
+                        "Defaults to 'default'."
+                    ),
+                    "default": "default",
+                },
+                "governed": {
+                    "type": "boolean",
+                    "description": (
+                        "If true, route through SingleWriterOrchestrator for "
+                        "ledger sealing, dedup, and audit trail. "
+                        "Required when task_type='orchestrate'. Default: false."
+                    ),
+                    "default": False,
+                },
             },
         },
     ),
@@ -105,6 +124,10 @@ TOOLS = [
                     "type": "integer",
                     "description": "Max tasks to return (default: 20).",
                     "default": 20,
+                },
+                "project": {
+                    "type": "string",
+                    "description": "Filter by project name. Omit to get all projects.",
                 },
             },
         },
@@ -168,6 +191,7 @@ TOOLS = [
 def create_server(
     db: TaskDB,
     caller_agent: str,  # "claude" or "antigravity" — identifies who's calling
+    orch_bridge: OrchestratorBridge | None = None,
 ) -> "Server":
     if not MCP_AVAILABLE:
         raise RuntimeError(
@@ -180,10 +204,12 @@ def create_server(
     async def list_tools():
         return TOOLS
 
+    _bridge = orch_bridge or get_default_bridge()
+
     @server.call_tool()
     async def call_tool(name: str, arguments: Dict[str, Any]) -> CallToolResult:
         try:
-            result = _dispatch(name, arguments, db, caller_agent)
+            result = _dispatch(name, arguments, db, caller_agent, _bridge)
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(result, indent=2))]
             )
@@ -201,27 +227,66 @@ def _dispatch(
     args: Dict[str, Any],
     db: TaskDB,
     caller_agent: str,
+    orch_bridge: OrchestratorBridge,
 ) -> Any:
     if name == "dispatch_task":
+        project = args.get("project", "default")
+        governed = bool(args.get("governed", False)) or args.get("task_type") == "orchestrate"
+        task_type = args["task_type"]
+
         task = db.dispatch(
             from_agent=caller_agent,
             to_agent=args["to_agent"],
-            task_type=args["task_type"],
+            task_type=task_type,
             description=args["description"],
             payload=args.get("payload"),
             priority=int(args.get("priority", 2)),
+            project=project,
         )
-        return {"ok": True, "task": task}
+
+        orch_job_id = None
+        if governed:
+            orch_job_id = orch_bridge.submit_task(
+                project=project,
+                task_id=task["id"],
+                description=args["description"],
+                payload=args.get("payload") or {},
+            )
+            # Store orch_job_id back on the task row
+            db._conn.execute(
+                "UPDATE tasks SET orch_job_id=? WHERE id=?",
+                (orch_job_id, task["id"]),
+            )
+            db._conn.commit()
+            task["orch_job_id"] = orch_job_id
+
+        return {"ok": True, "task": task, "governed": governed}
 
     elif name == "get_pending":
         agent = args["agent"]
         limit = int(args.get("limit", 20))
-        tasks = db.pending_for(agent, limit=limit)
+        project = args.get("project")
+        tasks = db.pending_for(agent, limit=limit, project=project)
         return {"ok": True, "count": len(tasks), "tasks": tasks}
 
     elif name == "complete_task":
-        ok = db.complete(args["task_id"], result=args.get("result"))
-        return {"ok": ok, "task_id": args["task_id"], "status": "done"}
+        task_id = args["task_id"]
+        result = args.get("result") or {}
+        ok = db.complete(task_id, result=result)
+
+        # If this was a governed task, seal in orchestrator ledger
+        task = db.get(task_id)
+        if task and task.get("orch_job_id"):
+            project = task.get("project", "default")
+            verdict = orch_bridge.accept_result(
+                project=project,
+                worker_id=0,   # bridge worker
+                job_id=task["orch_job_id"],
+                result_payload=result,
+            )
+            return {"ok": ok, "task_id": task_id, "status": "done", "ledger_verdict": verdict}
+
+        return {"ok": ok, "task_id": task_id, "status": "done"}
 
     elif name == "fail_task":
         ok = db.fail(args["task_id"], error=args["error"])
@@ -242,7 +307,7 @@ def _dispatch(
 async def run_server(caller_agent: str, db_path: str | None = None) -> None:
     """Run the MCP bridge server over stdio."""
     db = TaskDB(db_path) if db_path else TaskDB()
-    server = create_server(db, caller_agent)
+    server = create_server(db, caller_agent, orch_bridge=get_default_bridge())
 
     print(
         f"[gahenax-bridge] Started. Agent: {caller_agent}. "

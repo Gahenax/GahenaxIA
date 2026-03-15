@@ -2,6 +2,7 @@
 mcp_bridge/db.py
 
 SQLite task queue for the Claude Code ↔ Google Antigravity bridge.
+Supports multiple projects across the Gahenax ecosystem.
 
 Schema
 ------
@@ -9,15 +10,17 @@ tasks
   id          TEXT PRIMARY KEY  (uuid4)
   created_at  TEXT              (ISO-8601 UTC)
   updated_at  TEXT
+  project     TEXT              (project name, e.g. "GahenaxIA", "LimpiaMAX", "TRIKSTER-ORACLE")
   from_agent  TEXT              ("claude" | "antigravity")
   to_agent    TEXT              ("claude" | "antigravity")
-  task_type   TEXT              (e.g. "deploy", "review", "fix", "build")
+  task_type   TEXT              (e.g. "deploy", "review", "fix", "build", "orchestrate")
   description TEXT
   payload     TEXT              (JSON)
   priority    INTEGER           (1=low, 2=normal, 3=high)
   status      TEXT              ("pending" | "running" | "done" | "failed")
   result      TEXT              (JSON, nullable)
   error       TEXT              (nullable)
+  orch_job_id TEXT              (nullable — linked SingleWriterOrchestrator job_id)
 """
 from __future__ import annotations
 
@@ -39,6 +42,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     id          TEXT    PRIMARY KEY,
     created_at  TEXT    NOT NULL,
     updated_at  TEXT    NOT NULL,
+    project     TEXT    NOT NULL DEFAULT 'default',
     from_agent  TEXT    NOT NULL,
     to_agent    TEXT    NOT NULL,
     task_type   TEXT    NOT NULL,
@@ -47,10 +51,13 @@ CREATE TABLE IF NOT EXISTS tasks (
     priority    INTEGER NOT NULL DEFAULT 2,
     status      TEXT    NOT NULL DEFAULT 'pending',
     result      TEXT,
-    error       TEXT
+    error       TEXT,
+    orch_job_id TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_tasks_to_agent_status
     ON tasks(to_agent, status, priority DESC, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_tasks_project
+    ON tasks(project, status, created_at DESC);
 """
 
 
@@ -78,6 +85,8 @@ class TaskDB:
         description: str,
         payload: Dict[str, Any] | None = None,
         priority: int = 2,
+        project: str = "default",
+        orch_job_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Insert a new task. Returns the full task row."""
         if from_agent not in AGENT_VALUES:
@@ -94,12 +103,12 @@ class TaskDB:
         self._conn.execute(
             """
             INSERT INTO tasks
-              (id, created_at, updated_at, from_agent, to_agent,
-               task_type, description, payload, priority, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+              (id, created_at, updated_at, project, from_agent, to_agent,
+               task_type, description, payload, priority, status, orch_job_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
             """,
-            (task_id, now, now, from_agent, to_agent,
-             task_type, description, payload_json, priority),
+            (task_id, now, now, project, from_agent, to_agent,
+             task_type, description, payload_json, priority, orch_job_id),
         )
         self._conn.commit()
         return self.get(task_id)  # type: ignore[return-value]
@@ -144,13 +153,25 @@ class TaskDB:
         ).fetchone()
         return _row_to_dict(row) if row else None
 
-    def pending_for(self, agent: str, limit: int = 20) -> List[Dict[str, Any]]:
+    def pending_for(
+        self,
+        agent: str,
+        limit: int = 20,
+        project: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """Return pending tasks for an agent, ordered by priority DESC then created_at ASC."""
-        rows = self._conn.execute(
-            "SELECT * FROM tasks WHERE to_agent=? AND status='pending' "
-            "ORDER BY priority DESC, created_at ASC LIMIT ?",
-            (agent, limit),
-        ).fetchall()
+        if project:
+            rows = self._conn.execute(
+                "SELECT * FROM tasks WHERE to_agent=? AND status='pending' AND project=? "
+                "ORDER BY priority DESC, created_at ASC LIMIT ?",
+                (agent, project, limit),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                "SELECT * FROM tasks WHERE to_agent=? AND status='pending' "
+                "ORDER BY priority DESC, created_at ASC LIMIT ?",
+                (agent, limit),
+            ).fetchall()
         return [_row_to_dict(r) for r in rows]
 
     def list_tasks(
@@ -159,6 +180,7 @@ class TaskDB:
         to_agent: Optional[str] = None,
         from_agent: Optional[str] = None,
         status: Optional[str] = None,
+        project: Optional[str] = None,
         limit: int = 50,
     ) -> List[Dict[str, Any]]:
         clauses: List[str] = []
@@ -172,6 +194,9 @@ class TaskDB:
         if status:
             clauses.append("status=?")
             params.append(status)
+        if project:
+            clauses.append("project=?")
+            params.append(project)
 
         where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
         params.append(limit)
