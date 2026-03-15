@@ -82,6 +82,69 @@ comunicar contexto al agente de Antigravity:
 
 ---
 
+## MCP Bridge — Calls Directas con Antigravity
+
+El **MCP Bridge** (`mcp_bridge/`) permite comunicación directa bidireccional
+entre Claude Code y Google Antigravity via Model Context Protocol.
+
+### Configuración (una vez por máquina)
+
+Agregar a `~/.claude/mcp.json` o al `.mcp.json` del repo:
+
+```json
+{
+  "mcpServers": {
+    "gahenax-bridge": {
+      "command": "python",
+      "args": ["-m", "mcp_bridge.run", "claude"],
+      "cwd": "/ruta/absoluta/a/GahenaxIA"
+    }
+  }
+}
+```
+
+Instalar dependencia: `pip install mcp`
+
+### Herramientas disponibles
+
+| Herramienta | Cuándo usarla |
+|-------------|---------------|
+| `dispatch_task` | Delegar una tarea a Antigravity (deploy, build, test) |
+| `get_pending` | Ver qué tareas me envió Antigravity (review, fix) |
+| `complete_task` | Marcar mi tarea como terminada |
+| `fail_task` | Reportar que una tarea falló |
+| `get_task` | Consultar estado de una tarea |
+
+### Integración con SingleWriterOrchestrator
+
+Cuando una tarea requiere gobernanza completa (ledger, contratos, validación
+de schema), usar `task_type: "orchestrate"` — el bridge puede delegar al
+`SingleWriterOrchestrator` existente de GahenaxIA para mantener el registro
+de auditoría.
+
+### Ejemplo de flujo directo
+
+```
+# Claude Code termina un fix, le pide a Antigravity que haga deploy
+dispatch_task(
+  to_agent="antigravity",
+  task_type="deploy",
+  description="Deploy fix/auth-token a staging",
+  payload={"branch": "claude/fix-auth-token-a1b2", "target": "staging"},
+  priority=3
+)
+
+# Antigravity detecta un error en prod, le pide a Claude Code que lo analice
+dispatch_task(
+  to_agent="claude",
+  task_type="fix",
+  description="Error 500 en /api/ledger — ver logs adjuntos",
+  payload={"log_file": "build_logs.txt", "error": "KeyError: 'hash'"}
+)
+```
+
+---
+
 ## Reglas de Seguridad
 
 - Nunca hardcodear API keys, passwords ni secrets en código
