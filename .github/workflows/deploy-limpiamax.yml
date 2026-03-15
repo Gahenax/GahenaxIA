@@ -1,0 +1,48 @@
+name: Deploy LimpiaMAX
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'limpiamax-page/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: limpiamax-page/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./limpiamax-page
+        run: npm install
+
+      - name: Build Next.js static export
+        working-directory: ./limpiamax-page
+        run: npm run build
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python SFTP dependencies
+        run: pip install paramiko
+
+      - name: Deploy to GoDaddy via SFTP
+        working-directory: ./limpiamax-page
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_PASS: ${{ secrets.SFTP_PASS }}
+        run: python deploy.py
