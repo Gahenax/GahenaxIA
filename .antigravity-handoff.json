@@ -1,0 +1,17 @@
+{
+  "timestamp_utc": "2026-03-15T00:00:00Z",
+  "branch": "claude/research-google-antigravity-1zOdN",
+  "claude_session": "research-google-antigravity-1zOdN",
+  "changes_summary": "Setup inicial del workflow conjunto Claude Code + Google Antigravity. Crear CLAUDE.md (rol y reglas), WORKFLOW.md (protocolo completo) y .github/workflows/claude-to-antigravity.yml (pipeline CI).",
+  "files_changed": [
+    "CLAUDE.md",
+    "WORKFLOW.md",
+    ".github/workflows/claude-to-antigravity.yml",
+    ".antigravity-handoff.json"
+  ],
+  "deploy_target": "none",
+  "deploy_notes": "Solo documentación y configuración de workflow. No requiere deploy.",
+  "test_focus": "N/A — no hay cambios de código funcional",
+  "risk_level": "low",
+  "blockers": []
+}

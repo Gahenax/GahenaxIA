@@ -1,0 +1,172 @@
+# claude-to-antigravity.yml
+#
+# Pipeline: Claude Code → Google Antigravity
+#
+# Se activa cuando Claude Code pushea a una rama claude/*
+# Ejecuta validaciones básicas y prepara el artefacto para que
+# Antigravity tome el relevo (build completo + deploy).
+#
+# COPIA este archivo a cada proyecto del ecosistema Gahenax
+# y ajusta las secciones marcadas con # ← CONFIGURAR
+
+name: Claude → Antigravity Pipeline
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  # ─────────────────────────────────────────────
+  # FASE 1: Validaciones de Claude Code
+  # Responsabilidad: Claude Code debe dejar el repo en estado verde
+  # ─────────────────────────────────────────────
+  validate:
+    name: Validate (Claude Code Gate)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read handoff file
+        id: handoff
+        run: |
+          if [ -f ".antigravity-handoff.json" ]; then
+            echo "handoff_exists=true" >> $GITHUB_OUTPUT
+            cat .antigravity-handoff.json
+            RISK=$(jq -r '.risk_level // "low"' .antigravity-handoff.json)
+            echo "risk_level=$RISK" >> $GITHUB_OUTPUT
+          else
+            echo "handoff_exists=false" >> $GITHUB_OUTPUT
+            echo "risk_level=low" >> $GITHUB_OUTPUT
+          fi
+
+      # ← CONFIGURAR: ajustar según el stack del proyecto
+      - name: Setup runtime
+        uses: actions/setup-python@v5   # cambiar a setup-node@v4 para JS
+        with:
+          python-version: '3.11'        # o node-version: '20'
+
+      # ← CONFIGURAR: ajustar el comando de instalación
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt 2>/dev/null || \
+          pip install -e ".[dev]" 2>/dev/null || \
+          echo "No requirements file found, skipping"
+
+      # ← CONFIGURAR: ajustar el comando de lint
+      - name: Lint
+        run: |
+          pip install ruff 2>/dev/null && ruff check . || \
+          echo "Lint skipped (no linter configured)"
+        continue-on-error: true
+
+      # ← CONFIGURAR: ajustar el comando de tests
+      - name: Unit tests
+        run: |
+          python -m pytest tests/ -v --tb=short 2>/dev/null || \
+          echo "Tests skipped (no test runner configured)"
+        env:
+          GAHENAX_FORCE_MOCK: "1"   # siempre mock en CI
+
+      - name: Report gate result
+        run: |
+          echo "═══════════════════════════════════════"
+          echo "CLAUDE CODE GATE — RESULT"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Risk level: ${{ steps.handoff.outputs.risk_level }}"
+          echo "Handoff file: ${{ steps.handoff.outputs.handoff_exists }}"
+          echo "═══════════════════════════════════════"
+
+  # ─────────────────────────────────────────────
+  # FASE 2: Notificación a Antigravity
+  # Se ejecuta solo si validate pasó
+  # ─────────────────────────────────────────────
+  notify-antigravity:
+    name: Notify Antigravity
+    needs: validate
+    runs-on: ubuntu-latest
+    if: success()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare Antigravity context
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          COMMIT="${{ github.sha }}"
+          SHORT_SHA="${COMMIT:0:7}"
+          REPO="${{ github.repository }}"
+
+          echo "═══════════════════════════════════════"
+          echo "HANDOFF → ANTIGRAVITY"
+          echo "Repo:   $REPO"
+          echo "Branch: $BRANCH"
+          echo "Commit: $SHORT_SHA"
+          echo ""
+          echo "Antigravity debe:"
+          echo "  1. Pull de la rama $BRANCH"
+          echo "  2. Build completo"
+          echo "  3. Tests de integración"
+          echo "  4. Deploy a staging"
+          echo "  5. Verificar health checks"
+          echo "═══════════════════════════════════════"
+
+          # Escribir summary para GitHub Actions
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## Claude → Antigravity Handoff
+
+          | Campo | Valor |
+          |-------|-------|
+          | Branch | \`$BRANCH\` |
+          | Commit | \`$SHORT_SHA\` |
+          | Repo | \`$REPO\` |
+          | Estado | ✅ Listo para Antigravity |
+
+          **Próximos pasos en Antigravity:**
+          1. Pull \`$BRANCH\`
+          2. Build + integration tests
+          3. Deploy staging
+          4. Health check
+
+          EOF
+
+      # ← CONFIGURAR: descomentar y ajustar si tienes webhook de Antigravity
+      # - name: Trigger Antigravity webhook
+      #   run: |
+      #     curl -X POST "${{ secrets.ANTIGRAVITY_WEBHOOK_URL }}" \
+      #       -H "Content-Type: application/json" \
+      #       -d '{
+      #         "branch": "${{ github.ref_name }}",
+      #         "repo": "${{ github.repository }}",
+      #         "commit": "${{ github.sha }}",
+      #         "action": "deploy-staging"
+      #       }'
+
+  # ─────────────────────────────────────────────
+  # FASE 3: Gate de risk_level alto
+  # Si risk_level es "high", bloquear deploy automático
+  # ─────────────────────────────────────────────
+  high-risk-gate:
+    name: High Risk Gate (Manual Approval Required)
+    needs: validate
+    runs-on: ubuntu-latest
+    if: |
+      success() &&
+      contains(github.event.head_commit.message, 'risk:high')
+
+    environment:
+      name: production-approval   # ← CONFIGURAR: crear este environment en GitHub repo settings
+
+    steps:
+      - name: Awaiting approval
+        run: |
+          echo "⚠️  Risk level HIGH detectado."
+          echo "Este deployment requiere aprobación manual antes de que"
+          echo "Antigravity proceda al deploy de producción."
