@@ -1,0 +1,44 @@
+name: Deploy NOW - LimpiaMAX
+
+on:
+  push:
+    branches:
+      - claude/limpiamax-page-Q1Pvu
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy index.html to GoDaddy via SFTP
+        run: |
+          pip install paramiko -q
+          python3 - <<'PYEOF'
+          import paramiko
+          from pathlib import Path
+
+          HOST = "r5l.550.myftpupload.com"
+          PORT = 22
+          USER = "client_7099bf3c0_1103883"
+          PASS = "WM4jgbMFQuQ0UM"
+
+          t = paramiko.Transport((HOST, PORT))
+          t.connect(username=USER, password=PASS)
+          sftp = paramiko.SFTPClient.from_transport(t)
+
+          # Upload index.html
+          local = "limpiamax-page/index.html"
+          remote = "public_html/index.html"
+          print(f"Uploading {local} -> {remote}")
+          sftp.put(local, remote)
+
+          # Clean WordPress .htaccess
+          with sftp.open("public_html/.htaccess", "w") as f:
+              f.write("DirectoryIndex index.html\n")
+          print(".htaccess updated")
+
+          print("DONE - https://limpiamaxbarcelona.com")
+          sftp.close()
+          t.close()
+          PYEOF
