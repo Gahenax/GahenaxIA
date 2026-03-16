@@ -1,0 +1,50 @@
+{
+  "_comment": "GahenaxIA P-ATLAS-NP config — adapted from Gahenax/P-ATLAS-NP plan.json",
+  "schema_version": "GAHENAX-ATLAS-v1.0",
+  "atlas": {
+    "knn_k": 5,
+    "frontier_quantile": 0.8,
+    "min_points_to_classify": 8,
+    "rebuild_every_n": 5,
+    "max_dims": 7,
+    "atlas_path": "evidence/gahenax_atlas.json",
+    "ledger_path": "evidence/atlas_ledger.jsonl"
+  },
+  "ua_bands": {
+    "p_local_max": 3.0,
+    "frontier_budget": 8.0,
+    "np_hard_budget": 12.0
+  },
+  "adversarial_gates": {
+    "gate_1_semantics": {
+      "min_normalized_dist": 0.15
+    },
+    "gate_2_rephrase": {
+      "n_shuffles": 3,
+      "sample_n": 20,
+      "delta_v_threshold": 5.0
+    },
+    "gate_3_scale": {
+      "max_relative_drift": 2.0
+    },
+    "gate_4_mode": {
+      "max_intra_cv": 0.80
+    },
+    "gate_5_perturbation": {
+      "perturbation_rate": 0.15,
+      "sample_n": 20,
+      "delta_v_threshold": 5.0
+    },
+    "gate_6_camouflage": {
+      "max_camouflage_fraction": 0.30
+    },
+    "gate_7_falsifiability": {
+      "max_ua_ratio": 5.0
+    }
+  },
+  "signature_families": {
+    "spectral": ["spectral_complexity_proxy", "concept_specificity", "structural_depth_proxy"],
+    "thermodynamic": ["thermo_uncertainty_proxy", "thermo_negation_signal", "thermo_open_assumption_frac"],
+    "algebraic": ["algebra_reducible_proxy", "algebra_assumption_density", "algebra_horn_fraction"]
+  }
+}

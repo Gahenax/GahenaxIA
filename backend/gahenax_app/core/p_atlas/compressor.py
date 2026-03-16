@@ -42,8 +42,12 @@ class VectorCompressor:
             return {"coordinates": [], "stability_score": 0.0,
                     "correlation_H": {}, "correlation_D": {}, "interpretation": "no data"}
 
-        feature_cols = [k for k in records[0].keys()
-                        if k not in ("instance_id", "target_H", "target_D")]
+        feature_cols = [
+            k for k in records[0].keys()
+            if k not in ("instance_id", "target_H", "target_D")
+            and not k.startswith("_")  # exclude private fields like _raw_text
+            and isinstance(records[0][k], (int, float))
+        ]
 
         cors_H: List[tuple] = []
         cors_D: List[tuple] = []

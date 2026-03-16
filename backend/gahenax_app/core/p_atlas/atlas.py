@@ -76,7 +76,8 @@ def build_frontier_knn(
             "local_std": [0.0] * n,
         }
 
-    vmat_raw = [[float(r.get(c, 0.0)) for c in coords] for r in records]
+    vmat_raw = [[float(r.get(c, 0.0)) if isinstance(r.get(c), (int, float)) else 0.0
+                 for c in coords] for r in records]
     vmat_z = _zscore_normalize(vmat_raw)
     H = [float(r.get("target_H", 0.0)) for r in records]
 

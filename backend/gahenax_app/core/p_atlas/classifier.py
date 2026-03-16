@@ -8,20 +8,23 @@ Lifecycle:
   2. Classifier looks up (or updates) the persistent atlas.
   3. Returns a ComplexityAssessment that tells the Governor how to calibrate UA.
 
+After each atlas rebuild:
+  - GahenaxAdversarialGates validates the feature space (7 gates)
+  - Results recorded in AtlasLedger (chain-validated JSONL)
+
 Complexity classes (mapped from P-ATLAS-NP's hardness spectrum):
   P_LOCAL    — well inside the easy region; retrieval/mock suffices
   FRONTIER   — high-variance zone; allocate conservatively, may need AUDIT mode
   NP_HARD    — consistently expensive; pre-authorize Ruflo swarm
   UNKNOWN    — atlas too thin to classify; use defaults
 
-The atlas is persisted as a JSON file in the evidence directory so it
-accumulates knowledge across sessions (P-ATLAS-NP's "campaign memory" pattern).
+The atlas is persisted as a JSON file so it accumulates knowledge across sessions
+(P-ATLAS-NP's "campaign memory" pattern).
 """
 from __future__ import annotations
 
 import json
 import logging
-import os
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -30,6 +33,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from .extractor import GahenaxSignatureExtractor
 from .compressor import VectorCompressor
 from .atlas import build_frontier_knn, lookup_frontier_score, _zscore_normalize
+from .ledger import AtlasLedger
+from .gates import GahenaxAdversarialGates
 
 logger = logging.getLogger(__name__)
 
@@ -37,13 +42,16 @@ logger = logging.getLogger(__name__)
 _MIN_ATLAS_POINTS = 8
 # How often (in new data points) to rebuild the compressed atlas
 _REBUILD_EVERY = 5
+# Max raw text stored per record (chars) — for gate 2/5
+_RAW_TEXT_MAX = 500
 # Default atlas file
 _DEFAULT_ATLAS_PATH = "evidence/gahenax_atlas.json"
+_DEFAULT_LEDGER_PATH = "evidence/atlas_ledger.jsonl"
 
 
 @dataclass
 class ComplexityAssessment:
-    complexity_class: str           # P_LOCAL | FRONTIER | NP_HARD | UNKNOWN
+    complexity_class: str           # P_LOCAL | MODERATE | FRONTIER | NP_HARD | UNKNOWN
     frontier_score: float           # local_std(H) at query location [0..∞)
     predicted_ua: float             # estimated UA spend for this query
     recommended_mode: str           # everyday | audit | experiment
@@ -79,15 +87,21 @@ class GahenaxAtlasClassifier:
         classifier.update(query_text, context, ua_spend=3.5, h_rigidity=0.1)
     """
 
-    def __init__(self, atlas_path: str = _DEFAULT_ATLAS_PATH):
+    def __init__(
+        self,
+        atlas_path: str = _DEFAULT_ATLAS_PATH,
+        ledger_path: str = _DEFAULT_LEDGER_PATH,
+    ):
         self._path = Path(atlas_path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
 
         self._extractor = GahenaxSignatureExtractor()
         self._compressor = VectorCompressor()
+        self._ledger = AtlasLedger(ledger_path)
+        self._gates = GahenaxAdversarialGates(self._extractor)
 
-        # Dataset: list of {features..., target_H, target_D}
-        self._dataset: List[Dict[str, float]] = []
+        # Dataset: list of {features..., target_H, target_D, _raw_text}
+        self._dataset: List[Dict[str, Any]] = []
         # Current compressed state
         self._coords: List[str] = []
         self._atlas_vmat_z: List[List[float]] = []
@@ -95,6 +109,8 @@ class GahenaxAtlasClassifier:
         self._frontier_threshold: float = 0.0
         self._H_values: List[float] = []
         self._new_since_rebuild: int = 0
+        # Last gate validation verdict
+        self._gate_verdict: str = "UNVALIDATED"
 
         self._load()
 
@@ -109,7 +125,12 @@ class GahenaxAtlasClassifier:
     ) -> ComplexityAssessment:
         """Classify the complexity of a query before the Governor runs."""
         try:
-            return self._classify_internal(text, context)
+            result = self._classify_internal(text, context)
+            # Record in ledger (background-safe: ledger writes are fast)
+            self._ledger.record_classification(
+                result.complexity_class, result.frontier_score, result.predicted_ua
+            )
+            return result
         except Exception as exc:
             logger.debug("Atlas classify failed (non-critical): %s", exc)
             return _FALLBACK
@@ -126,6 +147,8 @@ class GahenaxAtlasClassifier:
             features, _ = self._extractor.extract_all(text, context)
             features["target_H"] = float(ua_spend)
             features["target_D"] = float(h_rigidity or 0.0)
+            # Store truncated raw text for gate 2/5 (rephrase + perturbation)
+            features["_raw_text"] = text[:_RAW_TEXT_MAX]
             self._dataset.append(features)
             self._new_since_rebuild += 1
             if (
@@ -136,6 +159,14 @@ class GahenaxAtlasClassifier:
             self._save()
         except Exception as exc:
             logger.debug("Atlas update failed (non-critical): %s", exc)
+
+    def get_gate_verdict(self) -> str:
+        """Last adversarial gate validation result."""
+        return self._gate_verdict
+
+    def validate_ledger(self) -> Tuple[bool, str]:
+        """Check chain integrity of the atlas ledger."""
+        return self._ledger.validate_chain()
 
     # ------------------------------------------------------------------
     # Internal
@@ -152,7 +183,6 @@ class GahenaxAtlasClassifier:
         features, _ = self._extractor.extract_all(text, context)
         query_raw = [float(features.get(c, 0.0)) for c in self._coords]
 
-        # z-score the query using the atlas statistics
         query_z = self._zscore_query(query_raw)
         frontier_score = lookup_frontier_score(
             query_z, self._atlas_vmat_z, self._local_std, k=min(5, len(self._dataset) - 1)
@@ -256,19 +286,40 @@ class GahenaxAtlasClassifier:
         self._H_values = target_H
         self._new_since_rebuild = 0
 
-        logger.info(
-            "P-ATLAS rebuilt: %d points, coords=%s, frontier_frac=%.2f",
-            len(self._dataset), self._coords, frontier["frontier_fraction"],
+        # Log rebuild to ledger
+        self._ledger.record_rebuild(
+            n_points=len(self._dataset),
+            coords=self._coords,
+            frontier_frac=frontier["frontier_fraction"],
         )
+
+        # Run adversarial gates — validate the feature space
+        try:
+            gate_results = self._gates.run_all(self._dataset, self._coords)
+            self._gate_verdict = gate_results.get("final_verdict", "UNKNOWN")
+            self._ledger.record_gates(gate_results, self._gate_verdict)
+            logger.info(
+                "P-ATLAS rebuilt: %d points, coords=%s, frontier_frac=%.2f, gates=%s",
+                len(self._dataset), self._coords,
+                frontier["frontier_fraction"], self._gate_verdict,
+            )
+        except Exception as exc:
+            logger.debug("Atlas gate validation failed (non-critical): %s", exc)
 
     def _save(self) -> None:
         try:
+            # Don't serialize _raw_text into the JSON (keep it in-memory only for perf)
+            clean_dataset = [
+                {k: v for k, v in r.items() if k != "_raw_text"}
+                for r in self._dataset
+            ]
             state = {
-                "version": "gahenax_atlas_v1",
+                "version": "gahenax_atlas_v2",
                 "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "dataset": self._dataset,
+                "dataset": clean_dataset,
                 "coords": self._coords,
                 "frontier_threshold": self._frontier_threshold,
+                "gate_verdict": self._gate_verdict,
             }
             self._path.write_text(json.dumps(state, indent=2), encoding="utf-8")
         except Exception as exc:
@@ -282,11 +333,12 @@ class GahenaxAtlasClassifier:
             self._dataset = state.get("dataset", [])
             self._coords = state.get("coords", [])
             self._frontier_threshold = state.get("frontier_threshold", 0.0)
+            self._gate_verdict = state.get("gate_verdict", "UNVALIDATED")
             if len(self._dataset) >= _MIN_ATLAS_POINTS and self._coords:
                 self._rebuild_atlas()
             logger.info(
-                "P-ATLAS loaded: %d data points from %s",
-                len(self._dataset), self._path,
+                "P-ATLAS loaded: %d data points from %s (gates: %s)",
+                len(self._dataset), self._path, self._gate_verdict,
             )
         except Exception as exc:
             logger.debug("Atlas load failed: %s", exc)
