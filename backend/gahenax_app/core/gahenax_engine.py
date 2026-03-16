@@ -106,6 +106,9 @@ class Finding:
     status: FindingStatus = FindingStatus.PROVISIONAL
     support: List[str] = field(default_factory=list)
     depends_on: List[str] = field(default_factory=list)
+    # Traceability + Falsifiability (required by contract v1.2)
+    verification_method: str = ""   # How the human executes a test of this claim
+    expected_outcome: str = ""      # Observable result that confirms or refutes the claim
 
 @dataclass
 class Assumption:
@@ -128,6 +131,9 @@ class ValidationQuestion:
 class NextStep:
     action: str
     evidence_required: str
+    # Traceability + Falsifiability (required by contract v1.2)
+    success_criteria: str = ""      # Measurable condition that closes this step
+    observable_outcome: str = ""    # What the human will observe when the step is done
 
 @dataclass
 class FinalVerdict:
@@ -352,16 +358,28 @@ class GahenaxGovernor:
         if a is None:
             return ""
 
+        # Falsifiability requirement appended to every complexity class —
+        # the human component must be able to execute and observe results.
+        _FALSIFIABILITY_SUFFIX = (
+            " TRAZABILIDAD OBLIGATORIA: cada finding debe incluir verification_method "
+            "(cómo el humano lo prueba) y expected_outcome (qué observa). "
+            "Cada next_step debe incluir success_criteria (condición medible) y "
+            "observable_outcome (qué ve el humano al terminar). "
+            "Sin cadena de trazabilidad = INFERENCE_FAILED."
+        )
+
         _STYLE_DIRECTIVES = {
             "P_LOCAL": (
                 "CONCISE. La consulta es simple y directa. "
                 "Usa el mínimo de findings necesarios para cubrir la respuesta. "
                 "Evita over-elaboration. Responde al punto."
+                + _FALSIFIABILITY_SUFFIX
             ),
             "MODERATE": (
                 "BALANCED. Profundidad estándar. "
                 "Incluye hallazgos relevantes sin redundancia. "
                 "Balance entre exhaustividad y economía de tokens."
+                + _FALSIFIABILITY_SUFFIX
             ),
             "FRONTIER": (
                 "STRUCTURED. La consulta presenta alta varianza semántica o ambigüedad. "
@@ -369,6 +387,7 @@ class GahenaxGovernor:
                 "El interrogatory DEBE contener preguntas que reduzcan la incertidumbre "
                 "antes de que el usuario tome decisiones. "
                 "No cierres el veredicto si quedan assumptions críticos abiertos."
+                + _FALSIFIABILITY_SUFFIX
             ),
             "NP_HARD": (
                 "EXHAUSTIVE. La consulta es genuinamente compleja — múltiples dimensiones "
@@ -376,10 +395,12 @@ class GahenaxGovernor:
                 "El interrogatory debe cubrir TODAS las dimensiones de incertidumbre. "
                 "Los next_steps deben ser concretos, secuenciados y accionables. "
                 "Prefiere status PROVISIONAL sobre omitir hallazgos difíciles."
+                + _FALSIFIABILITY_SUFFIX
             ),
             "UNKNOWN": (
                 "STANDARD. Atlas insuficiente para clasificar esta consulta. "
                 "Profundidad y formato por defecto."
+                + _FALSIFIABILITY_SUFFIX
             ),
         }
 

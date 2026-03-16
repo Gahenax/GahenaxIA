@@ -105,6 +105,25 @@ _TECHNICAL_MARKERS = frozenset([
     'ontology', 'epistemology', 'hermeneutics', 'dialectics',
 ])
 
+# Falsifiability markers — queries that naturally invite verification/testing
+# Signal that the user expects observable, testable results
+_FALSIFIABILITY_MARKERS = frozenset([
+    # Verification verbs (ES)
+    'verificar', 'comprobar', 'validar', 'medir', 'probar', 'testear', 'evaluar',
+    'comparar', 'observar', 'registrar', 'monitorear', 'auditar', 'contrastar',
+    'reproducir', 'replicar', 'ejecutar', 'correr', 'corroborar',
+    # Verification verbs (EN)
+    'verify', 'check', 'validate', 'measure', 'test', 'evaluate', 'assess',
+    'compare', 'observe', 'record', 'monitor', 'audit', 'contrast',
+    'reproduce', 'replicate', 'execute', 'run', 'confirm',
+    # Outcome markers
+    'resultado', 'outcome', 'output', 'qué pasa si', 'qué ocurre',
+    'what happens', 'what if', 'what would',
+    # Criteria markers
+    'criterio', 'criterios', 'condición', 'umbral', 'límite',
+    'criteria', 'criterion', 'threshold', 'condition', 'metric',
+])
+
 # Cross-domain linking terms (multi-field complexity signal)
 _MULTI_FIELD = frozenset([
     'relación entre', 'relación con', 'aplicado a', 'en el contexto de',
@@ -237,9 +256,30 @@ class GahenaxSignatureExtractor:
         multi_hits = sum(1 for p in _MULTI_FIELD if p in text_lower)
         domain_multi_field_signal = round(min(1.0, multi_hits / max(len(words) / 5, 1)), 6)
 
+        # Falsifiability signal: density of verification/test/measure markers
+        # Uses both exact match and root-prefix matching to cover conjugated forms
+        # (verifico, verifica, comprueba, mide, ejecuta, etc.)
+        _FALSI_ROOTS = (
+            'verif', 'comprob', 'valid', 'medic', 'midiendo', 'mid',
+            'prob', 'test', 'eval', 'compar', 'observ', 'registr',
+            'monitor', 'audit', 'contras', 'reprod', 'replica', 'ejecut',
+            'measur', 'check', 'confir', 'run', 'launch',
+        )
+        false_hits = sum(
+            1 for w in words
+            if w in _FALSIFIABILITY_MARKERS or any(w.startswith(r) for r in _FALSI_ROOTS)
+        )
+        false_phrase_hits = sum(
+            1 for p in _FALSIFIABILITY_MARKERS if len(p.split()) > 1 and p in text_lower
+        )
+        falsifiability_signal = round(
+            min(1.0, (false_hits + false_phrase_hits * 2) / max(n_words / 3, 1)), 6
+        )
+
         return {
             "domain_technical_density": domain_technical_density,
             "domain_multi_field_signal": domain_multi_field_signal,
+            "falsifiability_signal": falsifiability_signal,
         }
 
     def extract_all(

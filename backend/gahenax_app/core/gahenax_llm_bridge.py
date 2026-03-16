@@ -182,6 +182,8 @@ def _build_gahenax_output(data: dict, ua_spent: float, ua_efficiency: float) -> 
             status=fs,
             support=f.get("support", []),
             depends_on=f.get("depends_on", []),
+            verification_method=safe_str(f, "verification_method"),
+            expected_outcome=safe_str(f, "expected_outcome"),
         ))
 
     # Assumptions
@@ -218,6 +220,8 @@ def _build_gahenax_output(data: dict, ua_spent: float, ua_efficiency: float) -> 
         next_steps.append(NextStep(
             action=safe_str(ns, "action"),
             evidence_required=safe_str(ns, "evidence_required"),
+            success_criteria=safe_str(ns, "success_criteria"),
+            observable_outcome=safe_str(ns, "observable_outcome"),
         ))
 
     # Verdict
