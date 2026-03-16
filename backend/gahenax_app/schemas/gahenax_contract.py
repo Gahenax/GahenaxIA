@@ -60,14 +60,26 @@ class VerdictSchema(BaseModel):
     ua_audit: Dict[str, float]
     conditions: List[str] = []
 
+class ExecutionDispatchSchema(BaseModel):
+    """Record of a Ruflo agent dispatch triggered by a NextStep (Enlace 1)."""
+    next_step_action: str
+    agent_type:       str
+    routed_to:        str          # "ruflo" | "local" | "error"
+    job_id:           str
+    dispatched_at:    str
+    error:            Optional[str] = None
+
+
 class GahenaxOutputSchema(BaseModel):
-    reframe: ReframeSchema
-    exclusions: ExclusionsSchema
-    findings: List[FindingSchema]
-    assumptions: List[AssumptionSchema]
+    reframe:       ReframeSchema
+    exclusions:    ExclusionsSchema
+    findings:      List[FindingSchema]
+    assumptions:   List[AssumptionSchema]
     interrogatory: List[ValidationQuestionSchema]
-    next_steps: List[NextStepSchema]
-    verdict: VerdictSchema
+    next_steps:    List[NextStepSchema]
+    verdict:       VerdictSchema
+    # Ruflo execution dispatches — populated by Enlace 1 (Governor → Ruflo)
+    execution_dispatches: List[ExecutionDispatchSchema] = []
 
 class GahenaxRequest(BaseModel):
     text: str

@@ -11,11 +11,11 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 import hashlib
 import json
+import logging
 import time
 import uuid
-from dataclasses import dataclass, field, asdict
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # CNI v1 - Canonical Normalized Input
@@ -137,6 +137,17 @@ class FinalVerdict:
     conditions: List[str] = field(default_factory=list)
 
 @dataclass
+class ExecutionDispatch:
+    """Record of a Ruflo agent dispatch triggered by a NextStep."""
+    next_step_action: str
+    agent_type: str          # coder | architect | reviewer | tester | security
+    routed_to: str           # "ruflo" | "local"
+    job_id: str
+    dispatched_at: str
+    error: Optional[str] = None
+
+
+@dataclass
 class GahenaxOutput:
     """The final emission of the engine."""
     reframe: Reframe
@@ -146,6 +157,12 @@ class GahenaxOutput:
     interrogatory: List[ValidationQuestion]
     next_steps: List[NextStep]
     verdict: FinalVerdict
+    # Ruflo execution dispatches — populated after NextSteps are routed (Enlace 1)
+    execution_dispatches: List[ExecutionDispatch] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to a JSON-safe dict compatible with GahenaxOutputSchema."""
+        return _as_jsonable(asdict(self))
 
     def to_markdown(self, profile: RenderProfile) -> str:
         lines = []
@@ -210,34 +227,179 @@ class GahenaxOptimizer:
 # =============================================================================
 
 class GahenaxGovernor:
-    def __init__(self, budget_ua: Optional[float] = None, mode: EngineMode = EngineMode.EVERYDAY):
+    def __init__(
+        self,
+        budget_ua: Optional[float] = None,
+        mode: EngineMode = EngineMode.EVERYDAY,
+        ruflo_url: str = "http://localhost:3001",
+        enable_ruflo: bool = True,
+    ):
         self.mode = mode
         if budget_ua is None:
             budget_ua = UA_BUDGET_EVERYDAY if mode == EngineMode.EVERYDAY else 1000.0
-        
+
         self.ua = UAMetrics(budget=budget_ua)
         self.session_id = str(uuid.uuid4())
         self.turn = 1
+        self.ruflo_url = ruflo_url
+        self.enable_ruflo = enable_ruflo
+
+        # Lazy-loaded Ruflo components (imported only if available)
+        self._ruflo_adapter = None
+        self._ruflo_bridge = None
+        if enable_ruflo:
+            self._init_ruflo()
+
+    def _init_ruflo(self) -> None:
+        """Initialize Ruflo adapter and bridge. Silent on import failure."""
+        try:
+            from gahenax_app.core.ruflo_bridge import get_bridge
+            from orchestrator.ruflo_swarm_adapter import RufloSwarmAdapter
+            self._ruflo_bridge = get_bridge(self.ruflo_url)
+            self._ruflo_adapter = RufloSwarmAdapter(ruflo_url=self.ruflo_url)
+        except Exception as exc:
+            logger.debug("Ruflo components unavailable: %s", exc)
 
     def run_inference_cycle(self, text: str, context: Dict[str, Any] = None) -> GahenaxOutput:
         import os
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
+        # Enlace 3 (read): enrich context with Ruflo semantic memory
+        memory_context = self._retrieve_memory_context(text)
+        if memory_context and context is not None:
+            context = {**context, "_ruflo_memory": memory_context}
+        elif memory_context:
+            context = {"_ruflo_memory": memory_context}
+
         if api_key:
-            return self._run_real(text, api_key)
+            output = self._run_real(text, api_key)
         else:
-            return self._run_mock(text)
+            output = self._run_mock(text)
+
+        # Enlace 1: dispatch NextSteps to Ruflo agents
+        if self.enable_ruflo and output.next_steps:
+            dispatches = self._dispatch_next_steps(output.next_steps)
+            output.execution_dispatches = dispatches
+
+        return output
+
+    def _retrieve_memory_context(self, text: str) -> Optional[List[Dict[str, Any]]]:
+        """
+        Enlace 3 (read side): semantic search over Ruflo AgentDB.
+        Returns top-3 past decisions similar to the current query.
+        Costs 0.3 UA. Silent on failure.
+        """
+        if self._ruflo_bridge is None:
+            return None
+        try:
+            self.ua.consume(0.3)
+            result = self._ruflo_bridge.retrieve_memory(
+                query=text,
+                agent_id="gahenax_cmr",
+                top_k=3,
+            )
+            if result.ok and result.payload:
+                return result.payload.get("results", [])
+        except Exception as exc:
+            logger.debug("Ruflo memory retrieve failed: %s", exc)
+        return None
+
+    def _dispatch_next_steps(
+        self, next_steps: List[NextStep]
+    ) -> List[ExecutionDispatch]:
+        """
+        Enlace 1: Convert each NextStep into a RufloAgentJob and dispatch.
+        Fire-and-forget — doesn't block on agent completion.
+        Costs 1.0 UA per dispatch (capped at budget).
+        """
+        if self._ruflo_adapter is None:
+            return []
+
+        from gahenax_app.core.ruflo_bridge import (
+            RufloAgentJob, RufloAgentType, SwarmTopology
+        )
+        from orchestrator.contracts import Job as OrcJob
+
+        dispatches: List[ExecutionDispatch] = []
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+        # Build intent → agent type map inline (no import cycle)
+        _INTENT_MAP = [
+            (["code", "implement", "refactor", "debug", "function", "module"],
+             RufloAgentType.CODER),
+            (["design", "architect", "api", "schema", "system"],
+             RufloAgentType.ARCHITECT),
+            (["review", "lint", "quality", "style"],
+             RufloAgentType.REVIEWER),
+            (["test", "coverage", "assert", "spec"],
+             RufloAgentType.TESTER),
+            (["security", "vuln", "cve", "threat", "audit"],
+             RufloAgentType.SECURITY),
+        ]
+
+        for step in next_steps:
+            try:
+                self.ua.consume(1.0)
+            except ResourceWarning:
+                logger.info("UA cap reached — stopping NextStep dispatch at %d/%d",
+                            len(dispatches), len(next_steps))
+                break
+
+            action_lower = step.action.lower()
+            agent_type = RufloAgentType.CODER  # default
+            for keywords, atype in _INTENT_MAP:
+                if any(kw in action_lower for kw in keywords):
+                    agent_type = atype
+                    break
+
+            # Build a synthetic OrcJob to satisfy the adapter's type contract
+            orch_job = OrcJob(
+                job_id=f"nextstep_{uuid.uuid4().hex[:8]}",
+                t_start=0.0,
+                t_end=1.0,
+                stride=1.0,
+            )
+
+            try:
+                result = self._ruflo_adapter.route(
+                    orch_job,
+                    task_description=step.action,
+                )
+                dispatches.append(ExecutionDispatch(
+                    next_step_action=step.action,
+                    agent_type=agent_type.value,
+                    routed_to=result.routed_to,
+                    job_id=result.job_id,
+                    dispatched_at=timestamp,
+                    error=result.error,
+                ))
+            except Exception as exc:
+                dispatches.append(ExecutionDispatch(
+                    next_step_action=step.action,
+                    agent_type=agent_type.value,
+                    routed_to="error",
+                    job_id="",
+                    dispatched_at=timestamp,
+                    error=str(exc),
+                ))
+
+        return dispatches
 
     def _run_real(self, text: str, api_key: str) -> GahenaxOutput:
-        """Live path: Gemini API under Gahenax contract."""
-        # Import here to avoid circular import at module load
-        from gahenax_app.core.gahenax_llm_bridge import GahenaxLLMBridge
+        """
+        Live path: MultiProviderBridge (Gemini primary → Ruflo fallback).
+        Enlace 2: automatic provider failover under the same Gahenax contract.
+        """
+        from gahenax_app.core.gahenax_llm_bridge import MultiProviderBridge
 
         # UA: cost to engage the bridge
         cost_ingest = 2.0 if self.mode == EngineMode.EVERYDAY else 10.0
         self.ua.consume(cost_ingest)
 
-        bridge = GahenaxLLMBridge(api_key=api_key)
+        bridge = MultiProviderBridge(
+            gemini_api_key=api_key,
+            ruflo_url=self.ruflo_url,
+        )
         result = bridge.call(
             text=text,
             ua_spent=self.ua.spent,

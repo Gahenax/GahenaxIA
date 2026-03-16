@@ -18,12 +18,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+import os
 import time
 from collections import defaultdict
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
+
+_RUFLO_URL = os.getenv("RUFLO_URL", "http://localhost:3001")
 
 
 # =========================================================================
@@ -408,9 +414,28 @@ class ExecutionGateway:
 class _ToolRunner:
     """
     Dispatches to actual skill implementations.
-    Each skill_id maps to a handler function.
-    Replace stubs with real logic.
+
+    Routing priority:
+      1. Explicit handlers registered via register_handler()
+      2. ruflo.* skills → RufloBridge via _RUFLO_SKILL_MAP
+      3. gahenax.* built-in skills (inline logic)
+      4. Stub fallback (echo inputs)
     """
+
+    # ------------------------------------------------------------------
+    # Enlace 6 — Ruflo skill routing table
+    # Maps skill_id → (RufloToolGroup value, mcp_tool_name, extra_params_fn)
+    # ------------------------------------------------------------------
+    _RUFLO_SKILL_MAP: Dict[str, tuple] = {
+        "ruflo.coder":           ("agents",   "agent_spawn",     lambda i: {"type": "coder",     **i}),
+        "ruflo.architect":       ("agents",   "agent_spawn",     lambda i: {"type": "architect", **i}),
+        "ruflo.reviewer":        ("agents",   "agent_spawn",     lambda i: {"type": "reviewer",  **i}),
+        "ruflo.tester":          ("agents",   "agent_spawn",     lambda i: {"type": "tester",    **i}),
+        "ruflo.security":        ("security", "aidefence_scan",  lambda i: i),
+        "ruflo.swarm":           ("agents",   "swarm_create",    lambda i: i),
+        "ruflo.memory_store":    ("memory",   "memory_store",    lambda i: i),
+        "ruflo.memory_retrieve": ("memory",   "memory_retrieve", lambda i: i),
+    }
 
     def __init__(self):
         self._handlers: Dict[str, Any] = {}
@@ -419,14 +444,118 @@ class _ToolRunner:
         self._handlers[skill_id] = fn
 
     def run(self, spec: SkillSpec, inputs: Dict[str, Any], dry_run: bool = False) -> Dict[str, Any]:
+        # 1. Explicit registered handler
         handler = self._handlers.get(spec.skill_id)
-        if handler is None:
-            # Default stub: echo inputs, signal missing handler
+        if handler is not None:
+            return handler(inputs, dry_run=dry_run)
+
+        # 2. Enlace 6 — ruflo.* skills routed to RufloBridge
+        if spec.skill_id.startswith("ruflo."):
+            return self._run_ruflo(spec, inputs, dry_run)
+
+        # 3. gahenax.* built-in stubs (ledger read/write)
+        if spec.skill_id.startswith("gahenax."):
+            return self._run_gahenax_builtin(spec, inputs, dry_run)
+
+        # 4. Unknown — echo stub
+        return {
+            "stub":           True,
+            "dry_run":        dry_run,
+            "skill_id":       spec.skill_id,
+            "inputs_received": inputs,
+            "note": "No handler registered.",
+        }
+
+    # ------------------------------------------------------------------
+    # Ruflo handler
+    # ------------------------------------------------------------------
+
+    def _run_ruflo(
+        self, spec: SkillSpec, inputs: Dict[str, Any], dry_run: bool
+    ) -> Dict[str, Any]:
+        """
+        Enlace 6: execute a ruflo.* skill via RufloBridge.
+        If dry_run: validate bridge availability without dispatching.
+        If bridge unreachable: return BLOCKED stub (never raises).
+        """
+        if dry_run:
+            try:
+                from gahenax_app.core.ruflo_bridge import get_bridge
+                bridge = get_bridge(_RUFLO_URL)
+                healthy = bridge.health_check()
+                return {
+                    "dry_run":   True,
+                    "skill_id":  spec.skill_id,
+                    "bridge_ok": healthy,
+                    "inputs":    inputs,
+                }
+            except Exception as exc:
+                return {"dry_run": True, "bridge_ok": False, "error": str(exc)}
+
+        route = self._RUFLO_SKILL_MAP.get(spec.skill_id)
+        if route is None:
             return {
-                "stub": True,
-                "dry_run": dry_run,
+                "error": f"No Ruflo route defined for {spec.skill_id}",
                 "skill_id": spec.skill_id,
-                "inputs_received": inputs,
-                "note": "No handler registered. Register via gateway._tool_runner.register_handler()"
             }
-        return handler(inputs, dry_run=dry_run)
+
+        group_val, tool_name, params_fn = route
+
+        try:
+            from gahenax_app.core.ruflo_bridge import get_bridge, RufloToolGroup
+            bridge = get_bridge(_RUFLO_URL)
+            group  = RufloToolGroup(group_val)
+            params = params_fn(inputs)
+            result = bridge.dispatch_tool(group=group, tool_name=tool_name, params=params)
+
+            if not result.ok:
+                logger.warning(
+                    "Ruflo skill %s returned error: %s", spec.skill_id, result.error
+                )
+
+            return {
+                "ok":           result.ok,
+                "ruflo_tool":   tool_name,
+                "ruflo_group":  group_val,
+                "payload":      result.payload,
+                "latency_ms":   result.latency_ms,
+                "request_id":   result.request_id,
+                "error":        result.error,
+            }
+
+        except Exception as exc:
+            logger.error("Ruflo execution error for %s: %s", spec.skill_id, exc)
+            return {
+                "ok":      False,
+                "error":   str(exc),
+                "skill_id": spec.skill_id,
+            }
+
+    # ------------------------------------------------------------------
+    # Gahenax built-in skill stubs (inline logic)
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _run_gahenax_builtin(
+        spec: SkillSpec, inputs: Dict[str, Any], dry_run: bool
+    ) -> Dict[str, Any]:
+        if spec.skill_id == "gahenax.query_ledger":
+            return {
+                "skill_id": spec.skill_id,
+                "dry_run": dry_run,
+                "window_n": inputs.get("window_n", 10),
+                "note": "Ledger query stub — connect CMR for real data.",
+            }
+        if spec.skill_id == "gahenax.generate_snapshot":
+            return {
+                "skill_id": spec.skill_id,
+                "dry_run": dry_run,
+                "snapshot_label": inputs.get("snapshot_label", "unnamed"),
+                "note": "Snapshot stub — implement snapshot writer.",
+            }
+        return {
+            "skill_id":  spec.skill_id,
+            "dry_run":   dry_run,
+            "inputs":    inputs,
+            "note":      "Gahenax built-in stub.",
+        }

@@ -1,9 +1,17 @@
 from __future__ import annotations
 
-import hashlib, json, os, sqlite3, time
+import hashlib
+import json
+import logging
+import os
+import sqlite3
+import threading
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 
 def utc_now() -> str:
@@ -21,7 +29,9 @@ def canonical_hash(payload: Dict[str, Any]) -> str:
 class CMRConfig:
     db_path: str = "ua_ledger.sqlite"
     table: str = "ua_ledger"
-    chain_hash: bool = True  # add prev_hash chaining
+    chain_hash: bool = True                          # add prev_hash chaining
+    ruflo_sync: bool = True                          # Enlace 3: sync to AgentDB
+    ruflo_url: str = "http://localhost:3001"         # Ruflo MCP bridge URL
 
 
 class CMR:
@@ -170,4 +180,83 @@ class CMR:
         finally:
             con.close()
 
+        # Enlace 3 (write side): fire-and-forget sync to Ruflo AgentDB
+        if self.cfg.ruflo_sync:
+            self._async_sync_to_ruflo(
+                evidence_hash=payload["evidence_hash"],
+                session_id=session_id,
+                verdict_strength=payload.get("contract_valid"),
+                ua_spend=payload["ua_spend"],
+                h_rigidity=payload.get("h_rigidity"),
+                summary=(
+                    f"session={session_id} ua={ua_spend} "
+                    f"valid={contract_valid} latency={latency_ms:.0f}ms"
+                ),
+            )
+
         return payload["evidence_hash"]
+
+    # ------------------------------------------------------------------
+    # ENLACE 3 — Ruflo AgentDB sync
+    # ------------------------------------------------------------------
+
+    def _async_sync_to_ruflo(
+        self,
+        evidence_hash: str,
+        session_id: str,
+        verdict_strength: Optional[bool],
+        ua_spend: int,
+        h_rigidity: Optional[float],
+        summary: str,
+    ) -> None:
+        """
+        Fire-and-forget thread: push CMR event into Ruflo AgentDB HNSW store.
+        Never raises — CMR integrity is independent of Ruflo availability.
+        """
+        def _push():
+            try:
+                from gahenax_app.core.ruflo_bridge import get_bridge, RufloMemoryEntry
+                bridge = get_bridge(self.cfg.ruflo_url)
+                entry = RufloMemoryEntry(
+                    key=evidence_hash,
+                    content=summary,
+                    agent_id="gahenax_cmr",
+                    tags=[
+                        "cmr_event",
+                        f"valid={'true' if verdict_strength else 'false'}",
+                        f"ua={ua_spend}",
+                    ],
+                    metadata={
+                        "evidence_hash": evidence_hash,
+                        "session_id": session_id,
+                        "ua_spend": ua_spend,
+                        "h_rigidity": h_rigidity,
+                        "contract_valid": verdict_strength,
+                    },
+                )
+                bridge.store_memory(entry)
+            except Exception as exc:
+                logger.debug("CMR→Ruflo sync failed (non-critical): %s", exc)
+
+        t = threading.Thread(target=_push, daemon=True)
+        t.start()
+
+    def retrieve_ruflo_context(self, query: str, top_k: int = 3) -> List[Dict[str, Any]]:
+        """
+        Enlace 3 (read side): semantic search over past CMR events in AgentDB.
+        Returns enriched context for the Governor's next inference cycle.
+        Returns empty list if Ruflo unavailable (never raises).
+        """
+        try:
+            from gahenax_app.core.ruflo_bridge import get_bridge
+            bridge = get_bridge(self.cfg.ruflo_url)
+            result = bridge.retrieve_memory(
+                query=query,
+                agent_id="gahenax_cmr",
+                top_k=top_k,
+            )
+            if result.ok:
+                return result.payload.get("results", [])
+        except Exception as exc:
+            logger.debug("CMR Ruflo context retrieve failed: %s", exc)
+        return []

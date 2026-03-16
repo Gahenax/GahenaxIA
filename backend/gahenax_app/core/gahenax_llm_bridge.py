@@ -27,15 +27,20 @@ Rules (non-negotiable):
 from __future__ import annotations
 
 import json
+import logging
 import re
 import os
 import hashlib
 import time
+import urllib.request
+import urllib.error
 from dataclasses import dataclass
 from typing import Optional, Any, Dict
 
 from google import genai
 from google.genai import types as genai_types
+
+logger = logging.getLogger(__name__)
 
 from gahenax_app.core.gahenax_engine import (
     GahenaxOutput, Reframe, Exclusions, Finding, FindingStatus,
@@ -388,3 +393,197 @@ class GahenaxLLMBridge:
                 metrics=metrics,
                 error_reason=str(e),
             )
+
+
+# =====================================================================
+# ENLACE 2 — RUFLO MULTI-PROVIDER FALLBACK BRIDGE
+# =====================================================================
+
+class RufloProviderFallback:
+    """
+    Calls Ruflo's OpenAI-compatible chat completions proxy.
+
+    Used as a fallback when the primary Gemini bridge fails.
+    Sends the exact same Gahenax system prompt and validates the
+    response through the same contract validators — the governance
+    contract is provider-agnostic.
+
+    Endpoint: POST {ruflo_url}/v1/chat/completions
+    Compatible with: Claude, GPT, Gemini, Cohere, Ollama (Ruflo routes)
+    """
+
+    def __init__(
+        self,
+        ruflo_url: str = "http://localhost:3001",
+        model: str = "auto",        # Ruflo selects best available
+        timeout_s: float = 30.0,
+    ):
+        self.ruflo_url  = ruflo_url.rstrip("/")
+        self.model      = model
+        self.timeout_s  = timeout_s
+
+    def call(self, text: str, ua_spent: float, ua_budget: float) -> BridgeResult:
+        """
+        Mirror of GahenaxLLMBridge.call() but via Ruflo proxy.
+        Same contract validation, same BridgeResult schema.
+        """
+        from gahenax_app.core.gahenax_prompt_canonical import GAHENAX_SYSTEM_PROMPT
+
+        ua_remaining = ua_budget - ua_spent
+        t0 = time.perf_counter()
+
+        augmented_input = (
+            f"{text}\n\n"
+            f"[GAHENAX CONTEXT]\n"
+            f"UA Remaining: {ua_remaining:.1f} / {ua_budget:.1f}\n"
+            f"Mode: GEM (concise, governed)\n"
+            f"Respond ONLY with the JSON schema. No prose before or after."
+        )
+
+        body = json.dumps({
+            "model": self.model,
+            "messages": [
+                {"role": "system",  "content": GAHENAX_SYSTEM_PROMPT},
+                {"role": "user",    "content": augmented_input},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 1500,
+        }).encode("utf-8")
+
+        try:
+            req = urllib.request.Request(
+                f"{self.ruflo_url}/v1/chat/completions",
+                data=body,
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=self.timeout_s) as resp:
+                raw_resp = json.loads(resp.read())
+
+            elapsed_ms = (time.perf_counter() - t0) * 1000.0
+            raw_text = (
+                raw_resp.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+            )
+            raw_hash = hashlib.sha256(raw_text.encode()).hexdigest()
+
+            data = _extract_json(raw_text)
+            if data is None:
+                return BridgeResult(
+                    success=False,
+                    output=_build_failure_output("RUFLO_JSON_PARSE_FAILURE", ua_spent),
+                    metrics=BridgeMetrics(
+                        latency_ms=elapsed_ms, input_tokens=None, output_tokens=None,
+                        imperatives_found=[], absolutes_found=[],
+                        schema_complete=False, contract_valid=False, h_rigidity=1.0,
+                        raw_response_hash=raw_hash,
+                    ),
+                    error_reason="RUFLO_JSON_PARSE_FAILURE",
+                )
+
+            schema_ok   = _schema_complete(data)
+            imperatives = _check_imperatives(raw_text)
+            absolutes   = _check_absolutes(raw_text)
+            h           = _compute_h_rigidity(imperatives, absolutes, schema_ok)
+            contract_valid = schema_ok and not imperatives and not absolutes
+            compliance_score = (
+                (1.0 if schema_ok else 0.0)
+                + (1.0 if not imperatives else 0.0)
+                + (1.0 if not absolutes   else 0.0)
+            ) / 3.0
+            ua_efficiency = compliance_score / (ua_spent + 1e-9)
+
+            metrics = BridgeMetrics(
+                latency_ms=elapsed_ms, input_tokens=None, output_tokens=None,
+                imperatives_found=imperatives, absolutes_found=absolutes,
+                schema_complete=schema_ok, contract_valid=contract_valid,
+                h_rigidity=h, raw_response_hash=raw_hash,
+            )
+
+            if not contract_valid:
+                parts = []
+                if imperatives: parts.append(f"imperatives={imperatives}")
+                if absolutes:   parts.append(f"absolutes={absolutes}")
+                if not schema_ok: parts.append("schema_incomplete")
+                return BridgeResult(
+                    success=False,
+                    output=_build_failure_output("; ".join(parts), ua_spent),
+                    metrics=metrics,
+                    error_reason="CONTRACT_VIOLATION",
+                )
+
+            output = _build_gahenax_output(data, ua_spent=ua_spent, ua_efficiency=ua_efficiency)
+            return BridgeResult(success=True, output=output, metrics=metrics)
+
+        except Exception as exc:
+            elapsed_ms = (time.perf_counter() - t0) * 1000.0
+            return BridgeResult(
+                success=False,
+                output=_build_failure_output(f"RUFLO_PROXY_ERROR: {exc}", ua_spent),
+                metrics=BridgeMetrics(
+                    latency_ms=elapsed_ms, input_tokens=None, output_tokens=None,
+                    imperatives_found=[], absolutes_found=[],
+                    schema_complete=False, contract_valid=False, h_rigidity=1.0,
+                    raw_response_hash="",
+                ),
+                error_reason=str(exc),
+            )
+
+
+class MultiProviderBridge:
+    """
+    Enlace 2 — Provider-agnostic bridge with automatic fallback.
+
+    Priority:
+      1. GahenaxLLMBridge (Gemini — primary, deterministic)
+      2. RufloProviderFallback (Ruflo proxy — Claude/GPT/Ollama)
+
+    Contract guarantee: whichever provider responds, the output
+    passes the same Gahenax contract validators before acceptance.
+    The CMR records which provider was used via h_rigidity metadata.
+    """
+
+    def __init__(
+        self,
+        gemini_api_key: str,
+        ruflo_url: str = "http://localhost:3001",
+        gemini_model: str = GEMINI_MODEL,
+    ):
+        self._gemini  = GahenaxLLMBridge(api_key=gemini_api_key, model=gemini_model)
+        self._ruflo   = RufloProviderFallback(ruflo_url=ruflo_url)
+        self._used_provider: str = "gemini"
+
+    @property
+    def last_provider(self) -> str:
+        return self._used_provider
+
+    def call(self, text: str, ua_spent: float, ua_budget: float) -> BridgeResult:
+        # Primary: Gemini
+        result = self._gemini.call(text, ua_spent, ua_budget)
+        if result.success:
+            self._used_provider = "gemini"
+            return result
+
+        logger.warning(
+            "Gemini bridge failed (%s) — trying Ruflo fallback",
+            result.error_reason,
+        )
+
+        # Fallback: Ruflo multi-provider proxy
+        fallback = self._ruflo.call(text, ua_spent, ua_budget)
+        if fallback.success:
+            self._used_provider = "ruflo_proxy"
+            logger.info("Ruflo fallback succeeded")
+            return fallback
+
+        # Both failed — return Gemini's failure (more informative)
+        self._used_provider = "none"
+        logger.error(
+            "All providers failed. Gemini: %s | Ruflo: %s",
+            result.error_reason, fallback.error_reason,
+        )
+        return result

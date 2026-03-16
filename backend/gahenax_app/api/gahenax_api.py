@@ -7,13 +7,19 @@ import time
 import os
 
 PROMPT_VERSION = "engine_v1.1.md#GEMv1"
-ENGINE_VERSION = "GahenaxCore-v1.1.1"
-Contract_VERSION = "GahenaxOutput-v1.0"
+ENGINE_VERSION  = "GahenaxCore-v1.1.1+ruflo"
+Contract_VERSION = "GahenaxOutput-v1.1"
+
+RUFLO_URL = os.getenv("RUFLO_URL", "http://localhost:3001")
 
 router = APIRouter(prefix="/api/gahenax", tags=["Gahenax Core"])
 
-# CMR: Canonical Measurement Recorder (FCD-1.0 compliant)
-cmr_cfg = CMRConfig(db_path=os.path.join(os.getcwd(), "ua_ledger.sqlite"))
+# CMR: Canonical Measurement Recorder (FCD-1.0 compliant, ruflo_sync enabled)
+cmr_cfg  = CMRConfig(
+    db_path=os.path.join(os.getcwd(), "ua_ledger.sqlite"),
+    ruflo_sync=True,
+    ruflo_url=RUFLO_URL,
+)
 CMR_INST = CMR(cmr_cfg)
 
 # Persistent Governors (Mock Session Store)
@@ -38,12 +44,22 @@ async def infer(request: GahenaxRequest):
         mode = EngineMode.EVERYDAY
 
     if request.turn_index == 1 or not session_id:
-        gov = GahenaxGovernor(budget_ua=request.ua_budget, mode=mode)
+        gov = GahenaxGovernor(
+            budget_ua=request.ua_budget,
+            mode=mode,
+            ruflo_url=RUFLO_URL,
+            enable_ruflo=True,
+        )
         session_id = gov.session_id
         GOVERNORS[session_id] = gov
     else:
         if session_id not in GOVERNORS:
-            gov = GahenaxGovernor(budget_ua=request.ua_budget, mode=mode)
+            gov = GahenaxGovernor(
+                budget_ua=request.ua_budget,
+                mode=mode,
+                ruflo_url=RUFLO_URL,
+                enable_ruflo=True,
+            )
             GOVERNORS[session_id] = gov
         else:
             gov = GOVERNORS[session_id]
