@@ -32,17 +32,34 @@ class CMRConfig:
     chain_hash: bool = True                          # add prev_hash chaining
     ruflo_sync: bool = True                          # Enlace 3: sync to AgentDB
     ruflo_url: str = "http://localhost:3001"         # Ruflo MCP bridge URL
+    atlas_path: str = "evidence/gahenax_atlas.json"  # P-ATLAS-NP persistence path
 
 
 class CMR:
     """
     Canonical Measurement Recorder (append-only).
     Captures falsifiable evidence for each engine run.
+
+    P-ATLAS-NP integration:
+      After each record_run(), the real ua_spend and h_rigidity are fed back
+      into the GahenaxAtlasClassifier so the complexity atlas learns from
+      actual data (campaign memory pattern from P-ATLAS-NP).
     """
 
     def __init__(self, cfg: CMRConfig):
         self.cfg = cfg
         self._init_db()
+        # P-ATLAS-NP: lazy atlas classifier for retroalimentación
+        self._atlas: Optional[Any] = None
+        self._init_atlas()
+
+    def _init_atlas(self) -> None:
+        """Initialize P-ATLAS-NP classifier for retroalimentación. Silent on failure."""
+        try:
+            from gahenax_app.core.p_atlas import GahenaxAtlasClassifier
+            self._atlas = GahenaxAtlasClassifier(atlas_path=self.cfg.atlas_path)
+        except Exception as exc:
+            logger.debug("CMR: P-ATLAS init skipped: %s", exc)
 
     def _init_db(self) -> None:
         con = sqlite3.connect(self.cfg.db_path)
@@ -120,6 +137,9 @@ class CMR:
         timestamp_end: str,
         git_commit: Optional[str] = None,
         host_id: Optional[str] = None,
+        # P-ATLAS-NP retroalimentación: original query for atlas update
+        query_text: Optional[str] = None,
+        query_context: Optional[Dict[str, Any]] = None,
     ) -> str:
         prev = self._last_hash()
 
@@ -180,6 +200,15 @@ class CMR:
         finally:
             con.close()
 
+        # P-ATLAS-NP retroalimentación: update complexity atlas with real UA data
+        if self._atlas is not None and query_text:
+            self._async_atlas_update(
+                query_text=query_text,
+                query_context=query_context,
+                ua_spend=float(ua_spend),
+                h_rigidity=h_rigidity,
+            )
+
         # Enlace 3 (write side): fire-and-forget sync to Ruflo AgentDB
         if self.cfg.ruflo_sync:
             self._async_sync_to_ruflo(
@@ -195,6 +224,36 @@ class CMR:
             )
 
         return payload["evidence_hash"]
+
+    # ------------------------------------------------------------------
+    # P-ATLAS-NP — retroalimentación (campaign memory update)
+    # ------------------------------------------------------------------
+
+    def _async_atlas_update(
+        self,
+        query_text: str,
+        query_context: Optional[Dict[str, Any]],
+        ua_spend: float,
+        h_rigidity: Optional[float],
+    ) -> None:
+        """
+        Fire-and-forget thread: feed real ua_spend / h_rigidity back into
+        the P-ATLAS-NP classifier so the complexity atlas learns from data.
+        Never raises — CMR integrity is independent of atlas availability.
+        """
+        def _update():
+            try:
+                self._atlas.update(
+                    text=query_text,
+                    context=query_context,
+                    ua_spend=ua_spend,
+                    h_rigidity=h_rigidity,
+                )
+            except Exception as exc:
+                logger.debug("CMR→Atlas update failed (non-critical): %s", exc)
+
+        t = threading.Thread(target=_update, daemon=True)
+        t.start()
 
     # ------------------------------------------------------------------
     # ENLACE 3 — Ruflo AgentDB sync

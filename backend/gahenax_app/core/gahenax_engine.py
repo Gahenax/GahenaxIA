@@ -233,6 +233,8 @@ class GahenaxGovernor:
         mode: EngineMode = EngineMode.EVERYDAY,
         ruflo_url: str = "http://localhost:3001",
         enable_ruflo: bool = True,
+        enable_atlas: bool = True,
+        atlas_path: str = "evidence/gahenax_atlas.json",
     ):
         self.mode = mode
         if budget_ua is None:
@@ -244,11 +246,24 @@ class GahenaxGovernor:
         self.ruflo_url = ruflo_url
         self.enable_ruflo = enable_ruflo
 
+        # P-ATLAS-NP complexity classifier (lazy, never raises)
+        self._atlas: Optional[Any] = None
+        if enable_atlas:
+            self._init_atlas(atlas_path)
+
         # Lazy-loaded Ruflo components (imported only if available)
         self._ruflo_adapter = None
         self._ruflo_bridge = None
         if enable_ruflo:
             self._init_ruflo()
+
+    def _init_atlas(self, atlas_path: str) -> None:
+        """Initialize P-ATLAS-NP classifier. Silent on import/IO failure."""
+        try:
+            from gahenax_app.core.p_atlas import GahenaxAtlasClassifier
+            self._atlas = GahenaxAtlasClassifier(atlas_path=atlas_path)
+        except Exception as exc:
+            logger.debug("P-ATLAS init failed (non-critical): %s", exc)
 
     def _init_ruflo(self) -> None:
         """Initialize Ruflo adapter and bridge. Silent on import failure."""
@@ -263,6 +278,11 @@ class GahenaxGovernor:
     def run_inference_cycle(self, text: str, context: Dict[str, Any] = None) -> GahenaxOutput:
         import os
         api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+
+        # P-ATLAS-NP: classify query complexity before allocating UA
+        atlas_assessment = self._atlas_classify(text, context)
+        if atlas_assessment is not None:
+            self._apply_atlas_assessment(atlas_assessment)
 
         # Enlace 3 (read): enrich context with Ruflo semantic memory
         memory_context = self._retrieve_memory_context(text)
@@ -282,6 +302,42 @@ class GahenaxGovernor:
             output.execution_dispatches = dispatches
 
         return output
+
+    def _atlas_classify(self, text: str, context: Optional[Dict[str, Any]]) -> Optional[Any]:
+        """
+        P-ATLAS-NP: extract query signature and classify complexity.
+        Returns a ComplexityAssessment or None. Never raises.
+        """
+        if self._atlas is None:
+            return None
+        try:
+            return self._atlas.classify(text, context)
+        except Exception as exc:
+            logger.debug("Atlas classify error: %s", exc)
+            return None
+
+    def _apply_atlas_assessment(self, assessment: Any) -> None:
+        """
+        Adjust Governor UA budget and mode based on atlas classification.
+        Called before the LLM call. Silent on any error.
+        """
+        try:
+            cc = assessment.complexity_class
+            if cc == "P_LOCAL":
+                logger.info("[P-ATLAS] P_LOCAL — no budget expansion needed. %s", assessment.reasoning)
+            elif cc == "FRONTIER":
+                logger.info("[P-ATLAS] FRONTIER — switching to AUDIT mode. %s", assessment.reasoning)
+                self.mode = EngineMode.AUDIT
+                if assessment.ua_budget_override:
+                    self.ua = UAMetrics(budget=assessment.ua_budget_override)
+            elif cc == "NP_HARD":
+                logger.info("[P-ATLAS] NP_HARD — expanding budget. %s", assessment.reasoning)
+                if assessment.ua_budget_override:
+                    self.ua = UAMetrics(budget=assessment.ua_budget_override)
+            else:
+                logger.debug("[P-ATLAS] %s — %s", cc, assessment.reasoning)
+        except Exception as exc:
+            logger.debug("Atlas assessment apply error: %s", exc)
 
     def _retrieve_memory_context(self, text: str) -> Optional[List[Dict[str, Any]]]:
         """
