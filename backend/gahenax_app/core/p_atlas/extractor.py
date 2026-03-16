@@ -3,6 +3,10 @@ GahenaxSignatureExtractor
 -------------------------
 Adapts P-ATLAS-NP's SignatureExtractor to the Gahenax text-inference domain.
 
+Domain-agnostic: works on any query regardless of field (science, law, art,
+engineering, philosophy, medicine, business, etc.). The extractor measures
+LINGUISTIC STRUCTURE, not domain vocabulary.
+
 Instead of SAT clause graphs, we operate on:
   - Raw query text
   - Optional context dict (assumptions, findings, mode)
@@ -23,6 +27,10 @@ Three feature families (matching P-ATLAS-NP taxonomy):
     algebra_reducible_proxy     : retrieval-pattern terms (factual, definition, list queries)
     algebra_assumption_density  : assumption markers per sentence
     algebra_horn_fraction       : fraction of sentences that are single-polarity assertions
+
+  DOMAIN (meta-features for cross-domain calibration)
+    domain_technical_density    : density of technical/specialist register markers
+    domain_multi_field_signal   : presence of cross-domain linking terms
 """
 from __future__ import annotations
 
@@ -69,6 +77,41 @@ _RETRIEVABLE = frozenset([
     'qué es', 'qué son', 'define', 'definición', 'concepto', 'significa',
     'what is', 'what are', 'define', 'definition', 'meaning', 'means',
     'list', 'lista', 'ejemplos', 'examples',
+])
+
+# Technical / specialist register markers (domain-agnostic complexity signal)
+# These appear across fields: science, law, engineering, medicine, philosophy...
+_TECHNICAL_MARKERS = frozenset([
+    # Formal reasoning / logic
+    'demostrar', 'demostración', 'probar', 'prueba', 'teorema', 'lema', 'corolario',
+    'prove', 'proof', 'theorem', 'lemma', 'corollary', 'axiom', 'axioma',
+    # Quantitative / mathematical
+    'calcular', 'derivar', 'integral', 'ecuación', 'función', 'matriz', 'vector',
+    'calculate', 'derive', 'equation', 'integral', 'function', 'matrix',
+    # Scientific method
+    'hipótesis', 'experimento', 'variable', 'correlación', 'causalidad',
+    'hypothesis', 'experiment', 'variable', 'correlation', 'causality',
+    # Legal / normative
+    'normativa', 'contrato', 'litigio', 'jurisprudencia', 'regulación',
+    'regulation', 'contract', 'litigation', 'statute', 'jurisdiction',
+    # Medical / biological
+    'diagnóstico', 'síntoma', 'patología', 'tratamiento', 'protocolo',
+    'diagnosis', 'symptom', 'pathology', 'treatment', 'protocol',
+    # Engineering / technical
+    'especificación', 'arquitectura', 'optimizar', 'implementar', 'algoritmo',
+    'specification', 'architecture', 'optimize', 'implement', 'algorithm',
+    # Philosophical / epistemic
+    'ontología', 'epistemología', 'hermenéutica', 'dialéctica',
+    'ontology', 'epistemology', 'hermeneutics', 'dialectics',
+])
+
+# Cross-domain linking terms (multi-field complexity signal)
+_MULTI_FIELD = frozenset([
+    'relación entre', 'relación con', 'aplicado a', 'en el contexto de',
+    'implicaciones de', 'impacto en', 'intersección',
+    'relationship between', 'applied to', 'in the context of',
+    'implications of', 'impact on', 'intersection', 'interplay',
+    'compared to', 'vs', 'versus', 'trade-off', 'tradeoff',
 ])
 
 
@@ -176,6 +219,29 @@ class GahenaxSignatureExtractor:
             "algebra_horn_fraction": algebra_horn_fraction,
         }
 
+    def extract_domain(self, text: str) -> Dict[str, float]:
+        """
+        Domain meta-features: detect technical register and cross-field signals.
+        These make the atlas domain-agnostic — a legal query and a physics query
+        can both score high on technical_density without sharing vocabulary.
+        """
+        words = _words(text)
+        text_lower = text.lower()
+        n_words = max(len(words), 1)
+
+        # Technical density: fraction of words that are specialist markers
+        tech_hits = sum(1 for w in words if w in _TECHNICAL_MARKERS)
+        domain_technical_density = round(min(1.0, tech_hits / n_words), 6)
+
+        # Multi-field signal: cross-domain linking phrases
+        multi_hits = sum(1 for p in _MULTI_FIELD if p in text_lower)
+        domain_multi_field_signal = round(min(1.0, multi_hits / max(len(words) / 5, 1)), 6)
+
+        return {
+            "domain_technical_density": domain_technical_density,
+            "domain_multi_field_signal": domain_multi_field_signal,
+        }
+
     def extract_all(
         self,
         text: str,
@@ -184,9 +250,11 @@ class GahenaxSignatureExtractor:
         """
         Returns (features, mode_tag).
         mode_tag is "GAHENAX_DEMO" (no external deps).
+        Works for any domain — features are purely linguistic/structural.
         """
         features: Dict[str, float] = {}
         features.update(self.extract_spectral(text))
         features.update(self.extract_thermo(text, context))
         features.update(self.extract_algebra(text, context))
+        features.update(self.extract_domain(text))
         return features, "GAHENAX_DEMO"

@@ -248,6 +248,7 @@ class GahenaxGovernor:
 
         # P-ATLAS-NP complexity classifier (lazy, never raises)
         self._atlas: Optional[Any] = None
+        self._last_atlas_assessment: Optional[Any] = None
         if enable_atlas:
             self._init_atlas(atlas_path)
 
@@ -322,6 +323,7 @@ class GahenaxGovernor:
         Called before the LLM call. Silent on any error.
         """
         try:
+            self._last_atlas_assessment = assessment
             cc = assessment.complexity_class
             if cc == "P_LOCAL":
                 logger.info("[P-ATLAS] P_LOCAL — no budget expansion needed. %s", assessment.reasoning)
@@ -338,6 +340,57 @@ class GahenaxGovernor:
                 logger.debug("[P-ATLAS] %s — %s", cc, assessment.reasoning)
         except Exception as exc:
             logger.debug("Atlas assessment apply error: %s", exc)
+
+    def _build_atlas_directive(self) -> str:
+        """
+        Translates the last atlas assessment into a response-style instruction
+        injected into the LLM prompt. Works for any domain (math, law, science,
+        art, engineering, philosophy — the extractor measures linguistic features,
+        not domain-specific content).
+        """
+        a = self._last_atlas_assessment
+        if a is None:
+            return ""
+
+        _STYLE_DIRECTIVES = {
+            "P_LOCAL": (
+                "CONCISE. La consulta es simple y directa. "
+                "Usa el mínimo de findings necesarios para cubrir la respuesta. "
+                "Evita over-elaboration. Responde al punto."
+            ),
+            "MODERATE": (
+                "BALANCED. Profundidad estándar. "
+                "Incluye hallazgos relevantes sin redundancia. "
+                "Balance entre exhaustividad y economía de tokens."
+            ),
+            "FRONTIER": (
+                "STRUCTURED. La consulta presenta alta varianza semántica o ambigüedad. "
+                "Enumera las ambigüedades principales como assumptions OPEN. "
+                "El interrogatory DEBE contener preguntas que reduzcan la incertidumbre "
+                "antes de que el usuario tome decisiones. "
+                "No cierres el veredicto si quedan assumptions críticos abiertos."
+            ),
+            "NP_HARD": (
+                "EXHAUSTIVE. La consulta es genuinamente compleja — múltiples dimensiones "
+                "interdependientes. Desarrolla cada finding con profundidad técnica. "
+                "El interrogatory debe cubrir TODAS las dimensiones de incertidumbre. "
+                "Los next_steps deben ser concretos, secuenciados y accionables. "
+                "Prefiere status PROVISIONAL sobre omitir hallazgos difíciles."
+            ),
+            "UNKNOWN": (
+                "STANDARD. Atlas insuficiente para clasificar esta consulta. "
+                "Profundidad y formato por defecto."
+            ),
+        }
+
+        style = _STYLE_DIRECTIVES.get(a.complexity_class, "STANDARD.")
+        return (
+            f"[ATLAS COMPLEXITY PROFILE]\n"
+            f"Class: {a.complexity_class} | "
+            f"Frontier-Score: {a.frontier_score:.3f} | "
+            f"Predicted-UA: {a.predicted_ua:.2f}\n"
+            f"Response-Style: {style}\n"
+        )
 
     def _retrieve_memory_context(self, text: str) -> Optional[List[Dict[str, Any]]]:
         """
@@ -456,8 +509,10 @@ class GahenaxGovernor:
             gemini_api_key=api_key,
             ruflo_url=self.ruflo_url,
         )
+        atlas_directive = self._build_atlas_directive()
+        augmented_text = f"{atlas_directive}\n{text}" if atlas_directive else text
         result = bridge.call(
-            text=text,
+            text=augmented_text,
             ua_spent=self.ua.spent,
             ua_budget=self.ua.budget,
         )
