@@ -1,0 +1,65 @@
+{
+  "mcpServers": {
+    "ruflo-agents": {
+      "description": "Ruflo agent orchestration — spawn, swarm, hive-mind, task dispatch",
+      "url": "http://localhost:3001/mcp/agents",
+      "transport": "http",
+      "enabled": true,
+      "env": {
+        "MCP_GROUP_AGENTS": "true"
+      }
+    },
+    "ruflo-memory": {
+      "description": "Ruflo vector memory — AgentDB HNSW store/retrieve (~61µs)",
+      "url": "http://localhost:3001/mcp/memory",
+      "transport": "http",
+      "enabled": true,
+      "env": {
+        "MCP_GROUP_MEMORY": "true"
+      }
+    },
+    "ruflo-devtools": {
+      "description": "Ruflo dev tools — code analysis, performance profiling, GitHub integration",
+      "url": "http://localhost:3001/mcp/devtools",
+      "transport": "http",
+      "enabled": true,
+      "env": {
+        "MCP_GROUP_DEVTOOLS": "true"
+      }
+    },
+    "ruflo-intelligence": {
+      "description": "Ruflo self-learning intelligence — hooks, routing, pattern training (ruvector)",
+      "url": "http://localhost:3001/mcp/intelligence",
+      "transport": "http",
+      "enabled": true,
+      "env": {
+        "MCP_GROUP_INTELLIGENCE": "true"
+      }
+    },
+    "ruflo-security": {
+      "description": "Ruflo security & safety — AIDefence, PII detection, CVE scanning",
+      "url": "http://localhost:3001/mcp/security",
+      "transport": "http",
+      "enabled": false,
+      "env": {
+        "MCP_GROUP_SECURITY": "true"
+      }
+    },
+    "ruflo-neural": {
+      "description": "Ruflo neural training & DAA autonomous agents",
+      "url": "http://localhost:3001/mcp/neural",
+      "transport": "http",
+      "enabled": false,
+      "env": {
+        "MCP_GROUP_NEURAL": "true"
+      }
+    }
+  },
+  "meta": {
+    "ruflo_version": "3.5",
+    "source_repo": "https://github.com/ruvnet/ruflo",
+    "mcp_protocol": "2024-11-05",
+    "bridge_port": 3001,
+    "note": "Start ruflo bridge with: cd integration/ruflo/mcp-bridge && node index.js"
+  }
+}

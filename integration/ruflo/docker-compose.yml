@@ -1,0 +1,49 @@
+version: "3.9"
+
+# Ruflo MCP Bridge — runs as a sidecar to GahenaxIA.
+# Exposes Ruflo's 215 MCP tools at localhost:3001
+#
+# Start:  docker compose -f integration/ruflo/docker-compose.yml up -d
+# Stop:   docker compose -f integration/ruflo/docker-compose.yml down
+
+services:
+  ruflo-mcp-bridge:
+    image: node:20-alpine
+    container_name: gahenax_ruflo_bridge
+    working_dir: /app
+    volumes:
+      - ./mcp-bridge:/app
+    command: ["node", "index.js"]
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      # LLM providers — set in .env or override here
+      ANTHROPIC_API_KEY:   "${ANTHROPIC_API_KEY:-}"
+      GOOGLE_API_KEY:      "${GOOGLE_API_KEY:-}"
+      OPENAI_API_KEY:      "${OPENAI_API_KEY:-}"
+      OPENROUTER_API_KEY:  "${OPENROUTER_API_KEY:-}"
+      # Tool group toggles — enable only what you need
+      MCP_GROUP_AGENTS:       "true"
+      MCP_GROUP_MEMORY:       "true"
+      MCP_GROUP_DEVTOOLS:     "true"
+      MCP_GROUP_INTELLIGENCE: "true"
+      MCP_GROUP_SECURITY:     "false"
+      MCP_GROUP_BROWSER:      "false"
+      MCP_GROUP_NEURAL:       "false"
+      MCP_GROUP_AGENTIC_FLOW: "false"
+      MCP_GROUP_CLAUDE_CODE:  "false"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - gahenax_net
+
+networks:
+  gahenax_net:
+    name: gahenax_network
+    driver: bridge
