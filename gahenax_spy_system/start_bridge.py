@@ -1,25 +1,26 @@
 """
-start_bridge.py — Launcher canónico del Gahenax Claude Bridge
+start_bridge.py — Launcher canónico del Gahenax Claude Bridge v2.0
 
 Uso (Windows):
     cd c:\\Users\\jotam\\OneDrive\\Desktop\\GahenaxAI\\gahenax_spy_system
     python start_bridge.py
 """
-import sys
 import os
+import sys
 
-# Añadir backend/ al path sin importar desde dónde se ejecute
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BACKEND = os.path.join(ROOT, "backend")
+# Asegurar que el directorio de gahenax_spy_system está en el path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-if BACKEND not in sys.path:
-    sys.path.insert(0, BACKEND)
-
-os.chdir(BACKEND)  # uvicorn necesita estar en backend/ para resolver imports
-
-from main import app, BANNER
-import uvicorn
+from claude_bridge import app
 
 if __name__ == "__main__":
-    print(BANNER)
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    print("=" * 52)
+    print(" GAHENAX CLAUDE BRIDGE v2.0 — Port 8080")
+    print(" POST /telemetry                   <- userscript")
+    print(" GET  /messages/antigravity/pending <- Antigravity reads")
+    print(" POST /send                         <- Antigravity writes")
+    print(" GET  /messages/claude/pending      <- userscript polls")
+    print(" GET  /state/<session_id>           <- snapshot")
+    print(" GET  /heartbeat                    <- ping")
+    print("=" * 52)
+    app.run(host="127.0.0.1", port=8080, debug=False)
