@@ -77,3 +77,21 @@ class GahenaxRequest(BaseModel):
     mode: str = "everyday"
     context_answers: Dict[str, Any] = {}
     render_profile: str = "daily"
+
+
+# --- Claude Bridge Telemetry ---
+
+class BridgeMessage(BaseModel):
+    role: str
+    text: str
+    ts: int
+
+class BridgeTelemetryRequest(BaseModel):
+    session_id: str
+    url: str
+    messages: List[BridgeMessage]
+
+class BridgeTelemetryResponse(BaseModel):
+    ok: bool
+    session_id: str
+    messages_received: int

@@ -1,8 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from gahenax_app.schemas.gahenax_contract import GahenaxRequest, GahenaxOutputSchema
+from gahenax_app.schemas.gahenax_contract import (
+    GahenaxRequest, GahenaxOutputSchema,
+    BridgeTelemetryRequest, BridgeTelemetryResponse,
+)
 from gahenax_app.core.gahenax_engine import GahenaxGovernor, RenderProfile, EngineMode, compute_cni_fingerprint
 from gahenax_app.core.cmr import CMR, CMRConfig, utc_now
 from typing import Dict, Any
+import sqlite3
+import json
 import time
 import os
 
@@ -11,10 +16,32 @@ ENGINE_VERSION = "GahenaxCore-v1.1.1"
 Contract_VERSION = "GahenaxOutput-v1.0"
 
 router = APIRouter(prefix="/api/gahenax", tags=["Gahenax Core"])
+bridge_router = APIRouter(tags=["Claude Bridge"])
 
 # CMR: Canonical Measurement Recorder (FCD-1.0 compliant)
 cmr_cfg = CMRConfig(db_path=os.path.join(os.getcwd(), "ua_ledger.sqlite"))
 CMR_INST = CMR(cmr_cfg)
+
+# --- Bridge session store ---
+_BRIDGE_DB = os.path.join(os.getcwd(), "ua_ledger.sqlite")
+
+def _init_bridge_table() -> None:
+    con = sqlite3.connect(_BRIDGE_DB)
+    try:
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS bridge_sessions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                url TEXT NOT NULL,
+                messages TEXT NOT NULL,
+                received_at TEXT NOT NULL
+            )
+        """)
+        con.commit()
+    finally:
+        con.close()
+
+_init_bridge_table()
 
 # Persistent Governors (Mock Session Store)
 GOVERNORS: Dict[str, GahenaxGovernor] = {}
@@ -100,3 +127,48 @@ async def get_status(session_id: str):
             "efficiency": gov.ua.efficiency
         }
     }
+
+
+# -----------------------------------------------------------------------
+# Claude Bridge endpoints
+# -----------------------------------------------------------------------
+
+@bridge_router.post("/telemetry", response_model=BridgeTelemetryResponse)
+async def receive_telemetry(payload: BridgeTelemetryRequest):
+    """Receive conversation snapshots from the Gahenax Claude Bridge userscript."""
+    received_at = utc_now()
+    con = sqlite3.connect(_BRIDGE_DB)
+    try:
+        con.execute(
+            "INSERT INTO bridge_sessions (session_id, url, messages, received_at) VALUES (?, ?, ?, ?)",
+            (
+                payload.session_id,
+                payload.url,
+                json.dumps([m.model_dump() for m in payload.messages]),
+                received_at,
+            ),
+        )
+        con.commit()
+    finally:
+        con.close()
+    return BridgeTelemetryResponse(
+        ok=True,
+        session_id=payload.session_id,
+        messages_received=len(payload.messages),
+    )
+
+
+@bridge_router.get("/telemetry/{session_id}")
+async def get_bridge_session(session_id: str):
+    """Retrieve the latest snapshot for a given Claude session."""
+    con = sqlite3.connect(_BRIDGE_DB)
+    try:
+        row = con.execute(
+            "SELECT messages, received_at FROM bridge_sessions WHERE session_id = ? ORDER BY id DESC LIMIT 1",
+            (session_id,),
+        ).fetchone()
+    finally:
+        con.close()
+    if row is None:
+        raise HTTPException(status_code=404, detail="Session not found.")
+    return {"session_id": session_id, "messages": json.loads(row[0]), "received_at": row[1]}
