@@ -95,3 +95,11 @@ class BridgeTelemetryResponse(BaseModel):
     ok: bool
     session_id: str
     messages_received: int
+
+
+class BridgeSendRequest(BaseModel):
+    from_agent: str          # "antigravity" | "claude" | "gahenax"
+    to_agent: str            # "antigravity" | "claude" | "broadcast"
+    session_id: str
+    content: str
+    message_type: str = "chat"  # "chat" | "command" | "state_sync"
