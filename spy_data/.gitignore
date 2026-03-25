@@ -1,0 +1,2 @@
+# Ignore synced chat data — runtime output, not source
+claude_chats/*.json
