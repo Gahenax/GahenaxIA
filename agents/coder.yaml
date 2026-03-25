@@ -1,0 +1,28 @@
+# Gahenax Agent: Coder
+type: coder
+version: "1.0.0"
+engine: gahenax-core
+capabilities:
+  - code-generation
+  - refactoring
+  - debugging
+  - test-writing
+routing:
+  tier: 2                         # Haiku-equivalent (Gemini Flash)
+  complexity_threshold: 0.3
+  fallback_tier: 3                # Sonnet-equivalent for complex tasks
+memory:
+  persist: true
+  backend: sqlite                 # ua_ledger.sqlite
+  context_window: 8000
+contract:
+  mode: everyday
+  ua_budget: 8.0
+  render_profile: daily
+bridge:
+  reports_to: antigravity         # Antigravity reads via /messages/antigravity/pending
+  session_prefix: "coder-"
+optimizations:
+  - token-reduction
+  - flash-attention
+createdAt: "2026-03-25"

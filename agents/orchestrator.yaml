@@ -1,0 +1,31 @@
+# Gahenax Agent: Orchestrator
+type: orchestrator
+version: "1.0.0"
+engine: gahenax-core
+capabilities:
+  - task-routing
+  - swarm-coordination
+  - agent-spawning
+  - result-aggregation
+routing:
+  tier: 3
+  complexity_threshold: 0.7
+  manages:
+    - coder
+    - architect
+    - tester
+    - reviewer
+topology: hierarchical               # orchestrator → [coder, tester, reviewer, architect]
+memory:
+  persist: true
+  backend: sqlite
+  context_window: 32000
+contract:
+  mode: audit
+  ua_budget: 20.0
+  render_profile: dense
+bridge:
+  reports_to: antigravity
+  session_prefix: "swarm-"
+  push_results: true                # auto-POST results to /send → claude
+createdAt: "2026-03-25"

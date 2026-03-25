@@ -1,0 +1,27 @@
+# Gahenax Agent: Tester
+type: tester
+version: "1.0.0"
+engine: gahenax-core
+capabilities:
+  - test-generation
+  - coverage-analysis
+  - stress-testing
+  - contract-validation
+routing:
+  tier: 2
+  complexity_threshold: 0.3
+memory:
+  persist: true
+  backend: sqlite
+  context_window: 8000
+contract:
+  mode: everyday
+  ua_budget: 6.0
+  render_profile: daily
+bridge:
+  reports_to: antigravity
+  session_prefix: "tester-"
+optimizations:
+  - parallel-execution
+  - cache-results
+createdAt: "2026-03-25"

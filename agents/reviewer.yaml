@@ -1,0 +1,27 @@
+# Gahenax Agent: Reviewer
+type: reviewer
+version: "1.0.0"
+engine: gahenax-core
+capabilities:
+  - code-review
+  - security-audit
+  - contract-compliance
+  - h-rigidity-check
+routing:
+  tier: 3
+  complexity_threshold: 0.5
+memory:
+  persist: true
+  backend: sqlite
+  context_window: 12000
+contract:
+  mode: audit
+  ua_budget: 10.0
+  render_profile: dense
+bridge:
+  reports_to: antigravity
+  session_prefix: "reviewer-"
+optimizations:
+  - deep-analysis
+  - evidence-chain
+createdAt: "2026-03-25"

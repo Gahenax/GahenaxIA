@@ -1,0 +1,27 @@
+# Gahenax Agent: Architect
+type: architect
+version: "1.0.0"
+engine: gahenax-core
+capabilities:
+  - system-design
+  - api-design
+  - schema-definition
+  - documentation
+routing:
+  tier: 3                         # Sonnet/Opus-equivalent (Gemini Pro)
+  complexity_threshold: 0.6
+memory:
+  persist: true
+  backend: sqlite
+  context_window: 16000
+contract:
+  mode: audit
+  ua_budget: 12.0
+  render_profile: dense
+bridge:
+  reports_to: antigravity
+  session_prefix: "architect-"
+optimizations:
+  - context-caching
+  - memory-persistence
+createdAt: "2026-03-25"
