@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  gahenax-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gahenax-bridge
+    ports:
+      - "8080:8080"
+    volumes:
+      # Persiste el SQLite fuera del contenedor
+      - ./data:/app/data
+      # Persiste spy_data para que Antigravity pueda leerlo
+      - ./spy_data:/app/spy_data
+    environment:
+      - DB_PATH=/app/data/ua_ledger.sqlite
+      # Opcional: tu API key de Gemini (si no se pone, corre en modo MOCK)
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/heartbeat')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

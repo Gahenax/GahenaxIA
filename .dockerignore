@@ -1,0 +1,15 @@
+**/__pycache__
+**/*.pyc
+**/*.pyo
+.git
+.gitignore
+*.md
+data/
+spy_data/
+gahenax_spy_system/
+benchmarks/
+tests/
+snapshots/
+docs/
+*.sqlite
+.env

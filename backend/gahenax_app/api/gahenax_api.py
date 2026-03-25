@@ -19,11 +19,12 @@ router = APIRouter(prefix="/api/gahenax", tags=["Gahenax Core"])
 bridge_router = APIRouter(tags=["Claude Bridge"])
 
 # CMR: Canonical Measurement Recorder (FCD-1.0 compliant)
-cmr_cfg = CMRConfig(db_path=os.path.join(os.getcwd(), "ua_ledger.sqlite"))
+_DEFAULT_DB = os.environ.get("DB_PATH", os.path.join(os.getcwd(), "ua_ledger.sqlite"))
+cmr_cfg = CMRConfig(db_path=_DEFAULT_DB)
 CMR_INST = CMR(cmr_cfg)
 
 # --- Bridge session store ---
-_BRIDGE_DB = os.path.join(os.getcwd(), "ua_ledger.sqlite")
+_BRIDGE_DB = _DEFAULT_DB
 
 def _init_bridge_table() -> None:
     con = sqlite3.connect(_BRIDGE_DB)

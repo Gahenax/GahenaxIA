@@ -31,7 +31,7 @@ import os
 
 bridge_router = APIRouter(tags=["Antigravity Bridge"])
 
-_DB = os.path.join(os.getcwd(), "ua_ledger.sqlite")
+_DB = os.environ.get("DB_PATH", os.path.join(os.getcwd(), "ua_ledger.sqlite"))
 
 KNOWN_AGENTS = {"claude", "antigravity", "gahenax", "broadcast"}
 
