@@ -1,0 +1,85 @@
+# Gahenax Caddyfile — Reverse Proxy + HTTPS automático
+# Reemplaza: Nginx + Certbot (mucho más simple)
+# HTTPS/TLS es automático via Let's Encrypt
+
+# ── Variables globales ─────────────────────────────────────
+{
+    email contact@{$DOMAIN}
+    # Descomentar para staging (evitar rate-limit durante pruebas):
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+# ── Wave 1: Seguridad + Código ────────────────────────────
+
+# Git Forge (GitHub replacement)
+git.{$DOMAIN} {
+    reverse_proxy gahenax-gitea:3000
+    header {
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+    }
+}
+
+# Password Manager (1Password replacement)
+vault.{$DOMAIN} {
+    reverse_proxy gahenax-vaultwarden:80 {
+        header_up X-Real-IP {remote_host}
+    }
+    # WebSocket para sync en tiempo real
+    reverse_proxy /notifications/hub* gahenax-vaultwarden:3012
+}
+
+# ── Wave 2: Productividad ──────────────────────────────────
+
+# Analytics (Google Analytics replacement)
+analytics.{$DOMAIN} {
+    reverse_proxy gahenax-plausible:8000
+}
+
+# Automation (Zapier replacement)
+flows.{$DOMAIN} {
+    reverse_proxy gahenax-activepieces:80
+}
+
+# ── Wave 3: AI Stack ───────────────────────────────────────
+
+# ChatGPT UI propia (OpenAI replacement)
+chat.{$DOMAIN} {
+    reverse_proxy gahenax-open-webui:8080
+    # WebSocket para streaming de tokens
+    @ws {
+        header Upgrade websocket
+    }
+    reverse_proxy @ws gahenax-open-webui:8080
+}
+
+# RAG / Knowledge base (Notion AI replacement)
+rag.{$DOMAIN} {
+    reverse_proxy gahenax-anythingllm:3001
+}
+
+# Ollama API (uso interno / Jules integration)
+ollama.{$DOMAIN} {
+    # Solo accesible con token de Jules
+    basicauth {
+        jules {$OLLAMA_API_HASH}
+    }
+    reverse_proxy gahenax-ollama:11434
+}
+
+# ── Wave 4: Observabilidad + CRM ───────────────────────────
+
+# Métricas + Dashboards Jules (DataDog replacement)
+metrics.{$DOMAIN} {
+    reverse_proxy gahenax-grafana:3000
+}
+
+# CRM (HubSpot replacement)
+crm.{$DOMAIN} {
+    reverse_proxy gahenax-twenty-server:3000
+    # WebSocket para colaboración en tiempo real
+    @ws {
+        header Upgrade websocket
+    }
+    reverse_proxy @ws gahenax-twenty-server:3000
+}

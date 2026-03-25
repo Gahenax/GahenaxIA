@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gahenax Mines Radar</title>
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #c9d1d9;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            color: #58a6ff;
+            text-shadow: 0 0 10px rgba(88,166,255,0.5);
+            margin-bottom: 5px;
+        }
+        p {
+            color: #8b949e;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            grid-template-rows: repeat(5, 60px);
+            gap: 10px;
+            background: #161b22;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid #30363d;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            background-color: #21262d;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .stats {
+            margin-top: 20px;
+            font-size: 16px;
+            display: flex;
+            gap: 20px;
+        }
+        .stat-box {
+            background: #21262d;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Gahenax Mines Radar (P-ATLAS)</h1>
+    <p>Probabilidad de Bombas basada en Telemetría en Vivo</p>
+
+    <div class="grid" id="grid">
+        <!-- Generado dinamicamente -->
+    </div>
+
+    <div class="stats">
+        <div class="stat-box">
+            <div>Juegos Analizados</div>
+            <div class="stat-value" id="games-count">0</div>
+        </div>
+        <div class="stat-box">
+            <div>Última Bomba</div>
+            <div class="stat-value" id="last-bomb">-</div>
+        </div>
+    </div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const cells = [];
+        const TOTAL_CELLS = 25;
+
+        // Inicializar Grid
+        for(let i = 0; i < TOTAL_CELLS; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.innerText = '0%';
+            grid.appendChild(cell);
+            cells.push(cell);
+        }
+
+        function getColorForProbability(prob) {
+            // prob va de 0.0 a 1.0 (0% a 100%)
+            // 0% (seguro) -> Verde (#28a745)
+            // 50% (medio) -> Amarilo (#ffc107)
+            // 100% (peligro) -> Rojo (#dc3545)
+            
+            // Expected fair probability per cell is ~ num_mines / 25.
+            // Let's say max normal prob is around 0.3 (30%) if there are many mines.
+            // Cap at 0.5 for full red for better contrast.
+            let normalized = Math.min(prob * 2, 1.0); // 0.5 becomes 1.0 (Full Red)
+            
+            let r, g, b;
+            if (normalized < 0.5) {
+                // Green to Yellow
+                g = 255;
+                r = Math.floor(255 * (normalized / 0.5));
+                b = 0;
+            } else {
+                // Yellow to Red
+                r = 255;
+                g = Math.floor(255 * (1.0 - (normalized - 0.5) / 0.5));
+                b = 0;
+            }
+            
+            return `rgba(${r}, ${g}, ${b}, 0.7)`;
+        }
+
+        async function fetchHeatmap() {
+            try {
+                // Suponemos que el agente está corriendo localmente y generando este JSON
+                const response = await fetch('http://localhost:8080/heatmap.json');
+                const data = await response.json();
+                
+                document.getElementById('games-count').innerText = data.total_games || 0;
+                
+                if(data.heatmap && data.heatmap.length === 25) {
+                    for(let i = 0; i < 25; i++) {
+                        let prob = data.heatmap[i] || 0;
+                        cells[i].innerText = (prob * 100).toFixed(1) + '%';
+                        cells[i].style.backgroundColor = getColorForProbability(prob);
+                        
+                        // Si es el que tiene más probabilidad, ponerle un brillo
+                        if (prob > 0 && prob === Math.max(...data.heatmap)) {
+                            cells[i].style.boxShadow = '0 0 15px #dc3545';
+                            cells[i].style.border = '2px solid #dc3545';
+                        } else {
+                            cells[i].style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.5)';
+                            cells[i].style.border = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log("Esperando datos del Agente Gahenax...", error);
+            }
+            
+            // Poll cada 2 segundos
+            setTimeout(fetchHeatmap, 2000);
+        }
+
+        // Iniciar polling
+        fetchHeatmap();
+    </script>
+</body>
+</html>

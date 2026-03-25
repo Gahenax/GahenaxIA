@@ -1,0 +1,410 @@
+---
+# Gahenax Self-Hosted Infrastructure
+# docker-compose.yml — Stack Unificado
+#
+# DEPLOY BY WAVE:
+#   Wave 1 (Security + Code):  docker compose --profile wave1 up -d
+#   Wave 2 (Productivity):     docker compose --profile wave2 up -d
+#   Wave 3 (AI Stack):         docker compose --profile wave3 up -d
+#   Wave 4 (Observability):    docker compose --profile wave4 up -d
+#   All at once:               docker compose --profile all up -d
+
+name: gahenax
+
+# ─── NETWORKS ────────────────────────────────────────────────────────────────
+networks:
+  gahenax-net:
+    driver: bridge
+  monitoring-net:
+    driver: bridge
+
+# ─── VOLUMES ─────────────────────────────────────────────────────────────────
+volumes:
+  # Wave 1
+  gitea_data:
+  gitea_postgres:
+  vaultwarden_data:
+  caddy_data:
+  caddy_config:
+  # Wave 2
+  mailcow_data:
+  plausible_db:
+  plausible_events:
+  activepieces_data:
+  activepieces_postgres:
+  # Wave 3
+  ollama_data:
+  open_webui_data:
+  anythingllm_data:
+  # Wave 4
+  grafana_data:
+  prometheus_data:
+  twenty_postgres:
+  kong_postgres:
+
+# ─── SERVICES ────────────────────────────────────────────────────────────────
+services:
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  CORE: Caddy (reverse proxy + HTTPS automático)         ║
+  # ╚══════════════════════════════════════════════════════════╝
+  caddy:
+    image: caddy:2-alpine
+    container_name: gahenax-caddy
+    profiles: [wave1, wave2, wave3, wave4, all, core]
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - gahenax-net
+    environment:
+      - DOMAIN=${DOMAIN}
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 1 — Seguridad + Código                            ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  # ── Gitea — Git forge propia (reemplaza GitHub) ───────────
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gahenax-gitea
+    profiles: [wave1, all]
+    restart: unless-stopped
+    depends_on:
+      - gitea-db
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=gitea-db:5432
+      - GITEA__database__NAME=gitea
+      - GITEA__database__USER=gitea
+      - GITEA__database__PASSWD=${GITEA_DB_PASSWORD}
+      - GITEA__server__DOMAIN=git.${DOMAIN}
+      - GITEA__server__ROOT_URL=https://git.${DOMAIN}
+      - GITEA__server__SSH_DOMAIN=git.${DOMAIN}
+      - GITEA__service__DISABLE_REGISTRATION=true
+      - GITEA__service__REQUIRE_SIGNIN_VIEW=false
+    volumes:
+      - gitea_data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - gahenax-net
+    expose:
+      - "3000"
+      - "22"
+
+  gitea-db:
+    image: postgres:15-alpine
+    container_name: gahenax-gitea-db
+    profiles: [wave1, all]
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=${GITEA_DB_PASSWORD}
+      - POSTGRES_DB=gitea
+    volumes:
+      - gitea_postgres:/var/lib/postgresql/data
+    networks:
+      - gahenax-net
+
+  # ── Vaultwarden — Password manager (reemplaza 1Password) ──
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: gahenax-vaultwarden
+    profiles: [wave1, all]
+    restart: unless-stopped
+    environment:
+      - DOMAIN=https://vault.${DOMAIN}
+      - SIGNUPS_ALLOWED=false
+      - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN}
+      - WEBSOCKET_ENABLED=true
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_FROM=vault@${DOMAIN}
+      - SMTP_PORT=587
+      - SMTP_SECURITY=starttls
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+    volumes:
+      - vaultwarden_data:/data
+    networks:
+      - gahenax-net
+    expose:
+      - "80"
+      - "3012"  # WebSocket
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 2 — Productividad                                 ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  # ── Plausible — Analytics (reemplaza Google Analytics) ────
+  plausible:
+    image: ghcr.io/plausible/community-edition:v2
+    container_name: gahenax-plausible
+    profiles: [wave2, all]
+    restart: unless-stopped
+    depends_on:
+      - plausible-db
+      - plausible-events-db
+    command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
+    environment:
+      - BASE_URL=https://analytics.${DOMAIN}
+      - SECRET_KEY_BASE=${PLAUSIBLE_SECRET_KEY}
+      - DATABASE_URL=postgres://plausible:${PLAUSIBLE_DB_PASSWORD}@plausible-db/plausible
+      - CLICKHOUSE_DATABASE_URL=http://plausible-events-db:8123/plausible_events_db
+      - MAILER_EMAIL=analytics@${DOMAIN}
+    networks:
+      - gahenax-net
+    expose:
+      - "8000"
+
+  plausible-db:
+    image: postgres:15-alpine
+    container_name: gahenax-plausible-db
+    profiles: [wave2, all]
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=plausible
+      - POSTGRES_PASSWORD=${PLAUSIBLE_DB_PASSWORD}
+      - POSTGRES_DB=plausible
+    volumes:
+      - plausible_db:/var/lib/postgresql/data
+    networks:
+      - gahenax-net
+
+  plausible-events-db:
+    image: clickhouse/clickhouse-server:23.3.7.5-alpine
+    container_name: gahenax-clickhouse
+    profiles: [wave2, all]
+    restart: unless-stopped
+    volumes:
+      - plausible_events:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - gahenax-net
+
+  # ── Activepieces — Automation (reemplaza Zapier) ──────────
+  activepieces:
+    image: activepieces/activepieces:latest
+    container_name: gahenax-activepieces
+    profiles: [wave2, all]
+    restart: unless-stopped
+    depends_on:
+      - activepieces-db
+    environment:
+      - AP_JWT_SECRET=${ACTIVEPIECES_JWT_SECRET}
+      - AP_FRONTEND_URL=https://flows.${DOMAIN}
+      - AP_DB_TYPE=POSTGRES
+      - AP_POSTGRES_HOST=activepieces-db
+      - AP_POSTGRES_DATABASE=activepieces
+      - AP_POSTGRES_USERNAME=activepieces
+      - AP_POSTGRES_PASSWORD=${ACTIVEPIECES_DB_PASSWORD}
+      - AP_TELEMETRY_ENABLED=false
+      - AP_SIGN_UP_ENABLED=false
+    networks:
+      - gahenax-net
+    expose:
+      - "80"
+
+  activepieces-db:
+    image: postgres:15-alpine
+    container_name: gahenax-activepieces-db
+    profiles: [wave2, all]
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=activepieces
+      - POSTGRES_PASSWORD=${ACTIVEPIECES_DB_PASSWORD}
+      - POSTGRES_DB=activepieces
+    volumes:
+      - activepieces_postgres:/var/lib/postgresql/data
+    networks:
+      - gahenax-net
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 3 — AI Stack                                      ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  # ── Ollama — LLM Runner (reemplaza OpenAI API) ────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: gahenax-ollama
+    profiles: [wave3, all]
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - gahenax-net
+    expose:
+      - "11434"
+    # Descomentar si tienes GPU NVIDIA:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # ── Open-WebUI — ChatGPT UI propia ───────────────────────
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: gahenax-open-webui
+    profiles: [wave3, all]
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=${OPEN_WEBUI_SECRET}
+      - WEBUI_URL=https://chat.${DOMAIN}
+      - DEFAULT_MODELS=llama3.2:3b
+      - ENABLE_SIGNUP=false
+    volumes:
+      - open_webui_data:/app/backend/data
+    networks:
+      - gahenax-net
+    expose:
+      - "8080"
+
+  # ── AnythingLLM — RAG Engine (reemplaza Notion AI) ───────
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: gahenax-anythingllm
+    profiles: [wave3, all]
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    environment:
+      - STORAGE_DIR=/app/server/storage
+      - LLM_PROVIDER=ollama
+      - OLLAMA_BASE_PATH=http://ollama:11434
+      - EMBEDDING_ENGINE=ollama
+      - OLLAMA_EMBED_MODEL_PREF=nomic-embed-text
+      - SERVER_PORT=3001
+    volumes:
+      - anythingllm_data:/app/server/storage
+    networks:
+      - gahenax-net
+    expose:
+      - "3001"
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 4 — Observabilidad + CRM + API                   ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  # ── Prometheus — Métricas ─────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: gahenax-prometheus
+    profiles: [wave4, all]
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    networks:
+      - gahenax-net
+      - monitoring-net
+    expose:
+      - "9090"
+
+  # ── Grafana — Dashboards ──────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: gahenax-grafana
+    profiles: [wave4, all]
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SERVER_ROOT_URL=https://metrics.${DOMAIN}
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - gahenax-net
+      - monitoring-net
+    expose:
+      - "3000"
+
+  # ── Twenty CRM — CRM moderno (reemplaza HubSpot) ─────────
+  twenty-server:
+    image: twentycrm/twenty:latest
+    container_name: gahenax-twenty-server
+    profiles: [wave4, all]
+    restart: unless-stopped
+    depends_on:
+      - twenty-db
+    environment:
+      - PG_DATABASE_URL=postgres://twenty:${TWENTY_DB_PASSWORD}@twenty-db/twenty
+      - NODE_ENV=production
+      - APP_SECRET=${TWENTY_APP_SECRET}
+      - FRONT_BASE_URL=https://crm.${DOMAIN}
+      - SERVER_URL=https://crm.${DOMAIN}
+      - STORAGE_TYPE=local
+      - STORAGE_LOCAL_PATH=/app/files
+      - MESSAGE_QUEUE_TYPE=bull-mq
+      - REDIS_URL=redis://twenty-redis:6379
+    volumes:
+      - ./data/twenty-files:/app/files
+    networks:
+      - gahenax-net
+    expose:
+      - "3000"
+
+  twenty-worker:
+    image: twentycrm/twenty:latest
+    container_name: gahenax-twenty-worker
+    profiles: [wave4, all]
+    restart: unless-stopped
+    command: ["yarn", "worker:prod"]
+    depends_on:
+      - twenty-db
+      - twenty-redis
+    environment:
+      - PG_DATABASE_URL=postgres://twenty:${TWENTY_DB_PASSWORD}@twenty-db/twenty
+      - NODE_ENV=production
+      - APP_SECRET=${TWENTY_APP_SECRET}
+      - REDIS_URL=redis://twenty-redis:6379
+    networks:
+      - gahenax-net
+
+  twenty-db:
+    image: pgvector/pgvector:pg15
+    container_name: gahenax-twenty-db
+    profiles: [wave4, all]
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=twenty
+      - POSTGRES_PASSWORD=${TWENTY_DB_PASSWORD}
+      - POSTGRES_DB=twenty
+    volumes:
+      - twenty_postgres:/var/lib/postgresql/data
+    networks:
+      - gahenax-net
+
+  twenty-redis:
+    image: redis:7-alpine
+    container_name: gahenax-twenty-redis
+    profiles: [wave4, all]
+    restart: unless-stopped
+    networks:
+      - gahenax-net

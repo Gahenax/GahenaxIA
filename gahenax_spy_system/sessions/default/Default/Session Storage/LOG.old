@@ -1,0 +1,21 @@
+2026/03/20-23:30:48.108 31ec Reusing MANIFEST C:\Users\jotam\OneDrive\Desktop\GahenaxAI\gahenax_spy_system\sessions\default\Default\Session Storage/MANIFEST-000001
+2026/03/20-23:30:48.113 31ec Recovering log #21
+2026/03/20-23:30:48.120 31ec Reusing old log C:\Users\jotam\OneDrive\Desktop\GahenaxAI\gahenax_spy_system\sessions\default\Default\Session Storage/000021.log 
+2026/03/20-23:32:33.880 21c8 Level-0 table #25: started
+2026/03/20-23:32:33.915 21c8 Level-0 table #25: 1067514 bytes OK
+2026/03/20-23:32:33.920 21c8 Delete type=0 #21
+2026/03/20-23:32:52.142 21c8 Level-0 table #27: started
+2026/03/20-23:32:52.171 21c8 Level-0 table #27: 1071343 bytes OK
+2026/03/20-23:32:52.177 21c8 Delete type=0 #24
+2026/03/20-23:32:52.179 21c8 Compacting 4@0 + 2@1 files
+2026/03/20-23:32:52.236 21c8 Generated table #28@0: 107 keys, 2105351 bytes
+2026/03/20-23:32:52.279 21c8 Generated table #29@0: 54 keys, 2134129 bytes
+2026/03/20-23:32:52.312 21c8 Generated table #30@0: 141 keys, 1201032 bytes
+2026/03/20-23:32:52.312 21c8 Compacted 4@0 + 2@1 files => 5440512 bytes
+2026/03/20-23:32:52.313 21c8 compacted to: files[ 0 3 1 0 0 0 0 ]
+2026/03/20-23:32:52.315 21c8 Delete type=2 #17
+2026/03/20-23:32:52.315 21c8 Delete type=2 #18
+2026/03/20-23:32:52.315 21c8 Delete type=2 #20
+2026/03/20-23:32:52.315 21c8 Delete type=2 #22
+2026/03/20-23:32:52.315 21c8 Delete type=2 #25
+2026/03/20-23:32:52.315 21c8 Delete type=2 #27

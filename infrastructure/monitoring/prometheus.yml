@@ -1,0 +1,51 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: gahenax-primary
+    environment: production
+
+# ── Alerting (opcional: añadir Alertmanager) ──────────────────
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# ── Scrape configs ────────────────────────────────────────────
+scrape_configs:
+
+  # Caddy metrics
+  - job_name: caddy
+    static_configs:
+      - targets: ['gahenax-caddy:2019']
+
+  # Gitea metrics
+  - job_name: gitea
+    static_configs:
+      - targets: ['gahenax-gitea:3000']
+    metrics_path: /metrics
+
+  # Docker host metrics (node_exporter si está instalado)
+  - job_name: node
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+
+  # Jules Katsina drones (node_exporter en cada drone)
+  - job_name: jules-drones
+    static_configs:
+      - targets:
+          - 'katsina1.lancis.unam.mx:9100'
+          - 'katsina2.lancis.unam.mx:9100'
+          - 'katsina3.lancis.unam.mx:9100'
+          - 'katsina4.lancis.unam.mx:9100'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(katsina\d+)\..*'
+        target_label: drone
+
+  # BSD/Mersenne research metrics (custom exporter)
+  # Activo cuando hay un sweep corriendo en Jules
+  - job_name: gahenax-research
+    static_configs:
+      - targets: ['host.docker.internal:9091']  # pushgateway
+    honor_labels: true

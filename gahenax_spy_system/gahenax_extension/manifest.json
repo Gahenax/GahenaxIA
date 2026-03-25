@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Gahenax Spy Bridge",
+  "version": "4.0",
+  "description": "Bypass CSP/CORS for Aviator Telemetry Infiltration",
+  "permissions": [
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "http://localhost:8080/*",
+    "https://*.wplay.co/*",
+    "https://gamelauncher-uu-pop-co.wplay.co/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://*.wplay.co/*"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}

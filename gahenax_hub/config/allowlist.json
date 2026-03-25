@@ -1,0 +1,9 @@
+{
+  "contacts": [],
+  "channels": [],
+  "authorized_senders": ["admin"],
+  "rules": {
+    "outbound_only": true,
+    "log_all_events": true
+  }
+}

@@ -1,0 +1,22 @@
+# Gahenax Infrastructure
+# git tracking permitido para todos los archivos EXCEPTO secrets
+
+# Secrets — NUNCA commitear
+.env
+*.env.local
+
+# Datos persistentes de servicios (volúmenes Docker)
+data/
+logs/
+
+# Certificados Caddy (se regeneran automáticamente)
+caddy_data/
+caddy_config/
+
+# Backups locales
+backups/*.tar.gz
+backups/*.sql
+
+# OS
+.DS_Store
+Thumbs.db

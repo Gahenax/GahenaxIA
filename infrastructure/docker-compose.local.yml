@@ -1,0 +1,93 @@
+# docker-compose.local.yml — Override para Docker Desktop en Windows
+# USO: docker compose -f docker-compose.yml -f docker-compose.local.yml --env-file .env.local --profile wave1 up -d
+#
+# Este override:
+#   1. Desactiva Caddy (no necesitamos reverse proxy local)
+#   2. Abre puertos directamente a localhost para cada servicio
+#   3. Usa DOMAIN=localhost en vez de gahenax.ai
+
+services:
+
+  # ── Caddy DESACTIVADO en local (no hay dominio real) ─────────────
+  caddy:
+    profiles: [_disabled]  # override: excluir de todos los profiles
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 1                                                  ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  gitea:
+    ports:
+      - "3000:3000"   # Web UI  → http://localhost:3000
+      - "2222:22"     # SSH git → ssh://localhost:2222
+    environment:
+      - GITEA__server__DOMAIN=localhost
+      - GITEA__server__ROOT_URL=http://localhost:3000
+      - GITEA__server__SSH_DOMAIN=localhost
+      - GITEA__server__SSH_PORT=2222
+      - GITEA__server__START_SSH_SERVER=true
+
+  vaultwarden:
+    ports:
+      - "8222:80"     # Web UI → http://localhost:8222
+    environment:
+      - DOMAIN=http://localhost:8222
+      - SIGNUPS_ALLOWED=true   # Habilitado solo para testing local
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 2                                                  ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  plausible:
+    ports:
+      - "8000:8000"   # Web UI → http://localhost:8000
+    environment:
+      - BASE_URL=http://localhost:8000
+
+  activepieces:
+    ports:
+      - "3004:80"     # Web UI → http://localhost:3004
+    environment:
+      - AP_FRONTEND_URL=http://localhost:3004
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 3 — AI Stack                                       ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  ollama:
+    ports:
+      - "11434:11434" # API REST → http://localhost:11434
+
+  open-webui:
+    ports:
+      - "3001:8080"   # Web UI → http://localhost:3001
+    environment:
+      - WEBUI_URL=http://localhost:3001
+      - ENABLE_SIGNUP=true   # Permitir crear usuario en local
+
+  anythingllm:
+    ports:
+      - "3002:3001"   # Web UI → http://localhost:3002
+
+  # ╔══════════════════════════════════════════════════════════╗
+  # ║  WAVE 4 — Observabilidad                                 ║
+  # ╚══════════════════════════════════════════════════════════╝
+
+  prometheus:
+    ports:
+      - "9090:9090"   # UI → http://localhost:9090
+
+  grafana:
+    ports:
+      - "3003:3000"   # Dashboard → http://localhost:3003
+    environment:
+      - GF_SERVER_ROOT_URL=http://localhost:3003
+      - GF_AUTH_ANONYMOUS_ENABLED=true        # Sin login en local
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+
+  twenty-server:
+    ports:
+      - "3005:3000"   # CRM → http://localhost:3005
+    environment:
+      - FRONT_BASE_URL=http://localhost:3005
+      - SERVER_URL=http://localhost:3005

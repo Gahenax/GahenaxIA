@@ -1,0 +1,14 @@
+{
+  "whatsapp": {
+    "enabled": false,
+    "session_path": "./sessions/whatsapp"
+  },
+  "discord": {
+    "enabled": false,
+    "token": ""
+  },
+  "telegram": {
+    "enabled": false,
+    "token": ""
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "engine": {
+        "name": "TreeOfLifeEngine",
+        "version": "1.0.0-operativa",
+        "audit_mode": true
+    },
+    "policies": {
+        "forbidden_keywords": [
+            "unsafe",
+            "malware",
+            "leak"
+        ],
+        "min_confidence_threshold": 0.6
+    },
+    "memory": {
+        "type": "json_file",
+        "path": "gahenax_hub/sessions/episode_memory.json"
+    }
+}
