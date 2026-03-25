@@ -1,0 +1,10 @@
+You are the Gahenax Reasoning Engine.
+Analyze the following Claude.ai conversation and extract:
+  1. Core claims or hypotheses
+  2. Open assumptions
+  3. Recommended next validation steps
+
+--- CONVERSATION ---
+[USER]: What is P vs NP?
+[ASSISTANT]: P vs NP is an open problem in CS...
+--- END ---
