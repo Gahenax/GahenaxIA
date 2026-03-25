@@ -10,7 +10,6 @@ app = FastAPI(
     description="Gahenax inference engine + bidirectional Claude ↔ Antigravity message bus",
 )
 
-# Allow Claude.ai userscript and Antigravity (localhost) to call the bridge
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://claude.ai", "http://localhost", "http://127.0.0.1"],
@@ -41,5 +40,18 @@ async def root():
     }
 
 
+BANNER = """
+==================================================
+ GAHENAX CLAUDE BRIDGE — Port 8080
+ POST /telemetry               — recibir mensajes (userscript)
+ POST /send                    — Antigravity → Claude
+ GET  /messages/{agent}/pending — poll mensajes pendientes
+ GET  /state/<id>              — leer sesion
+ GET  /heartbeat               — ping
+ GET  /sessions                — listar sesiones activas
+==================================================
+"""
+
 if __name__ == "__main__":
+    print(BANNER)
     uvicorn.run(app, host="0.0.0.0", port=8080)
