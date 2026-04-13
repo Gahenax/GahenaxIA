@@ -1,14 +1,14 @@
 """
 gahenax_spy_system/orchestrator.py
-MasterOrchestrator — coordina los 5 agentes con GSD Wave Protocol.
-Sigil: CHAIN → SWORD → MIRROR
+MasterOrchestrator - coordina los 5 agentes con GSD Wave Protocol.
+Sigil: CHAIN -> SWORD -> MIRROR
 
 WAVE 1 (independiente):  TechFingerprinter + SitemapCrawler
 WAVE 2 (depende de W1):  StructuralScraper + CompetitorProfiler
 WAVE 3 (secuencial):     PriceWatcher + síntesis + emit_skill opcional
 
 Además, puede emitir una SKILL.md nueva en .agent/skills/ con el patrón
-arquitectónico descubierto — implementando el web-espionage-protocol.
+arquitectónico descubierto - implementizando el web-espionage-protocol.
 """
 from __future__ import annotations
 
@@ -30,8 +30,9 @@ from gahenax_spy_system.agents import (
     CyberAgent,
     UXAgent,
     LLMAgent,
+    DiscoveryAmalgamator,
 )
-from gahenax_spy_system.models import IntelReport, SpyMission
+from gahenax_spy_system.models import IntelReport, SpyMission, DiscoverySearchReport
 from gahenax_spy_system.utils import StealthHTTPClient
 
 
@@ -58,6 +59,35 @@ class MasterOrchestrator:
         mission = SpyMission(url=url, mode=mode, **kwargs)
         return self.run_mission(mission)
 
+    def run_discovery(self, keyword: str, mode: str = "full", **kwargs) -> list[IntelReport]:
+        """
+        WAVE -1: Discover + Infiltrate.
+        Busca objetivos basados en una keyword y lanza misiones para cada uno.
+        """
+        print(f"\n [MasterOrchestrator] Iniciando WAVE -1: Discovery para '{keyword}'")
+        amalgamator = DiscoveryAmalgamator()
+        
+        # Extraer parámetros de misión para el descubrimiento
+        implant = kwargs.get("implant", False)
+        discovery_report = amalgamator.run(keyword, implant=implant)
+        
+        reports = []
+        if not discovery_report.results:
+            print(" [MasterOrchestrator] No se encontraron objetivos en la fase de descubrimiento.")
+            return reports
+
+        print(f" [MasterOrchestrator] Discovery completado. {len(discovery_report.results)} objetivos identificados.")
+        
+        # Lanzar misiones para los objetivos descubiertos (Top 3 de SerpApi + otros si los hay)
+        for res in discovery_report.results:
+            print(f"\n >>> Spawning mission for discovered target: {res.url}")
+            mission = SpyMission(url=res.url, mode=mode, **kwargs)
+            report = self.run_mission(mission)
+            report.discovery_origin = discovery_report
+            reports.append(report)
+            
+        return reports
+
     def run_mission(self, mission: SpyMission) -> IntelReport:
         """Ejecuta la misión completa con el ciclo de waves GSD."""
         t_start = time.time()
@@ -80,17 +110,17 @@ class MasterOrchestrator:
             ignore_robots=mission.implant
         )
 
-        print(f"\n  🕵️  GAHENAX SPY — Mission {mission_id}")
+        print(f"\n    GAHENAX SPY - Mission {mission_id}")
         print(f"  Target : {mission.url}")
         print(f"  Mode   : {mission.mode}")
         if mission.implant:
             print("  Stealth: IMPLANT MODE ENABLED (HackerOne Level)")
-        print(f"  {'─'*50}")
+        print(f"  {''*50}")
 
         try:
-            # ── WAVE 0: Cyber-Infiltration (Infiltración profunda) ────────────
+            # Wave 0: Cyber-Infiltration (Infiltracion profunda) 
             if mission.mode in ("full", "cyber") or mission.implant:
-                print("  🌊 Wave 0 → Cyber-Infiltration (Puppeteer-Stealth Engine)")
+                print("   Wave 0 -> Cyber-Infiltration (Puppeteer-Stealth Engine)")
                 # Crear directorio de salida para los assets si no existe
                 output_base = Path("spy_data") / mission_id
                 output_base.mkdir(parents=True, exist_ok=True)
@@ -111,9 +141,9 @@ class MasterOrchestrator:
                 except Exception as e:
                     report.errors.append(f"Wave0/cyber: {str(e)[:120]}")
 
-            # ── WAVE 0.5: UX-Infiltration (Scrapling Engine) ──────────────────
+            # Wave 0.5: UX-Infiltration (Scrapling Engine) 
             if mission.mode in ("full", "cyber", "ux"):
-                print("  🌊 Wave 0.5 → UX-Infiltration (Scrapling Engine)")
+                print("   Wave 0.5 -> UX-Infiltration (Scrapling Engine)")
                 try:
                     report.ux = UXAgent().run(mission)
                     if report.ux.status == "Success":
@@ -124,9 +154,9 @@ class MasterOrchestrator:
                 except Exception as e:
                     report.errors.append(f"Wave0.5/ux: {str(e)[:120]}")
 
-            # ── WAVE 1: TechFingerprinter + SitemapCrawler (paralelo) ─────────
+            # Wave 1: TechFingerprinter + SitemapCrawler (paralelo) 
             if mission.mode in ("full", "tech", "map"):
-                print("  🌊 Wave 1 → TechFingerprinter + SitemapCrawler (paralelo)")
+                print("   Wave 1 -> TechFingerprinter + SitemapCrawler (paralelo)")
                 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
                     futures = {}
                     if mission.mode in ("full", "tech"):
@@ -152,9 +182,9 @@ class MasterOrchestrator:
                 if report.sitemap:
                     print(f"      Sitemap: {report.sitemap.total_urls} URLs")
 
-            # ── WAVE 4: AI Synthesis (CyberScraper-2077 Brain) ────────────────
+            # Wave 4: AI Synthesis (CyberScraper-2077 Brain) 
             if mission.ai_parse:
-                print("  🌊 Wave 4 → AI Synthesis (CyberScraper-2077 Brain)")
+                print("   Wave 4 -> AI Synthesis (CyberScraper-2077 Brain)")
                 try:
                     report.ai_synthesis = LLMAgent().run(mission, report)
                     if report.ai_synthesis.confidence > 0:
@@ -162,9 +192,9 @@ class MasterOrchestrator:
                 except Exception as e:
                     report.errors.append(f"Wave4/ai: {str(e)[:120]}")
 
-            # ── WAVE 3: StructuralScraper + CompetitorProfiler (paralelo) ────
+            # Wave 3: StructuralScraper + CompetitorProfiler (paralelo) 
             if mission.mode in ("full", "structure", "competitor"):
-                print("  🌊 Wave 2 → StructuralScraper + CompetitorProfiler (paralelo)")
+                print("   Wave 2 -> StructuralScraper + CompetitorProfiler (paralelo)")
                 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
                     futures2 = {}
                     if mission.mode in ("full", "structure"):
@@ -191,11 +221,11 @@ class MasterOrchestrator:
                 if report.competitor:
                     tools = len(report.competitor.third_party_tools)
                     print(f"      Competitor: Tools={tools} | "
-                          f"Pricing={'✅' if report.competitor.has_pricing else '❌'}")
+                          f"Pricing={'[YES]' if report.competitor.has_pricing else '[NO]'}")
 
-            # ── WAVE 3: PriceWatcher (secuencial) ────────────────────────────
+            #  WAVE 3: PriceWatcher (secuencial) 
             if mission.mode in ("full", "price"):
-                print("  🌊 Wave 3 → PriceWatcher")
+                print("   Wave 3 → PriceWatcher")
                 try:
                     report.pricing = PriceWatcher(http).run(mission.url)
                     model  = report.pricing.pricing_model
@@ -209,24 +239,24 @@ class MasterOrchestrator:
             report.errors.append(f"Orchestrator fatal: {str(outer_e)[:200]}")
 
         report.duration_ms = int((time.time() - t_start) * 1000)
-        print(f"\n  ✅ Mission complete in {report.duration_ms}ms")
+        print(f"\n   Mission complete in {report.duration_ms}ms")
 
-        # ── Emit Skill (web-espionage-protocol) ───────────────────────────────
+        # Emit Skill (web-espionage-protocol) 
         if mission.emit_skill:
             skill_path = self._emit_skill(mission, report)
             if skill_path:
-                print(f"  📖 New Skill → {skill_path}")
+                print(f"   New Skill -> {skill_path}")
 
-        # ── Save output ───────────────────────────────────────────────────────
+        #  Save output 
         if mission.output_path:
             Path(mission.output_path).write_text(
                 report.to_json(), encoding="utf-8"
             )
-            print(f"  💾 Report saved → {mission.output_path}")
+            print(f"   Report saved → {mission.output_path}")
 
         return report
 
-    # ── Skill Emitter (web-espionage-protocol) ────────────────────────────────
+    #  Skill Emitter (web-espionage-protocol) 
 
     def _emit_skill(self, mission: SpyMission, report: IntelReport) -> str | None:
         """

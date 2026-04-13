@@ -45,7 +45,7 @@
             };
             
             ctx.GAHENAX_ACTIVE = true;
-            console.log("🦾 Gahenax Injected into Frame: " + ctx.location.href);
+            console.log(" Gahenax Injected into Frame: " + ctx.location.href);
         } catch(e) {
             // Error silencioso si el frame es cross-origin y está bloqueado
         }
@@ -63,6 +63,6 @@
     // Iniciar penetración profunda
     crawlFrames(window);
     
-    console.log("%c🦾 GAHENAX PERVASIVE BRIDGE v3.2 ACTIVE", "color: lime; font-weight: bold; font-size: 14px;");
-    console.log("🛰️ Telemetría enviándose via Híbrido (POST/GET) al Puerto 8080");
+    console.log("%c GAHENAX PERVASIVE BRIDGE v3.2 ACTIVE", "color: lime; font-weight: bold; font-size: 14px;");
+    console.log(" Telemetría enviándose via Híbrido (POST/GET) al Puerto 8080");
 })();

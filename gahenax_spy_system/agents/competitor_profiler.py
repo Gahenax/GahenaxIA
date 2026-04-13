@@ -108,7 +108,7 @@ class CompetitorProfiler:
 
         return profile
 
-    # ── SEO ──────────────────────────────────────────────────────────────────
+    #  SEO 
 
     def _extract_seo(self, soup: BeautifulSoup) -> SEOSnapshot:
         seo = SEOSnapshot()
@@ -142,7 +142,7 @@ class CompetitorProfiler:
                 pass
         return seo
 
-    # ── Third-party tools ─────────────────────────────────────────────────────
+    #  Third-party tools 
 
     def _detect_third_party(self, raw: str) -> list[str]:
         detected = []
@@ -152,7 +152,7 @@ class CompetitorProfiler:
                 detected.append(name)
         return sorted(detected)
 
-    # ── Social links ──────────────────────────────────────────────────────────
+    #  Social links 
 
     def _extract_social_links(self, soup: BeautifulSoup, base_url: str) -> list[str]:
         found: set[str] = set()
@@ -163,7 +163,7 @@ class CompetitorProfiler:
                     found.add(name)
         return sorted(found)
 
-    # ── Trust signals ─────────────────────────────────────────────────────────
+    #  Trust signals 
 
     def _extract_trust_signals(self, soup: BeautifulSoup, raw: str) -> list[str]:
         signals = []
@@ -182,7 +182,7 @@ class CompetitorProfiler:
                 signals.append(label)
         return signals
 
-    # ── Contact methods ───────────────────────────────────────────────────────
+    #  Contact methods 
 
     def _detect_contact_methods(self, soup: BeautifulSoup, raw: str) -> list[str]:
         methods = []
@@ -196,7 +196,7 @@ class CompetitorProfiler:
             methods.append("Live Chat")
         return methods
 
-    # ── Language ──────────────────────────────────────────────────────────────
+    #  Language 
 
     def _detect_language(self, soup: BeautifulSoup) -> str:
         html_tag = soup.find("html")
@@ -204,7 +204,7 @@ class CompetitorProfiler:
             return html_tag.get("lang", "")[:10]
         return ""
 
-    # ── Section detection ─────────────────────────────────────────────────────
+    #  Section detection 
 
     def _has_section(self, soup: BeautifulSoup, raw: str, keywords: list[str]) -> bool:
         raw_lower = raw.lower()

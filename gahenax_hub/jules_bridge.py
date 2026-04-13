@@ -44,7 +44,7 @@ class JulesBridge:
         conn.commit()
         conn.close()
             
-        print(f"📦 [JULES] Order {order_id} persisted in DB for {problem}")
+        print(f" [JULES] Order {order_id} persisted in DB for {problem}")
         return order_id
 
     def list_orders(self) -> List[Dict[str, Any]]:

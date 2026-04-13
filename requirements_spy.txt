@@ -1,8 +1,0 @@
-# Gahenax Spy System — dependencias
-# Instalar con: pip install -r requirements_spy.txt
-
-httpx>=0.27.0          # HTTP async client con SSL, redirects, retry
-beautifulsoup4>=4.12   # HTML parsing
-lxml>=5.0              # Parser backend (más rápido que html.parser)
-flask>=3.0.0
-flask-cors>=4.0.0

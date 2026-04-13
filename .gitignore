@@ -37,3 +37,7 @@ Dossier_*.pdf
 SOP.pdf
 Biblia_*.pdf
 Aelric_*.pdf
+
+# Large Payloads (Ignored to prevent Git Push 408 / LFS Errors)
+jules_orders/*.zip
+.codebase-index-cache.json

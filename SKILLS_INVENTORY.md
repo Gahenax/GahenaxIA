@@ -2,7 +2,7 @@
 
 Este inventario cataloga todas las capacidades activas del ecosistema Gahenax, mapeadas según la arquitectura neural del Connectome.
 
-## 🧠 Lóbulo Frontal (Planificación y Razonamiento)
+##  Lóbulo Frontal (Planificación y Razonamiento)
 - **gsd-wave-protocol**: Orquestación de tareas en paralelo y DAGs.
 - **superpowers-brainstorming**: Refinamiento socrático de intenciones.
 - **gahenax-architect**: Diseño de sistemas de alto nivel y ADRs.
@@ -13,7 +13,7 @@ Este inventario cataloga todas las capacidades activas del ecosistema Gahenax, m
 - **superpowers-tdd**: Desarrollo guiado por pruebas estricto.
 - **gahenax-loop-operator**: Gestión de tareas iterativas de larga duración.
 
-## 📚 Lóbulo Temporal (Memoria y Conocimiento)
+##  Lóbulo Temporal (Memoria y Conocimiento)
 - **gahenax-memory**: Gestión de memoria persistente indexada.
 - **gahenax-memory-search**: Búsqueda semántica en 3 capas.
 - **cie-sigil-routing**: Inferencia de contexto y taxonomía de sigilos.
@@ -21,7 +21,7 @@ Este inventario cataloga todas las capacidades activas del ecosistema Gahenax, m
 - **claude-code-vocabulary**: Alineación terminológica con Anthropic.
 - **anthropic-certified-patterns**: Mejores prácticas de integración con Claude.
 
-## ⚙️ Lóbulo Parietal (Acción e Infraestructura)
+##  Lóbulo Parietal (Acción e Infraestructura)
 ### Comunicación y CRM
 - **gahenax-gateway-secure**: Hub de WhatsApp, Discord y Telegram (Local).
 - **discord-b2b-crm**: Embudo de ventas y gestión de leads en Discord.
@@ -50,13 +50,13 @@ Este inventario cataloga todas las capacidades activas del ecosistema Gahenax, m
 - **eloquent-dynamic-approval-engine**: Flujos de aprobación dinámicos.
 - **bpmn-token-state-machine**: Ejecución formal de workflows.
 
-## 👁️ Lóbulo Occipital (Monitoreo y Sensórica)
+##  Lóbulo Occipital (Monitoreo y Sensórica)
 - **observability-stack**: Prometheus + Grafana.
 - **selfhosted-analytics-stack**: Plausible (reemplaza GA4).
 - **web-espionage-protocol**: Scraping avanzado y análisis competitivo.
 - **comfyui-orchestrator**: Generación y análisis visual.
 
-## 🛡️ Sistema Límbico (Seguridad y Calidad)
+##  Sistema Límbico (Seguridad y Calidad)
 - **gahenax-security-audit**: Auditoría de secretos y vulnerabilidades.
 - **gahenax-quality-gate**: Verificación de estándares pre-commit.
 - **gahenax-rulebook**: Gestión de normas jerárquicas.
@@ -65,7 +65,7 @@ Este inventario cataloga todas las capacidades activas del ecosistema Gahenax, m
 - **systematic-debugging**: Resolución de fallas complejas.
 - **superpowers-debugging-pro**: Rastreo de causa raíz y prevención.
 
-## 🧬 Tronco Encefálico (Infraestructura Base & HPC)
+##  Tronco Encefálico (Infraestructura Base & HPC)
 - **jules-heavy-compute**: Delegación de cómputo masivo a LANCIS.
 - **rust-rayon-parallelism**: Aceleración multihilo en CPU.
 - **distributed-dag-orchestrator**: Orquestación en clúster (ZooKeeper).

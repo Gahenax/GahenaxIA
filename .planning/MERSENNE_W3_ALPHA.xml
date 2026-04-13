@@ -1,0 +1,9 @@
+<task type="jules">
+  <name>[GAHENAX] MERSENNE-W3-ALPHA</name>
+  <sigil>COMPUTE</sigil>
+  <files>OEDA_HodgeRigidity/tools/mersenne-worker-rs/src/bin/gahenax-score.rs, OEDA_HodgeRigidity/scripts/jules_api_deployer.py</files>
+  <action>Launch Wave 3 Mersenne survey (136M-150M) with asymptotic spectral filter [0.100 - 0.140]. Target node: Gateway Patung for orchestration, Forge drones for FFT residues.</action>
+  <verify>Check Jules dashboard for session activation with checkmark signifier.</verify>
+  <done>Session JULES-W3-136M-150M-ALPHA listed as ACTIVE.</done>
+  <jules_order>true</jules_order>
+</task>

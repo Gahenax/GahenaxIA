@@ -126,7 +126,7 @@ class LocalSpy:
                         for i in range(25):
                             if current_state[i]:
                                 HEATMAP_STATE["mine_counts"][i] += 1
-                        print(f"🧨 [RADAR] ¡Minas reveladas! Total minas encontradas: {mines_found_this_frame}. Actualizando matriz...")
+                        print(f" [RADAR] ¡Minas reveladas! Total minas encontradas: {mines_found_this_frame}. Actualizando matriz...")
 
                     last_grid_state = current_state
 

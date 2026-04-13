@@ -29,7 +29,7 @@ class MersenneRecoverer:
         if len(self.state) < 624:
             self.state.append(untemper(val))
             if len(self.state) == 624:
-                print("🏁 GAHENAX: Estado interno de Mersenne RECUPERADO. Iniciando predicción...")
+                print(" GAHENAX: Estado interno de Mersenne RECUPERADO. Iniciando predicción...")
                 return True
         return False
 
@@ -56,6 +56,6 @@ class MersenneRecoverer:
 
 # Inyectar en el flujo táctico
 if __name__ == "__main__":
-    print("🧠 Gahenax Mersenne Crypt Engine v12.0")
+    print(" Gahenax Mersenne Crypt Engine v12.0")
     print("Esperando 624 muestras para descifrado completo...")
     # [Integración con pattern_analyzer.py para ingestión de telemetry]

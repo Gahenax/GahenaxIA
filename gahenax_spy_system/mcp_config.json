@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cheatengine": {
+      "command": "python",
+      "args": ["c:/Users/jotam/OneDrive/Desktop/GahenaxAI/gahenax_spy_system/infiltration/MCP_Server/mcp_cheatengine.py"]
+    }
+  }
+}

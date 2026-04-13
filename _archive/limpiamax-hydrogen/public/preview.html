@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Limpiamax — Limpieza Profesional de Confianza</title>
+  <meta name="description" content="Servicios profesionales de limpieza residencial, comercial y post-obra. Calidad garantizada, personal certificado." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ========================================
+       LIMPIAMAX — Design System
+       ======================================== */
+    :root {
+      --navy:       #0A1628;
+      --navy-mid:   #0F2040;
+      --navy-light: #1A3055;
+      --teal:       #00C9B1;
+      --teal-light: #00E5CC;
+      --teal-dark:  #009E8C;
+      --white:      #FFFFFF;
+      --off-white:  #F7FAFB;
+      --gray-50:    #F0F4F8;
+      --gray-100:   #E2E8F0;
+      --gray-400:   #94A3B8;
+      --gray-600:   #475569;
+      --gray-900:   #0F172A;
+      --font-sans: 'Outfit', system-ui, sans-serif;
+      --radius-sm: 8px; --radius-md: 16px; --radius-lg: 24px; --radius-full: 9999px;
+      --shadow-sm:  0 2px 8px rgba(10,22,40,0.08);
+      --shadow-md:  0 8px 24px rgba(10,22,40,0.12);
+      --shadow-lg:  0 16px 48px rgba(10,22,40,0.18);
+      --shadow-glow: 0 0 40px rgba(0,201,177,0.25);
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body { font-family: var(--font-sans); background: var(--white); color: var(--gray-900); line-height: 1.6; overflow-x: hidden; }
+    img { max-width: 100%; display: block; }
+    a { text-decoration: none; color: inherit; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 90px 0; }
+
+    /* ── Buttons ── */
+    .btn { display: inline-flex; align-items: center; gap: 10px; padding: 16px 32px; border-radius: var(--radius-full); font-family: var(--font-sans); font-size: 1rem; font-weight: 600; cursor: pointer; border: 2px solid transparent; transition: var(--transition); white-space: nowrap; }
+    .btn-primary { background: var(--teal); color: var(--navy); }
+    .btn-primary:hover { background: var(--teal-light); transform: translateY(-2px); box-shadow: var(--shadow-glow); }
+    .btn-outline { background: transparent; color: var(--white); border-color: rgba(255,255,255,0.5); }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: var(--white); transform: translateY(-2px); }
+    .btn-lg { padding: 20px 40px; font-size: 1.1rem; }
+
+    /* ── NAVBAR ── */
+    .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; transition: var(--transition); padding: 20px 0; }
+    .navbar.scrolled { background: rgba(10,22,40,0.95); backdrop-filter: blur(20px); padding: 14px 0; box-shadow: 0 4px 30px rgba(0,0,0,0.3); }
+    .navbar .container { display: flex; align-items: center; justify-content: space-between; }
+    .navbar-logo { font-size: 1.6rem; font-weight: 800; color: var(--white); letter-spacing: -0.03em; }
+    .navbar-logo span { color: var(--teal); }
+    .navbar-tagline { font-size: 0.7rem; color: var(--teal); font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; }
+    .navbar-nav { display: flex; align-items: center; gap: 36px; list-style: none; }
+    .navbar-nav a { color: rgba(255,255,255,0.8); font-weight: 500; font-size: 0.95rem; transition: var(--transition); position: relative; }
+    .navbar-nav a::after { content: ''; position: absolute; bottom: -4px; left: 0; width: 0; height: 2px; background: var(--teal); transition: var(--transition); }
+    .navbar-nav a:hover { color: var(--white); }
+    .navbar-nav a:hover::after { width: 100%; }
+
+    /* ── HERO ── */
+    .hero { position: relative; min-height: 100vh; display: flex; align-items: center; overflow: hidden; background: var(--navy); }
+    .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(10,22,40,0.98) 0%, rgba(10,22,40,0.85) 50%, rgba(0,201,177,0.1) 100%); }
+    .hero-orb { position: absolute; top: 20%; right: 15%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,201,177,0.15) 0%, transparent 70%); pointer-events: none; animation: orb-float 8s ease-in-out infinite; }
+    @keyframes orb-float { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-20px,-30px) scale(1.05); } }
+    .hero-content { position: relative; z-index: 2; padding-top: 100px; max-width: 720px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,201,177,0.12); border: 1px solid rgba(0,201,177,0.3); color: var(--teal); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px 18px; border-radius: var(--radius-full); margin-bottom: 28px; }
+    .badge-dot { width: 8px; height: 8px; background: var(--teal); border-radius: 50%; animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.4); } }
+    .hero-title { font-size: clamp(3rem, 6vw, 5rem); font-weight: 800; color: var(--white); line-height: 1.05; letter-spacing: -0.04em; margin-bottom: 24px; }
+    .hero-title .teal { color: var(--teal); display: block; }
+    .hero-sub { font-size: 1.15rem; color: rgba(255,255,255,0.68); max-width: 560px; line-height: 1.7; margin-bottom: 40px; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 60px; }
+    .hero-stats { display: flex; gap: 40px; flex-wrap: wrap; }
+    .hero-stat-num { font-size: 2.2rem; font-weight: 800; color: var(--teal); line-height: 1; letter-spacing: -0.04em; }
+    .hero-stat-label { font-size: 0.85rem; color: rgba(255,255,255,0.5); font-weight: 500; margin-top: 4px; }
+    .scroll-hint { position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); z-index:2; display: flex; flex-direction: column; align-items: center; gap: 8px; color: rgba(255,255,255,0.35); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .scroll-arrow { width: 22px; height: 22px; border-right: 2px solid rgba(255,255,255,0.35); border-bottom: 2px solid rgba(255,255,255,0.35); transform: rotate(45deg); animation: bounce 2s infinite; }
+    @keyframes bounce { 0%,100% { transform: rotate(45deg) translateY(0); opacity:1; } 50% { transform: rotate(45deg) translateY(8px); opacity: 0.4; } }
+
+    /* ── SECTION HEADER ── */
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-label { display: inline-block; color: var(--teal-dark); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 12px; }
+    .section-title { font-size: clamp(2rem, 3.5vw, 2.8rem); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 16px; }
+    .section-sub { font-size: 1.05rem; color: var(--gray-600); max-width: 540px; margin: 0 auto; }
+
+    /* ── SERVICES ── */
+    .services { background: var(--off-white); }
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .service-card { background: var(--white); border-radius: var(--radius-lg); padding: 36px 32px; border: 1px solid var(--gray-100); transition: var(--transition); position: relative; overflow: hidden; }
+    .service-card::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--teal), var(--teal-light)); transform: scaleX(0); transform-origin: left; transition: var(--transition); }
+    .service-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+    .service-card:hover::before { transform: scaleX(1); }
+    .service-icon { width: 64px; height: 64px; background: linear-gradient(135deg, rgba(0,201,177,0.12), rgba(0,201,177,0.05)); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 24px; }
+    .service-name { font-size: 1.15rem; font-weight: 700; color: var(--navy); margin-bottom: 12px; }
+    .service-desc { font-size: 0.9rem; color: var(--gray-600); line-height: 1.6; margin-bottom: 18px; }
+    .service-price { font-size: 0.88rem; font-weight: 600; color: var(--teal-dark); }
+
+    /* ── TRUST ── */
+    .trust { background: var(--navy); position: relative; overflow: hidden; }
+    .trust::before { content: ''; position: absolute; top: -100px; right: -100px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(0,201,177,0.1) 0%, transparent 70%); pointer-events: none; }
+    .trust .section-label { color: var(--teal); }
+    .trust .section-title { color: var(--white); }
+    .trust .section-sub { color: rgba(255,255,255,0.5); }
+    .trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px; }
+    .trust-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-lg); padding: 32px 24px; text-align: center; transition: var(--transition); }
+    .trust-card:hover { background: rgba(0,201,177,0.08); border-color: rgba(0,201,177,0.2); transform: translateY(-4px); }
+    .trust-icon { font-size: 2.5rem; margin-bottom: 16px; display: block; }
+    .trust-title { font-size: 1.05rem; font-weight: 700; color: var(--white); margin-bottom: 10px; }
+    .trust-desc { font-size: 0.875rem; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+    /* ── PROCESS ── */
+    .process { background: var(--white); }
+    .process-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; margin-top: 56px; }
+    .process-steps::before { content: ''; position: absolute; top: 40px; left: calc(12.5%); right: calc(12.5%); height: 2px; background: linear-gradient(90deg, var(--teal), var(--teal-light)); z-index: 0; }
+    .process-step { text-align: center; position: relative; z-index: 1; padding: 0 16px; }
+    .step-num { width: 80px; height: 80px; background: white; border: 3px solid var(--teal); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 24px; transition: var(--transition); box-shadow: 0 0 0 6px white, var(--shadow-sm); }
+    .process-step:hover .step-num { background: var(--teal); transform: scale(1.1); box-shadow: 0 0 0 6px white, var(--shadow-glow); }
+    .step-title { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+    .step-desc { font-size: 0.85rem; color: var(--gray-600); line-height: 1.5; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { background: var(--gray-50); }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 56px; }
+    .testimonial-card { background: var(--white); border-radius: var(--radius-lg); padding: 32px; border: 1px solid var(--gray-100); transition: var(--transition); position: relative; }
+    .testimonial-card::before { content: '"'; position: absolute; top: 12px; right: 24px; font-size: 5rem; color: var(--teal); opacity: 0.12; font-family: Georgia, serif; line-height: 1; }
+    .testimonial-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .stars { color: #F59E0B; font-size: 0.95rem; margin-bottom: 16px; letter-spacing: 2px; }
+    .t-text { font-size: 0.93rem; color: var(--gray-600); line-height: 1.7; margin-bottom: 24px; font-style: italic; }
+    .t-author { display: flex; align-items: center; gap: 12px; }
+    .t-avatar { width: 44px; height: 44px; background: linear-gradient(135deg, var(--teal), var(--navy)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: var(--white); flex-shrink: 0; }
+    .t-name { font-weight: 700; font-size: 0.93rem; color: var(--navy); }
+    .t-role { font-size: 0.78rem; color: var(--gray-400); }
+
+    /* ── CTA ── */
+    .cta-section { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 60%, rgba(0,201,177,0.08) 100%); position: relative; overflow: hidden; text-align: center; }
+    .cta-section::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,201,177,0.08) 0%, transparent 70%); }
+    .cta-title { font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 800; color: var(--white); margin-bottom: 20px; letter-spacing: -0.03em; position: relative; }
+    .cta-sub { font-size: 1.1rem; color: rgba(255,255,255,0.6); max-width: 500px; margin: 0 auto 40px; position: relative; }
+    .cta-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; position: relative; }
+    .whatsapp-btn { display: inline-flex; align-items: center; gap: 10px; padding: 18px 36px; background: #25D366; color: var(--white); border-radius: var(--radius-full); font-weight: 700; font-size: 1.05rem; font-family: var(--font-sans); transition: var(--transition); }
+    .whatsapp-btn:hover { background: #1DA851; transform: translateY(-3px); box-shadow: 0 8px 32px rgba(37,211,102,0.4); }
+    .call-btn { display: inline-flex; align-items: center; gap: 10px; padding: 18px 36px; background: transparent; color: var(--white); border-radius: var(--radius-full); font-weight: 700; font-size: 1.05rem; font-family: var(--font-sans); border: 2px solid rgba(255,255,255,0.4); transition: var(--transition); }
+    .call-btn:hover { background: rgba(255,255,255,0.08); border-color: white; transform: translateY(-3px); }
+
+    /* ── FOOTER ── */
+    .footer { background: var(--gray-900); color: rgba(255,255,255,0.55); padding: 64px 0 32px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
+    .footer-brand-name { font-size: 1.5rem; font-weight: 800; color: var(--white); margin-bottom: 12px; }
+    .footer-brand-name span { color: var(--teal); }
+    .footer-brand-desc { font-size: 0.88rem; line-height: 1.7; margin-bottom: 24px; }
+    .footer-socials { display: flex; gap: 10px; }
+    .social-link { width: 40px; height: 40px; background: rgba(255,255,255,0.07); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: var(--transition); border: 1px solid rgba(255,255,255,0.07); }
+    .social-link:hover { background: var(--teal); transform: translateY(-2px); }
+    .footer-col-title { color: var(--white); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 18px; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-links a { font-size: 0.88rem; color: rgba(255,255,255,0.5); transition: var(--transition); }
+    .footer-links a:hover { color: var(--teal); }
+    .contact-item { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; font-size: 0.88rem; }
+    .contact-icon { color: var(--teal); flex-shrink: 0; }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.07); padding-top: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 0.83rem; }
+
+    /* ── Floating WhatsApp ── */
+    .wa-float { position: fixed; bottom: 28px; right: 28px; z-index: 900; width: 60px; height: 60px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 0 8px 24px rgba(37,211,102,0.45); transition: var(--transition); text-decoration: none; }
+    .wa-float:hover { transform: scale(1.1) translateY(-2px); }
+    .wa-ring { position: absolute; inset: -4px; border: 2px solid rgba(37,211,102,0.4); border-radius: 50%; animation: ring 2.5s infinite; }
+    @keyframes ring { 0% { transform:scale(1); opacity:1; } 100% { transform:scale(1.4); opacity:0; } }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .navbar-nav { display: none; }
+      .process-steps { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+      .process-steps::before { display: none; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .section { padding: 60px 0; }
+      .hero-actions { flex-direction: column; }
+      .hero-stats { gap: 24px; }
+      .process-steps { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+    .fade-1 { animation: fadeUp 0.7s ease 0.1s both; }
+    .fade-2 { animation: fadeUp 0.7s ease 0.25s both; }
+    .fade-3 { animation: fadeUp 0.7s ease 0.4s both; }
+    .fade-4 { animation: fadeUp 0.7s ease 0.55s both; }
+  </style>
+</head>
+<body>
+
+<!-- ─────────── NAVBAR ─────────── -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div>
+      <div class="navbar-logo">Limpia<span>max</span></div>
+      <div class="navbar-tagline">Servicios Profesionales</div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="#servicios">Servicios</a></li>
+      <li><a href="#nosotros">Nosotros</a></li>
+      <li><a href="#proceso">Proceso</a></li>
+      <li><a href="#testimonios">Testimonios</a></li>
+    </ul>
+    <a href="https://wa.me/18091234567" class="btn btn-primary" style="padding:12px 24px" target="_blank">📲 Cotizar</a>
+  </div>
+</nav>
+
+<!-- Floating WhatsApp -->
+<a href="https://wa.me/18091234567" class="wa-float" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+  <span class="wa-ring"></span>
+  💬
+</a>
+
+<!-- ─────────── HERO ─────────── -->
+<section class="hero" id="inicio">
+  <div class="hero-overlay"></div>
+  <div class="hero-orb"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge fade-1">
+        <span class="badge-dot"></span>
+        Servicio Profesional &amp; Garantizado
+      </div>
+      <h1 class="hero-title fade-2">
+        Tu espacio,
+        <span class="teal">impecable.</span>
+      </h1>
+      <p class="hero-sub fade-3">
+        Limpieza profesional para hogares y empresas. Personal certificado,
+        productos ecológicos y resultados que hablan por sí solos.
+      </p>
+      <div class="hero-actions fade-4">
+        <a href="https://wa.me/18091234567" class="btn btn-primary btn-lg" target="_blank">💬 Solicitar Cotización</a>
+        <a href="#servicios" class="btn btn-outline btn-lg">Ver Servicios</a>
+      </div>
+      <div class="hero-stats fade-4">
+        <div>
+          <div class="hero-stat-num">2,000+</div>
+          <div class="hero-stat-label">Clientes satisfechos</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">8+</div>
+          <div class="hero-stat-label">Años de experiencia</div>
+        </div>
+        <div>
+          <div class="hero-stat-num">100%</div>
+          <div class="hero-stat-label">Garantía de calidad</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint" aria-hidden="true">
+    <span>Scroll</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ─────────── SERVICES ─────────── -->
+<section class="section services" id="servicios">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Nuestros Servicios</span>
+      <h2 class="section-title">Todo lo que necesitas,<br>en un solo lugar</h2>
+      <p class="section-sub">Desde limpieza residencial hasta desinfecciones especializadas. Adaptamos cada servicio a tus necesidades.</p>
+    </div>
+    <div class="services-grid">
+      <article class="service-card">
+        <div class="service-icon">🏠</div>
+        <h3 class="service-name">Limpieza Residencial</h3>
+        <p class="service-desc">Tu hogar reluciente de arriba a abajo. Incluye habitaciones, baños, cocina y áreas comunes con productos premium.</p>
+        <span class="service-price">✓ Desde RD$1,500</span>
+      </article>
+      <article class="service-card">
+        <div class="service-icon">🏢</div>
+        <h3 class="service-name">Limpieza Comercial</h3>
+        <p class="service-desc">Oficinas, locales y establecimientos comerciales. Servicio diario, semanal o mensual según tus necesidades.</p>
+        <span class="service-price">✓ Desde RD$2,500</span>
+      </article>
+      <article class="service-card">
+        <div class="service-icon">🏗️</div>
+        <h3 class="service-name">Limpieza Post-Obra</h3>
+        <p class="service-desc">Eliminamos polvo, residuos de construcción y dejamos tu espacio listo para habitar o inaugurar.</p>
+        <span class="service-price">✓ Desde RD$3,500</span>
+      </article>
+      <article class="service-card">
+        <div class="service-icon">✨</div>
+        <h3 class="service-name">Limpieza Profunda</h3>
+        <p class="service-desc">Desinfección total con vapor y productos especializados. Ideal para mudanzas y limpieza semestral.</p>
+        <span class="service-price">✓ Desde RD$2,800</span>
+      </article>
+      <article class="service-card">
+        <div class="service-icon">🪟</div>
+        <h3 class="service-name">Limpieza de Vidrios</h3>
+        <p class="service-desc">Cristales, ventanas y fachadas con brillo garantizado. Trabajo en altura con equipo certificado.</p>
+        <span class="service-price">✓ Desde RD$800</span>
+      </article>
+      <article class="service-card">
+        <div class="service-icon">🛁</div>
+        <h3 class="service-name">Desinfección &amp; Fumigación</h3>
+        <p class="service-desc">Eliminamos bacterias, virus y plagas con productos certificados y seguros para tu familia.</p>
+        <span class="service-price">✓ Desde RD$1,200</span>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── TRUST ─────────── -->
+<section class="section trust" id="nosotros">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">¿Por qué Limpiamax?</span>
+      <h2 class="section-title">Comprometidos con la excelencia</h2>
+      <p class="section-sub">No somos solo una empresa de limpieza. Somos tu socio de confianza para mantener tus espacios en perfectas condiciones.</p>
+    </div>
+    <div class="trust-grid">
+      <div class="trust-card">
+        <span class="trust-icon">🛡️</span>
+        <h3 class="trust-title">Garantía Total</h3>
+        <p class="trust-desc">Si no quedas 100% satisfecho, regresamos sin costo adicional. Tu satisfacción es nuestra prioridad.</p>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">👥</span>
+        <h3 class="trust-title">Personal Certificado</h3>
+        <p class="trust-desc">Todo nuestro equipo pasa por verificación de antecedentes y capacitación profesional continua.</p>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">🌿</span>
+        <h3 class="trust-title">Productos Ecológicos</h3>
+        <p class="trust-desc">Usamos productos biodegradables que no dañan el medio ambiente ni la salud de tu familia.</p>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">⏱️</span>
+        <h3 class="trust-title">Puntuales Siempre</h3>
+        <p class="trust-desc">Respetamos tu tiempo. Llegamos en el horario acordado o te compensamos por la espera.</p>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">📱</span>
+        <h3 class="trust-title">Atención 24/7</h3>
+        <p class="trust-desc">Disponibles por WhatsApp en cualquier momento. Cotización en menos de 10 minutos.</p>
+      </div>
+      <div class="trust-card">
+        <span class="trust-icon">💎</span>
+        <h3 class="trust-title">+8 Años de Experiencia</h3>
+        <p class="trust-desc">Más de 8 años en el mercado y más de 2,000 clientes satisfechos respaldan nuestra calidad.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── PROCESS ─────────── -->
+<section class="section process" id="proceso">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" style="color:var(--teal-dark)">Cómo Funciona</span>
+      <h2 class="section-title">Simple, rápido y sin complicaciones</h2>
+      <p class="section-sub">En 4 pasos sencillos tu espacio estará impecable.</p>
+    </div>
+    <div class="process-steps">
+      <div class="process-step">
+        <div class="step-num">📲</div>
+        <h3 class="step-title">Contáctanos</h3>
+        <p class="step-desc">Escríbenos por WhatsApp o llámanos para coordinar tu servicio.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">📋</div>
+        <h3 class="step-title">Cotización</h3>
+        <p class="step-desc">Recibe tu presupuesto personalizado en menos de 10 minutos.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">📅</div>
+        <h3 class="step-title">Agendamos</h3>
+        <p class="step-desc">Escogemos fecha y hora según tu disponibilidad. 100% flexible.</p>
+      </div>
+      <div class="process-step">
+        <div class="step-num">✅</div>
+        <h3 class="step-title">Resultados</h3>
+        <p class="step-desc">Nuestro equipo llega y deja todo impecable. ¡Garantizado!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── TESTIMONIALS ─────────── -->
+<section class="section testimonials" id="testimonios">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" style="color:var(--teal-dark)">Testimonios</span>
+      <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+      <p class="section-sub">Más de 2,000 familias y empresas confían en Limpiamax.</p>
+    </div>
+    <div class="testimonials-grid">
+      <blockquote class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="t-text">"Increíble servicio. Llamé a Limpiamax para una limpieza post-obra y dejaron el apartamento como si fuera nuevo. Muy profesionales y puntuales."</p>
+        <footer class="t-author">
+          <div class="t-avatar">MA</div>
+          <div>
+            <div class="t-name">María A.</div>
+            <div class="t-role">Propietaria, Santo Domingo</div>
+          </div>
+        </footer>
+      </blockquote>
+      <blockquote class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="t-text">"Contratamos el servicio comercial para nuestra oficina y el nivel de detalle es impresionante. Ahora son nuestros proveedores permanentes."</p>
+        <footer class="t-author">
+          <div class="t-avatar">CR</div>
+          <div>
+            <div class="t-name">Carlos R.</div>
+            <div class="t-role">Gerente, Empresa de Tecnología</div>
+          </div>
+        </footer>
+      </blockquote>
+      <blockquote class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <p class="t-text">"Excelente relación calidad-precio. Personal muy amable y el resultado final superó mis expectativas. Los recomiendo 100%."</p>
+        <footer class="t-author">
+          <div class="t-avatar">JP</div>
+          <div>
+            <div class="t-name">Jennifer P.</div>
+            <div class="t-role">Ama de casa, Santiago</div>
+          </div>
+        </footer>
+      </blockquote>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── CTA ─────────── -->
+<section class="section cta-section">
+  <div class="container">
+    <h2 class="cta-title">¿Listo para un espacio impecable?</h2>
+    <p class="cta-sub">Solicita tu cotización ahora mismo. Respuesta en menos de 10 minutos por WhatsApp.</p>
+    <div class="cta-actions">
+      <a href="https://wa.me/18091234567" class="whatsapp-btn" target="_blank">💬 Cotizar por WhatsApp</a>
+      <a href="tel:+18091234567" class="call-btn">📞 Llamar Ahora</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────── FOOTER ─────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-name">Limpia<span>max</span></div>
+        <p class="footer-brand-desc">Servicios profesionales de limpieza para hogares y empresas. Calidad, confianza y resultados garantizados desde 2016.</p>
+        <div class="footer-socials">
+          <a href="https://facebook.com" class="social-link" aria-label="Facebook">📘</a>
+          <a href="https://instagram.com" class="social-link" aria-label="Instagram">📸</a>
+          <a href="https://tiktok.com" class="social-link" aria-label="TikTok">🎵</a>
+          <a href="https://wa.me/18091234567" class="social-link" aria-label="WhatsApp" target="_blank">💬</a>
+        </div>
+      </div>
+      <div>
+        <h3 class="footer-col-title">Servicios</h3>
+        <ul class="footer-links">
+          <li><a href="#servicios">Limpieza Residencial</a></li>
+          <li><a href="#servicios">Limpieza Comercial</a></li>
+          <li><a href="#servicios">Post-Obra</a></li>
+          <li><a href="#servicios">Limpieza Profunda</a></li>
+          <li><a href="#servicios">Vidrios & Fachadas</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer-col-title">Empresa</h3>
+        <ul class="footer-links">
+          <li><a href="#nosotros">Sobre Nosotros</a></li>
+          <li><a href="#proceso">Cómo Funciona</a></li>
+          <li><a href="#testimonios">Testimonios</a></li>
+          <li><a href="#contacto">Trabaja con Nosotros</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="footer-col-title">Contacto</h3>
+        <div class="contact-item"><span class="contact-icon">💬</span><span>+1 (809) 123-4567</span></div>
+        <div class="contact-item"><span class="contact-icon">📧</span><span>info@limpiamax.com</span></div>
+        <div class="contact-item"><span class="contact-icon">📍</span><span>Santo Domingo, RD</span></div>
+        <div class="contact-item"><span class="contact-icon">🕐</span><span>Lun–Sáb: 7am – 8pm</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 Limpiamax. Todos los derechos reservados.</span>
+      <span>Hecho con ❤️ por <a href="https://gahenax.com" target="_blank" style="color:var(--teal)">Gahenax</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Navbar scroll effect
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+</script>
+</body>
+</html>

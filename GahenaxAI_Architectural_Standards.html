@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Manual de Arquitectura - GahenaxAI</title>
+    
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; color: #1a202c; line-height: 1.6; max-width: 900px; margin: 0 auto; padding: 40px; background: #fff;}
+    .cover { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 90vh; text-align: center; }
+    h1.title { font-size: 3.5em; color: #000; border-bottom: 4px solid #3182ce; padding-bottom: 20px; font-weight: 700; }
+    h2.subtitle { font-size: 1.5em; color: #4a5568; font-weight: 300; margin-top: 20px;}
+    .company { margin-top: auto; font-size: 1.2em; color: #a0aec0; letter-spacing: 2px; }
+    
+    h1 { color: #2b6cb0; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top: 40px;}
+    h2 { color: #2c5282; margin-top: 30px;}
+    h3 { color: #2a4365; }
+    p { margin-bottom: 15px; }
+    
+    pre { background-color: #f7fafc; padding: 15px; border-radius: 8px; overflow-x: auto; border-left: 4px solid #3182ce; font-family: "Consolas", monospace; font-size: 0.9em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    code { background-color: #edf2f7; padding: 2px 5px; border-radius: 4px; font-family: "Consolas", monospace; font-size: 0.9em; color: #c53030;}
+    pre code { background-color: transparent; color: inherit; padding: 0;}
+    
+    blockquote { border-left: 5px solid #cbd5e0; margin: 1.5em 10px; padding: 0.5em 10px; color: #4a5568; background: #fdfdfd; font-style: italic;}
+    ul, ol { margin-left: 20px; margin-bottom: 15px; }
+    li { margin-bottom: 5px; }
+    
+    /* Print optimizations */
+    @media print {
+        body { margin: 0; padding: 0; max-width: 100%; border: none; }
+        .page-break { page-break-before: always; }
+        .cover { height: 100vh; }
+        h1, h2 { page-break-after: avoid; }
+        pre, blockquote { page-break-inside: avoid; border: 1px solid #e2e8f0; border-left: 4px solid #3182ce;}
+        a { text-decoration: none; color: #000; }
+    }
+</style>
+
+</head>
+<body>
+    <div class="cover page-break">
+        <h1 class="title">Bases de Datos de Arquitectura GahenaxAI</h1>
+        <h2 class="subtitle">Directrices, Heurísticas y Estándares de Ingeniería (Aprobado para Clientes)</h2>
+        <div class="company">PROPIEDAD INTELECTUAL DE GAHENAX AI SOLUTIONS</div>
+    </div>
+    
+    <div class="page-break">
+        <h1>Introducción Ejecutiva</h1>
+        <p>Este documento es la compilación oficial de ingeniería y arquitectura que dictan los cimientos tecnológicos de <b>GahenaxAI</b>. Contiene el análisis de ecosistemas, patrones <i>anti-patterns</i> y nuestra colección de heurísticas (Leyes Áureas) que nos garantizan la máxima escalabilidad y la evasión de sobre-ingeniería en entornos empresariales.</p>
+        <p><i>Nota: Puede presionar (Ctrl+P) o (Cmd+P) en su navegador web para imprimir este documento como una versión PDF corporativa inmaculada.</i></p>
+    </div>
+    
+    <div class="page-break"></div>
+    <h1>Web Frontend Frameworks (React, Vue, Angular, Svelte)</h1>
+<h2>Repositorios de Referencia</h2>
+<ul>
+<li><strong>React (Meta):</strong> <code>https://github.com/facebook/react</code> (Específicamente el Fiber Reconciler)</li>
+<li><strong>Vue (Evan You):</strong> <code>https://github.com/vuejs/core</code> (Específicamente <code>packages/reactivity</code>)</li>
+<li><strong>Angular (Google):</strong> <code>https://github.com/angular/angular</code></li>
+<li><strong>Svelte (Rich Harris):</strong> <code>https://github.com/sveltejs/svelte</code> (Compiler)</li>
+</ul>
+<h2>1. Arquitecturas Comparadas</h2>
+<h3>1.1 React: Fiber Reconciler &amp; Hooks</h3>
+<ul>
+<li><strong>Filosofía:</strong> UI como una función pura del estado. "Pull-based" reactividad superficial.</li>
+<li><strong>Fiber:</strong> Es una re-escritura del engine de renderizado. En lugar de un árbol recursivo sincrónico bloqueante, Fiber convierte cada componente virtual en una unidad de trabajo pausable, abortable y priorizable. Esto habilita Concurrent Rendering.</li>
+<li><strong>Hooks:</strong> Closures montadas sobre arrays internos de Fiber. Permiten abstraer lógica de ciclo de vida en funciones puras sin orientación a objetos.</li>
+</ul>
+<h3>1.2 Vue: Reactivity Engine</h3>
+<ul>
+<li><strong>Filosofía:</strong> Proxies transparentes. "Push-based" reactividad profunda.</li>
+<li><strong>Reactivity:</strong> Implementada primariamente usando ES6 Proxies (<code>reactive()</code>). Vue rastrea activamente (track) qué dependencias (getters) son tocadas durante la evaluación de un template o <code>computed()</code>, y notifica (trigger) a esos efectos específicos cuando mutan, haciendo el re-render altamente localizado comparado con React.</li>
+</ul>
+<h3>1.3 Angular: Dependency Injection &amp; Modularidad</h3>
+<ul>
+<li><strong>Filosofía:</strong> Baterías incluidas, Enterprise-ready. Fuerte acoplamiento a TypeScript.</li>
+<li><strong>Arquitectura:</strong> Módulos (<code>NgModules</code> históricamente, ahora migrando a <em>Standalone Components</em>). Basado en la inyección de dependencias jerárquica y el patrón Singleton.</li>
+<li><strong>Patrones Legacy:</strong> Uso excesivo de Zone.js para Detección de Cambios (dirty checking) y componentes "God" (smart components monolíticos).</li>
+</ul>
+<h3>1.4 Svelte: Compiler-First</h3>
+<ul>
+<li><strong>Filosofía:</strong> El framework desaparece en runtime. Todo ocurre en build-time.</li>
+<li><strong>Compilador:</strong> Evita el Virtual DOM. Parsea archivos <code>.svelte</code> para generar y emitir un Abstract Syntax Tree (AST), el cual se compila en código JavaScript imperativo, inyectando actualizaciones de DOM (<code>text()</code>, <code>insert()</code>, <code>update()</code>) conectadas quirúrgicamente a las variables de estado reactivo.</li>
+</ul>
+<h2>2. Patrones y Mejores Prácticas</h2>
+<ul>
+<li><strong>Re-renders Precisos (Vue/Svelte):</strong> Mutar una variable profunda en un objeto reactivo en Vue o Svelte solo actualiza los nodos del DOM que leen ese valor específico.</li>
+<li><strong>Memoización Dirigida (React):</strong> Dado que cualquier actualización de estado en React re-renderiza todo el subárbol, el patrón imperante es el uso de <code>useMemo</code>, <code>useCallback</code> y <code>React.memo</code> para cortar la propagación innecesaria.</li>
+<li><strong>Presentational vs Container (Smart/Dumb) Components:</strong> Patrón dominante en Angular y React. Componentes UI puros que reciben <code>props</code> y emiten eventos (<code>Output</code>), y componentes que inyectan dependencias, manejan estado global o realizan fetch de APIs (Repository Pattern).</li>
+</ul>
+<h2>3. Anti-patrones y "Trampas"</h2>
+<ul>
+<li><strong>Prop Drilling Masivo (React):</strong> Pasar propiedades múltiples niveles hacia abajo. Soluciones modernas implican Composition, Context API o Zustand.</li>
+<li><strong>Stale Closures (React Hooks):</strong> Efectos secundarios (<code>useEffect</code>) o funciones cacheadas que capturan referencias a valores antiguos del estado, causando bugs fantasmas de renderizado.</li>
+<li><strong>Memory Leaks por Subscripciones (Angular):</strong> No des-uscribirse de <code>Observables</code> (RxJS) al demontar componentes (evitable ahora usando pipe <code>async</code> y señales reactivas).</li>
+</ul>
+<h2>4. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-FW-REACT-01 "The Closure Trap"]:</strong> "Al generar arquitecturas React basadas en Hooks, siempre impón un linting estricto en las matrices de dependencias de <code>useEffect</code>/<code>useCallback</code> u opta por alternativas pull-based que no enganchen callbacks dinámicas."</li>
+<li><strong>[HEURISTICA-FW-VUE-01 "Proxy Boundaries"]:</strong> "En sistemas Vue, evita destructuring directo en el top-level de propiedades reactivas, ya que rompe la referencia de los getters del Proxy subyacente impidiendo la detección de cambios."</li>
+<li><strong>[HEURISTICA-FW-ARCH-01 "Smart vs Dumb"]:</strong> "En cualquier framework, enuncia claramente la frontera entre componentes de acceso a datos interconectados con el router/servicios global (Containers/Smart) y los elementos puros visuales acoplados a sistemas de diseño (Presentational/Dumb)."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>HTML &amp; CSS Core (WHATWG, CSSWG Layouts)</h1>
+<h2>Repositorios de Referencia</h2>
+<ul>
+<li><strong>HTML Standard (WHATWG):</strong> <code>https://github.com/whatwg/html</code></li>
+<li><strong>CSS Drafts (CSSWG):</strong> <code>https://github.com/w3c/csswg-drafts</code></li>
+</ul>
+<h2>1. Arquitectura y Mecánicas Internas</h2>
+<h3>1.1 HTML Semántico y Accesibilidad (WHATWG)</h3>
+<ul>
+<li><strong>DOM como Single Source of Truth:</strong> El DOM representa la estructura viva. La semántica no es sólo SEO, es la interfaz principal para Assistive Technologies (AT).</li>
+<li><strong>ARIA Hierarchy:</strong> Atributos ARIA (Accessible Rich Internet Applications) proveen roles analíticos para widgets complejos, pero la regla de oro en el estándar es preferir HTML nativo (como <code>&lt;dialog&gt;</code>, <code>&lt;datalist&gt;</code>) cuando sea posible porque los motores de renderizado mapean nativamente estos elementos a los árboles de accesibilidad del SO.</li>
+</ul>
+<h3>1.2 CSS Layout Engines (Blink/LayoutNG, Gecko)</h3>
+<ul>
+<li><strong>Flexbox (1D - Content Out):</strong> Diseñado para una dimensión. El cálculo algorítmico depende fundamentalmente del tamaño del contenido dentro flexible. Su motor interno (ej. en LayoutNG de Chromium) hace múltiples pasadas para ajustar el contenedor padre respecto a los contenidos hijos.</li>
+<li><strong>Grid (2D - Layout In):</strong> Sistema bidimensional puro. El grid dicta la estructura del layout primero, forzando a los ítems a acoplarse. Es más declarativo y computacionalmente eficiente para estabilizar la estructura visual (evitando reflows masivos por carga de contenido).</li>
+</ul>
+<h2>2. Patrones y Mejores Prácticas</h2>
+<ul>
+<li><strong>Macro-Micro Layout:</strong> Combinación arquitectónica estándar. Usar CSS Grid para establecer el esqueleto general de una vista (Macro), y Flexbox dentro de las áreas del Grid para arreglar contenido dinámico local (Micro).</li>
+<li><strong>Invarianza Semántica:</strong> Usar <code>lang</code>, jerarquía <code>h1-h6</code> estricta, y contrastes de color validados contra WCAG es una heurística fundamental, no un 'añadido final'.</li>
+</ul>
+<h2>3. Anti-patrones</h2>
+<ul>
+<li><strong>Div-Soup Arbitrario:</strong> Utilizar árboles anidados inmensos de <code>&lt;div&gt;</code> sin semántica, destruye el performance de parsing del DOM y bloquea el Accessibility Tree.</li>
+<li><strong>ARIA Abuse:</strong> Asignar <code>role="button"</code> a un <code>div</code> sin proveer soporte explícito de eventos de entrada por teclado (<code>Space</code> o <code>Enter</code>), generando componentes pseudo-interactivos inaccesibles.</li>
+<li><strong>Layout Thrashing por Flexbox Absoluto:</strong> Tratar de usar Flexbox para orquestar la grilla principal de la aplicación, llevando a recálculos de layout en cascada perjudiciales.</li>
+</ul>
+<h2>4. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-HTML-01]:</strong> "Privilegiar elementos HTML nativos (como <code>&lt;button&gt;</code>, <code>&lt;dialog&gt;</code>, <code>&lt;form&gt;</code>) en la síntesis de Vistas. Sólo aplicar ARIA si el elemento nativo no soluciona el escenario de interacción o el estado es estrictamente abstracto."</li>
+<li><strong>[HEURISTICA-CSS-LAYOUT-01]:</strong> "Aplica el patrón 'Grid para el esqueleto (Macro), Flex para los músculos (Micro)'. Nunca uses Flexbox para armar estructuras complejas bidimensionales de la página superior."</li>
+<li><strong>[HEURISTICA-CSS-PERF-01]:</strong> "Evita depender del tamaño del contenido para definir el layout en contenedores que cargarán contenido asíncrono pesado. Fija dimensiones vía CSS Grid o propiedades como <code>aspect-ratio</code> para evitar los <em>Cumulative Layout Shifts (CLS)</em>."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>JavaScript Core (Spec, V8, Bundlers)</h1>
+<h2>Repositorios de Referencia</h2>
+<ul>
+<li><strong>ECMAScript Specification (ECMA-262):</strong> <code>https://github.com/tc39/ecma262</code></li>
+<li><strong>V8 JavaScript Engine:</strong> <code>https://github.com/v8/v8</code></li>
+<li><strong>Webpack Bundler:</strong> <code>https://github.com/webpack/webpack</code></li>
+</ul>
+<h2>1. Arquitectura y Mecánicas Internas</h2>
+<h3>1.1 ECMAScript Specification</h3>
+<ul>
+<li><strong>Tipos Base:</strong> Define <em>Language Types</em> (Undefined, Null, Boolean, String, Symbol, Number, Object) y <em>Specification Types</em> (como Enum, Completion Record, y Reference Record, usados internamente).</li>
+<li><strong>Semántica:</strong> Usa Abstract Operations, Syntax-Directed Operations y Runtime/Static Semantics para definir cómo se comportan las construcciones.</li>
+<li><strong>Objetos:</strong> Distinción crítica entre <em>Ordinary Objects</em> (comportamiento default) y <em>Exotic Objects</em> (como Arrays o Proxies que sobreescriben métodos internos como <code>[[Get]]</code> o <code>[[Set]]</code>).</li>
+</ul>
+<h3>1.2 V8 Engine</h3>
+<ul>
+<li><strong>Ignition &amp; TurboFan:</strong> La arquitectura típica de V8 es un intérprete rápido (Ignition) que produce bytecode, y un compilador optimizador (TurboFan) que toma el bytecode y lo compila a código máquina altamente optimizado basado en <em>Type Feedback</em> (heuristicas de tipos recolectadas en runtime).</li>
+<li><strong>Hidden Classes (Mapas):</strong> V8 no usa diccionarios de hash para todos los objetos. Utiliza "Hidden Classes" (Mapas) y transiciones para el acceso rápido a propiedades. Si la forma del objeto (las propiedades que tiene y su orden de asignación) cambia en runtime, el objeto "transiciona" a una nueva clase oculta.</li>
+<li><strong>Inline Caches (IC):</strong> Cachea la ubicación de las propiedades de las hidden classes para acelerar accesos posteriores.</li>
+<li><strong>Garbage Collection:</strong> Generacional (Scavenger para Young Generation, Mark-Sweep-Compact para Old Generation).</li>
+</ul>
+<h3>1.3 Bundlers (Webpack)</h3>
+<ul>
+<li><strong>Dependency Graph:</strong> Comienza por un entry point y construye un grafo recursivo de dependencias antes de emitir los chunks o bundles.</li>
+<li><strong>Loaders:</strong> Transforman el código fuente (ej. TypeScript a JS, o SCSS a CSS) por cada archivo.</li>
+<li><strong>Plugins:</strong> Intervienen en el ciclo de vida (hooks de Tapable) para realizar operaciones a nivel de bundle (minificación, inyección de HTML, extracción de CSS).</li>
+</ul>
+<h2>2. Patrones y Mejores Prácticas</h2>
+<ul>
+<li><strong>Estabilidad de Tipos (Monomorfismo):</strong> En V8, pasar siempre el mismo tipo de objeto (misma estructura/hidden class) a las funciones favorece el monomorfismo, facilitando a TurboFan optimizar el código.</li>
+<li><strong>Evitar la Eliminación Dinámica (<code>delete</code>):</strong> Usar <code>delete obj.prop</code> rompe la cadena de hidden classes asociadas al objeto, degradando su acceso a modo diccionario (mucho más lento).</li>
+<li><strong>Inicialización de Propiedades:</strong> Siempre inicializar todas las propiedades de un objeto simultáneamente y en el mismo orden (idealmente en el constructor) para compartir la misma hidden class.</li>
+<li><strong>Code Splitting:</strong> Configurar el bundler para separar chunks por rutas (<code>import()</code>) o módulos pesados, aprovechando la carga asíncrona.</li>
+</ul>
+<h2>3. Anti-patrones</h2>
+<ul>
+<li><strong>Polimorfismo Excesivo:</strong> Funciones que reciben objetos de diferentes 'formas' constantemente forzarán a V8 a abandonar los Inline Caches y des-optimizar el código (Megamorphic state).</li>
+<li><strong>Mutación Dinámica Pesada:</strong> Añadir y quitar propiedades a objetos arbitrariamente durante la vida útil de la aplicación daña la optimización del acceso.</li>
+<li><strong>Bundles Monolíticos:</strong> No configurar estrategias de chunking genera descargas iniciales masivas y bloquea el Main Thread del navegador.</li>
+</ul>
+<h2>4. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-JS-V8-01]:</strong> "Cuando escribas constructores o fábricas de objetos de alta densidad (e.g., nodos de grafos, partículas), fuerza la inicialización de todas sus propiedades (incluso como <code>null</code>) en el momento de creación, preservando un orden estricto para apalancar <em>Hidden Classes</em>."</li>
+<li><strong>[HEURISTICA-JS-V8-02]:</strong> "Evita el uso de <code>delete</code>, prefiere asignar el valor a <code>null</code> o <code>undefined</code> si el objeto es propenso a cálculos intensivos a continuación."</li>
+<li><strong>[HEURISTICA-JS-BUNDLE-01]:</strong> "Siempre implementa split-chunks (ej. en webpack u otro bundler) separando <code>vendor</code> (node_modules) de código de aplicación, facilitando el cacheo agresivo en el navegador."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Web Styling Systems (Tailwind, Bootstrap)</h1>
+<h2>Repositorios y Filosofía</h2>
+<ul>
+<li><strong>Tailwind CSS (<code>tailwindlabs/tailwindcss</code>):</strong> Utility-First Architecture. Las clases no describen en semántica <em>qué</em> es el elemento (ej. <code>.card</code>), sino <em>cómo</em> se ve (ej. <code>.bg-white .rounded .shadow</code>).</li>
+<li><strong>Bootstrap (<code>twbs/bootstrap</code>):</strong> Component-Based &amp; Base-Modifier Architecture. Las clases nombran elementos semánticos o pre-construidos (ej. <code>.btn .btn-primary</code>). Usa SASS intensivamente para construir estas variaciones.</li>
+</ul>
+<h2>1. Patrones Arquitectónicos</h2>
+<h3>1.1 Tailwind CSS (Composabilidad y Tokens)</h3>
+<ul>
+<li><strong>Token-Driven:</strong> El archivo <code>tailwind.config.js</code> actúa como la única fuente de la verdad para las variables de diseño (colores, sombras, tipografías).</li>
+<li><strong>Atomicidad:</strong> Cada utilidad muta una o muy pocas propiedades CSS, posibilitando escalado ilimitado sin agrandar el bundle CSS (el compilador <em>purgea</em> (o compila Just-in-Time) solo lo que se usa).</li>
+</ul>
+<h3>1.2 Bootstrap (Modularidad MVC CSS)</h3>
+<ul>
+<li><strong>Base-Modifier Nomenclature:</strong> Basado en BEM (Block Element Modifier). Un componente base (<code>.modal</code>) define la estructura; modificadores (<code>.modal-lg</code>) la variante.</li>
+<li><strong>View-View-Controller Estilístico:</strong> Bootstrap divide estructuralmente sus variables base, utilidades genéricas, mixins de SCSS y finalmente componentes renderizados.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>El HTML Ilegible (Tailwind):</strong> Decenas de clases apiladas sin orden. Solucionable usando herramientas de formato o abstrayendo las repeticiones en componentes (ej. en React/Vue) y no a través de <code>@apply</code> masivo.</li>
+<li><strong>Sobreescritura Bruta (Bootstrap):</strong> Modificar directamente los archivos base core de Bootstrap o usar <code>!important</code> descontroladamente en lugar de redefinir variables Sass o usar Custom Properties.</li>
+<li><strong>Global Scope Pollution:</strong> Incluir la totalidad de un framework CSS gigante cuando sólo se necesitan grillas o dos componentes, bloqueando el render del Thread principal y devaluando el Performance Score.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-STYLING-01 "Componentización sobre @apply"]:</strong> "En proyectos utilizando Tailwind junto a un framework moderno (React/Vue/Svelte), si un grupo de utilidades se repite, extrae un <em>componente del framework</em> (ej. <code>&lt;Button&gt;</code>), <strong>NO</strong> uses <code>@apply</code> en un archivo CSS, ya que rompe la estricta granularidad atómica y aumenta la entropía CSS."</li>
+<li><strong>[HEURISTICA-STYLING-02 "Namespacing Legacy"]:</strong> "Cuando integres nuevas UI en un monolito que ya utiliza Bootstrap u otros sistemas globales, inyecta siempre un scope wrapper (ej. <code>.new-ui-scope</code>) o utiliza Shadow DOM para aislar tu Micro-frontend de cascadas CSS colaterales."</li>
+<li><strong>[HEURISTICA-STYLING-03 "Utility-First como Default"]:</strong> "Para nuevos proyectos de GahenaxAI, favorece un enfoque utility-first configurado estrictamente desde un archivo root (tokens de sistema de diseño). Esto facilitará el paso a modelos de IA generativos al requerir menos inferencia semántica caprichosa."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>UI / UX Tooling (Figma, Storybook)</h1>
+<h2>Arquitecturas y Ecosistemas</h2>
+<h3>1. Figma (Design Tokens &amp; REST API)</h3>
+<ul>
+<li><strong>Single Source of Truth:</strong> Figma no es solo una herramienta de dibujo vectorial, funciona como una base de datos relacional de diseño. A través de la <code>Figma REST API</code>, las decisiones de diseño (Colores, Espaciados, Radios) se exportan como <em>Design Tokens</em> (normalmente JSON).</li>
+<li><strong>Design Tokens Architecture:</strong> </li>
+<li><em>Tier 1 (Primitivos):</em> Valores crudos (<code>#FF0000</code>, <code>16px</code>).</li>
+<li><em>Tier 2 (Semánticos/Alias):</em> Valores con propósito (<code>color-danger-500</code>, <code>spacing-md</code>).</li>
+<li><em>Tier 3 (Componentes):</em> Atados a un componente específico (<code>button-submit-bg</code>).</li>
+<li><strong>Syncing (Tokens Studio):</strong> El flujo ideal para GahenaxAI implica usar plugins (como Tokens Studio) que interconecten de forma bidireccional los tokens de Figma con un Repositorio en GitHub, inyectándolos en el Pipeline de CI/CD.</li>
+</ul>
+<h3>2. Storybook (Component-Driven Development)</h3>
+<ul>
+<li><strong>Desarrollo en Aislamiento (CDD):</strong> Storybook provee un 'sandbox' fuera del contexto del ruteo complejo o el estado global de la aplicación (Next.js/React/Vue). Esto previene que un componente dependa de variables ocultas de la app padre.</li>
+<li><strong>CI/CD Architecture:</strong> Storybook no es solo visual. En un flujo moderno, una Build de Storybook se crea en <em>GitHub Actions</em>, se publica en <em>GitHub Pages</em> (o Vercel/Netlify), y luego una herramienta como <em>Chromatic</em> efectúa <em>Visual Regression Testing</em> comparando diferencias a nivel de pixel entre el Pull Request y la rama Main antes de hacer merge.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Hardcoding UI Values:</strong> Escribir <code>margin: 16px</code> o <code>color: #3b82f6</code> en el CSS de los componentes web/móviles. Todo valor debe nacer de un Design Token inyectado como variable (<code>var(--spacing-md)</code>, <code>theme.colors.danger</code>).</li>
+<li><strong>Blind Component Coupling:</strong> Desarrollar componentes "tontos" (Botones, Tarjetas) asumiendo directamente la inyección de un framework estado como Redux o Zustand en su interior. Los componentes base deben ser siempre <em>puros</em>, recibiendo callbacks y propiedades (Props) desde arriba.</li>
+<li><strong>Storybook Obsoleto:</strong> No incluir la compilación de Storybook en los checks pre-merge de GitHub Actions, causando que las librerías de componentes fallen silenciosamente cuando el código de la app avanza y rompe los contratos de los componentes UI.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-UI-TOKENS-01 "Semantic Over Primitive"]:</strong> "Obliga al motor de inferencia a nombrar toda macro de estilo de UI de forma <em>semántica</em> (ej. <code>bg-surface-elevated</code>) y no <em>primitiva</em> (<code>bg-gray-800</code>). Esto garantiza la viabilidad de los Dark Themes dinámicos."</li>
+<li><strong>[HEURISTICA-UI-CDD-01 "Pure UI Sandbox"]:</strong> "Genera todos los componentes visuales asumiendo que el único lugar donde vivirán inicialmente es Storybook (Aislamiento puro). Interacciones de red (fetch/APIs) o lógica pesada de ruteo está prohibida a nivel de UI Base y debe inyectarse vía Inversión de Control (IoC)."</li>
+<li><strong>[HEURISTICA-UI-SYNC-01 "Token as Code"]:</strong> "Para todo el trabajo frontend, asume que el archivo <code>tokens.json</code> exportado por diseño es la Ley. Todo archivo CSS (o Tailwind config) debe compilarse mapeando estrictamente a las llaves de dicho JSON."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Backend Languages (Python, Java, C++)</h1>
+<h2>Repositorios y Filosofía</h2>
+<ul>
+<li><strong>Python (Asyncio/ASGI):</strong> WebServers orientados a I/O no bloqueante (<code>aiohttp</code>, <code>uvicorn</code>, <code>fastapi</code>).</li>
+<li><strong>Java (JVM/Enterprise):</strong> Servicios de escala masiva (<code>Spring Boot</code>, <code>Jakarta EE</code>). Basado en inyección de dependencias pesada, multithreading nativo y Design Patterns GoF.</li>
+<li><strong>C++ (High Perf/Memory Engine):</strong> Componentes de ultra-baja latencia (High-Frequency Trading, Game Engines) haciendo bypass de la recolección de basura o llamadas al SO. (<code>mtrebi/memory-allocators</code>, <code>envoyproxy/envoy</code>).</li>
+</ul>
+<h2>1. Arquitecturas Comparadas</h2>
+<h3>1.1 Python: Event Loops y Asyncio Pipelines</h3>
+<ul>
+<li><strong>Event Loop (I/O Bound):</strong> Reemplaza el modelo de un-thread-por-request. Usa el Event Loop para multiplexar miles de sockets concurrentes delegando en <code>epoll</code>/<code>kqueue</code>.</li>
+<li><strong>Chaining Coroutines:</strong> Patrón estándar para flujos de datos asíncronos en backends AI. Las tareas se encolan con <code>asyncio.Queue</code>, permitiendo arquitecturas Productor-Consumidor.</li>
+<li><strong>ASGI:</strong> Asynchronous Server Gateway Interface es el estándar para acoplar servidores async (Uvicorn) a frameworks web Async (FastAPI).</li>
+</ul>
+<h3>1.2 Java: JVM Enterprise Patterns</h3>
+<ul>
+<li><strong>Thread-Pool/Virtual Threads:</strong> Históricamente 1 thread pesado por request (bloqueado en I/O database). Ahora moviéndose hacia Virtual Threads (Project Loom) estilo Go-routines.</li>
+<li><strong>Inversión de Control (IoC):</strong> Core pattern de Spring Boot. El contenedor instancia, cablea y gestiona el ciclo de vida de los componentes, aislando la lógica de negocio del boilerplate de instanciación.</li>
+<li><strong>Front-Controller &amp; Business Delegate:</strong> Patrones estructurales típicos del API Gateway (<code>DispatcherServlet</code>) y desacoplamiento de la capa EJB/SOAP a microservicios REST/gRPC modernos.</li>
+</ul>
+<h3>1.3 C++: Memory Control High-Performance</h3>
+<ul>
+<li><strong>Zero-Cost Abstractions:</strong> C++ no fuerza el uso del heap (donde ocurre la latencia por fragmentación o recolección). Los objetos pesados pueden vivir en el stack.</li>
+<li><strong>Custom Memory Allocators:</strong> En aplicaciones de baja latencia se evita <code>new</code>/<code>delete</code> o su backend <code>malloc</code>/<code>free</code>. Se inicializan bloques contiguos masivos de memoria ("Memory Pools" o "Arenas") al arrancar el programa.</li>
+<li><strong>Lock-Free / Wait-Free Data Structures:</strong> Diseño agresivo de estructuras concurrentes que no usan mutexes del OS, sino operaciones atómicas a nivel CPU (Compare-And-Swap) para encolado/desencolado de alta frecuencia.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Sync Code en Async Loop (Python):</strong> Invocar funciones bloqueantes (como <code>requests.get()</code> o procesamiento intensivo de Tensors) dentro de un <code>async def</code>, bloqueando el Event Loop entero y congelando el servidor web.</li>
+<li><strong>God Classes Annotations (Java):</strong> Abusar de anotaciones <code>@Autowired</code> con cientos de dependencias inyectadas creando contenedores impenetrables, acoplados y lentos al arrancar (Spring Boot startup time).</li>
+<li><strong>Fragmentación del Heap por punteros (C++):</strong> Usar memoria dinámica (smart pointers <code>std::shared_ptr</code> alocados en todos lados) en ciclos calientes destruye el CPU Cache Locality.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-BACK-PY-01 "Event Loop Isolation"]:</strong> "En backends AI en Python, nunca mezcles I/O y Computación intensiva. El Server de red (FastAPI) solo despacha descriptores o Pointers JSON a una cola asíncrona (RabbitMQ/NATS), mientras threads/procesos Worker separados (ej. Celery/Ray) hacen el inference crunching."</li>
+<li><strong>[HEURISTICA-BACK-JAVA-01 "Loom-first Threads"]:</strong> "Si el ecosistema objetivo usa JDK 21+, priorizar arquitecturas thread-per-request orientadas a <em>Virtual Threads</em> en lugar del arcaico Reactive Programming (<code>WebFlux</code>/<code>RxJava</code>), reduciendo la complejidad del stack trace."</li>
+<li><strong>[HEURISTICA-BACK-CPP-01 "Pre-allocation Rules"]:</strong> "Al concebir engines en C++, la regla número uno es pre-alocar memoria (Arena Allocators) durante la inicialización de la fase y rotar el Pool completo al finalizarla, reduciendo los calls del SO a cero durante la 'acción en vivo'."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Backend APIs &amp; Protocols (REST, gRPC)</h1>
+<h2>Repositorios y Especificaciones</h2>
+<ul>
+<li><strong>REST / OpenAPI (<code>OAI/OpenAPI-Specification</code>):</strong> Estandarización de las interfaces HTTP/1.1 para JSON. Diseñado alrededor de <em>Recursos</em> y <em>Colecciones</em> (Modelado Nouns-over-Verbs).</li>
+<li><strong>gRPC (<code>grpc/grpc</code> y <code>protocolbuffers/protobuf</code>):</strong> Remote Procedure Call con serialización Binaria nativa. Opera sobre HTTP/2 como transporte base, diseñado alrededor de <em>Servicios</em> y <em>Funciones</em> (Verbs sobre Nouns).</li>
+</ul>
+<h2>1. Arquitecturas Comparadas</h2>
+<h3>1.1 REST API &amp; OpenAPI</h3>
+<ul>
+<li><strong>Resource-Based Design:</strong> Arquitectura stateless. El nombre del recurso en la URI (ej. <code>/users/123/orders</code>) y el Verbo HTTP (<code>GET</code>, <code>POST</code>) definen semánticamente la operación.</li>
+<li><strong>OpenAPI (Swagger):</strong> Actúa como el 'contrato' de facto de las APIs REST modernas. Permite code-generation para clientes (SDKs) y servidores, validación estática y documentación viva interactiva.</li>
+<li><strong>Limitaciones Estructurales:</strong> Sufrir <em>Over-fetching</em> (descargar más campos de los necesarios) o <em>Under-fetching</em> (tener que hacer N+1 requests para agrupar data relacionada).</li>
+</ul>
+<h3>1.2 gRPC &amp; Protocol Buffers (Protobuf)</h3>
+<ul>
+<li><strong>Binary Contracts:</strong> El archivo <code>.proto</code> actúa como el IDL (Interface Definition Language). Es Typesafe. Romper el contrato (cambiar tipos o ID de variables) resulta en errores de compilación antes del runtime.</li>
+<li><strong>Multiplexing sobre HTTP/2:</strong> Múltiples requests/responses binarias fluyen concurrentemente a través de un solo socket TCP persistente sin "Head-of-Line Blocking".</li>
+<li><strong>Proxyless Service Mesh:</strong> Una arquitectura moderna donde bibliotecas gRPC en los clientes pueden implementar Load Balancing (xDS) y resoluciones sin requerir la inyección de sidecars pesados (como un Envoy pod por cada servicio).</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>RPC escondido en REST:</strong> Diseñar rutas REST como <code>/updateUserStatus</code> en lugar de <code>/users/{id}</code> con método <code>PATCH</code>. Confunde el modelo mental, rompe cachés HTTP y va contra el estándar OpenAPI.</li>
+<li><strong>Contratos Frágiles en Protobuf:</strong> Re-utilizar números de 'field index' (<code>int32 my_field = 1;</code>) en versiones posteriores después de borrar los originales, corrompiendo silenciosamente la deserialización binaria en consumidores no actualizados.</li>
+<li><strong>Microservicios 'Chatty':</strong> Usar REST para comunicación este-oeste (entre microservicios internos) intercambiando JSON de megabytes incurriendo en un masivo Parse Penalty del CPU a escala.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-BACK-API-01 "The Communication Divide"]:</strong> "Bajo cualquier diseño de sistema distribuido, usa REST/JSON exclusivamente para el tráfico <em>Norte-Sur</em> (Clientes Móviles/Web comunicándose con el Ingress Middleware). Usa estrictamente gRPC/Protobuf para todo tráfico <em>Este-Oeste</em> (comunicación interna inter-microservicio)."</li>
+<li><strong>[HEURISTICA-BACK-API-02 "API First Design"]:</strong> "Nunca deduzcas o auto-generes implementaciones de APIs web sin antes haber escrito la especificación OpenAPI (YAML/JSON) o el file <code>.proto</code>. El código debe compilarse desde el contrato, no al revés."</li>
+<li><strong>[HEURISTICA-BACK-API-03 "N+1 Safeguard"]:</strong> "En APIs REST con jerarquías anidadas complejas, favorece la exposición controlada de <code>includes</code> o adopta GraphQL/BFF (Backend-for-Frontend) si el cliente va a forzar iteradores secuenciales para resolver entidades."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Backend Middleware (Redis, Elasticsearch, Kafka, RabbitMQ)</h1>
+<h2>Repositorios y Filosofía</h2>
+<ul>
+<li><strong>Redis (<code>redis/redis</code>):</strong> In-Memory Engine. Arquitectura C monolítica optimizada para un-solo-hilo (Single-threaded) y operaciones ultra rápidas. </li>
+<li><strong>Elasticsearch (<code>elastic/elasticsearch</code>):</strong> Inverted Index Engine. Motor Java distribuido construido sobre Apache Lucene.</li>
+<li><strong>Kafka (<code>apache/kafka</code>):</strong> Distributed Event Streaming. Log inmutable y particionado (Partitioned Log Model) diseñado para replayability.</li>
+<li><strong>RabbitMQ (<code>rabbitmq/rabbitmq-server</code>):</strong> Smart Broker Messaging (AMQP). Mensajería transaccional y topologías complejas de routing (Exchanges + Queues).</li>
+</ul>
+<h2>1. Arquitecturas Comparadas</h2>
+<h3>1.1 Redis: Pub/Sub &amp; In-Memory Store</h3>
+<ul>
+<li><strong>Single-threaded Event Loop:</strong> La memoria RAM y el bus de datos dictan el performance. No hay bloqueos (locks) en comandos básicos, garantizando atomicidad por defecto.</li>
+<li><strong>Pub/Sub 'Fire-and-Forget':</strong> A diferencia de Kafka, Redis Pub/Sub NO almacena los mensajes. Si no hay suscriptores escuchando en el instante de la emisión, el mensaje se descarta para siempre.</li>
+<li><strong>Redis vs Memory Leaks:</strong> Uso incorrecto de comandos de complejidad O(N) como <code>KEYS *</code> en producción bloquea el thread único interrumpiendo todo el servicio de caché.</li>
+</ul>
+<h3>1.2 Elasticsearch: Inverted Index &amp; Sharding</h3>
+<ul>
+<li><strong>The Inverted Index:</strong> Mapea términos (tokens) a la lista de documentos que los contienen. No escanea documentos, sino que interseca sets de IDs pre-compilados.</li>
+<li><strong>Inmutabilidad (Lucene Segments):</strong> Los segmentos del índice son inmutables. Modificar un documento en realidad lo marca como borrado y escribe uno nuevo, delegando a un proceso de "Merge" en background la limpieza real (para no bloquear lecturas).</li>
+<li><strong>Cluster Hierarchy:</strong> Coordinadores, Master Nodes (manejo del estado del cluster), y Data Nodes (Shards primarios y réplicas).</li>
+</ul>
+<h3>1.3 Kafka vs RabbitMQ: Logs vs Queues</h3>
+<ul>
+<li><strong>Kafka (Dumb Broker, Smart Consumer):</strong> El broker solo preserva secuencialmente un Log de bytes inmutable (append-only file). Los consumidores mantienen internamente su propio "offset" (dónde se quedaron leyendo). Permite re-procesamiento temporal e historial de logs (Event Sourcing).</li>
+<li><strong>RabbitMQ (Smart Broker, Dumb Consumer):</strong> El broker maneja estados complejos: rastrea quién leyó el mensaje, enruta mensajes basándose en metadata (Headers/Topic Exchanges) e implementa arquitecturas FIFO pesadas (Work queues). Una vez reconocido (Ack), el mensaje es destruido.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Kafka como Base de Datos Transaccional:</strong> Usar Kafka para queries directos o como única base del 'User State'. Kafka es un <em>Pipe</em> (streaming log), no una base de datos relacional.</li>
+<li><strong>RabbitMQ Scaling Loop:</strong> Insertar RabbitMQ entre dos microservicios solo para "comunicación asíncrona genérica" introduciendo cuellos de botella por falta de configuración de clúster (Message persistence locks).</li>
+<li><strong>ES Heap Crash:</strong> Asignar excesiva memoria JVM al proceso de Elasticsearch (más del 50% de la RAM). Lucene requiere que el SO tenga abundante RAM disponible a nivel sistema de archivos (File System Cache) para ser rápido.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-MID-MQ-01 "Event Sourcing vs Work Queues"]:</strong> "Selecciona Kafka si los flujos de la inteligencia artificial requieren 'Replayability', auditoría del historial completo o Event Sourcing distribuido. Selecciona RabbitMQ para tareas asíncronas tradicionales (Workers encolados, envío de emails, conversiones de media)."</li>
+<li><strong>[HEURISTICA-MID-CACHE-01 "Redis Scan over Keys"]:</strong> "Nunca intentes mapear claves enteras en motores in-memory de Gahenax usando inferencia O(N). Preferir siempre iteradores como <code>SCAN</code> para evitar blocking locks que boten los Health Checks."</li>
+<li><strong>[HEURISTICA-MID-SEARCH-01 "Denormalized Searches"]:</strong> "Para módulos de búsqueda profunda, asume datos desnormalizados. Elasticsearch no soporta JOINs transaccionales complejos a escala; la inteligencia debe construir el objeto JSON completo (agregado) antes de indexarlo."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Relational Databases (MySQL, PostgreSQL)</h1>
+<h2>Arquitecturas y Conceptos Base</h2>
+<h3>1. MySQL (InnoDB &amp; B+ Trees)</h3>
+<ul>
+<li><strong>Motor InnoDB:</strong> Es el motor de almacenamiento por defecto y el único que deberías usar en producción moderna por su soporte ACID (Transacciones, Row-level locking).</li>
+<li><strong>Clustered Index Architecture:</strong> En InnoDB, toda la tabla está físicamente ordenada y almacenada en las hojas del Índice Primario (B+ Tree). Si buscar por Primary Key es O(log N) ultra rápido, buscar por un Índice Secundario requiere <em>dos saltos</em>: uno para encontrar el ID Primario en el índice secundario, y otro para buscar la data real en el Clustered Index.</li>
+<li><strong>Page Fill Factor:</strong> Las páginas B-tree (típicamente 16KB) dejan heurísticamente 1/16 de espacio libre durante inserciones ordenadas para mitigar costosos 'Page Splits' futuros.</li>
+</ul>
+<h3>2. PostgreSQL (MVCC &amp; Vacuuming)</h3>
+<ul>
+<li><strong>Multi-Version Concurrency Control (MVCC):</strong> Postgres no borra ni actualiza tuplas (filas) in-place ("in-place updates"). Un <code>UPDATE</code> es literalmente un <code>INSERT</code> de una tupla nueva y un marcador de "Dead" en la tupla vieja. Esto permite que lecturas concurrentes nunca bloqueen escrituras (Readers don't block writers).</li>
+<li><strong>The Vacuum:</strong> El proceso <code>VACUUM</code> (y el Autovacuum daemon) es obligatorio y vital. Recolecta la basura ("Dead tuples") que dejan los UPDATEs/DELETEs para prevenir el "Table Bloat" (hinchazón masiva de disco) y la fragmentación de índices.</li>
+<li><strong>Replication Conflicts:</strong> En topologías Primary-Replica, un Vacuum intenso en el primario puede borrar tuplas que transacciones largas en la réplica (Reader) todavía están observando, causando fallos de replicación.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>UUIDv4 como Primary Key (InnoDB):</strong> Insertar UUIDs aleatorios (v4) fragmenta brutalmente el B+ Tree del Clustered Index de MySQL. Al no ser secuenciales (como un Auto-Increment o UUIDv7 temporal), cada INSERT obliga a escribir en páginas aleatorias en el disco, forzando Page Splits masivos y destrozando el rendimiento I/O.</li>
+<li><strong>Desactivar o Retrasar el Autovacuum (Postgres):</strong> Considerado un pecado capital. Causará que la tabla crezca infinitamente hasta llenar el disco y corromperá la velocidad de las secuencias de escaneo (Seq Scans).</li>
+<li><strong>N+1 Queries:</strong> Recuperar una lista de 100 Artículos, y luego hacer un lazo (<code>for</code>) ejecutando un <code>SELECT</code> por cada artículo para traer su Autor. Deben agruparse forzosamente con <code>JOIN</code> o cláusulas <code>IN (...)</code> para aprovechar la optimización planificada del motor (Query Planner).</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-DB-MYSQL-01 "Sequential PKs Enforcement"]:</strong> "Exige llaves primarias de naturaleza secuencial (Auto-incrementales, UUIDv7 o ULID) en MySQL/InnoDB. Penaliza severamente diseños de tablas que usen cadenas aleatorias altas en entropía como Primary Key debido a la destrucción del Clustered Index."</li>
+<li><strong>[HEURISTICA-DB-PGSQL-01 "MVCC Update Cost"]:</strong> "Concientiza que en PostgreSQL, las tablas con una tasa de mutabilidad extremadamente alta (Millones de UPDATEs por minuto del mismo registro) sufrirán Table Bloat masivo. Redirige cargas de trabajo hiper-mutables a engines in-memory modernos como Redis."</li>
+<li><strong>[HEURISTICA-DB-SQL-01 "Index Selectivity"]:</strong> "Antes de proponer un índice secundario B-tree, evalúa su selectividad (Cardinality). Indexar una columna Booleana (<code>is_active</code>) donde el 95% de los registros son 'true', será ignorado por el Planner forzando un Full Table Scan de todos modos."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>NoSQL Databases (MongoDB, Cassandra)</h1>
+<h2>Arquitecturas y Ecosistemas</h2>
+<h3>1. MongoDB (Document Store &amp; WiredTiger)</h3>
+<ul>
+<li><strong>Topología (Replica Sets &amp; Sharding):</strong> El despliegue de producción mínimo es un <em>Replica Set</em> (1 Primary que recibe Writes, y 2 Secondaries replicados a través del Oplog). Cuando el Primary no da abasto, se introduce <em>Sharding</em>, partiendo la data a través de múltiples Replica Sets usando un "Shard Key", gestionado por enrutadores <code>mongos</code>.</li>
+<li><strong>WiredTiger Engine:</strong> Desde v3.2, Mongo usa WiredTiger con concurrencia a nivel de documento (MVCC). Utiliza B-trees en disco, un Internal Cache exhaustivo, y Write-Ahead Logging (WAL) llamado Journaling.</li>
+<li><strong>Data Modeling:</strong> Mongo abraza la desnormalización y el polimorfismo estructural. En lugar de hacer JOINs relacionales pesados, promueve embeber documentos relacionados (Embed over Reference) si la data secundaria no tiene un ciclo de vida independiente o crece infinitamente (Unbounded arrays).</li>
+</ul>
+<h3>2. Apache Cassandra (Wide-Column &amp; LSM Trees)</h3>
+<ul>
+<li><strong>Descentralización Peer-to-Peer:</strong> Arquitectura 'Masterless'. Todos los nodos son iguales y se enteran del estado del clúster mediante el <em>Gossip Protocol</em> que corre cada segundo. Extremadamente resistente a fallos de zona (Alta Disponibilidad).</li>
+<li><strong>Log-Structured Merge-Tree (LSM):</strong> Optimizada para escrituras fulminantes. Una escritura (<code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code>) va 1. Al <em>Commit Log</em> (disco secuencial) y 2. Al <em>Memtable</em> (memoria RAM). Cuando la memoria se llena, se vuelca al disco como un archivo inmutable <em>SSTable</em>. Las lecturas deben buscar en las SSTables (ayudadas por Bloom Filters). Un Job de <em>Compaction</em> en background fusiona las SSTables periódicamente.</li>
+<li><strong>Tombstones:</strong> En Cassandra, los DELETEs son en realidad INSERTS físicos de marcadores de borrado llamados "Tombstones". Generar excesivos borrados ahoga el proceso de Compaction y penaliza severamente el rendimiento de las lecturas.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Unbounded Arrays en MongoDB:</strong> Embeber logs de usuario o históricos infinitos (<code>push</code>) dentro de un documento principal. Cuando el documento excede los 16MB de límite BSON o empieza a fragmentar sus páginas repetidamente, degrada severamente el rendimiento.</li>
+<li><strong>Consultas sin Shard Key (Scatter-Gather):</strong> En un cluster particionado de MongoDB, hacer una query (Read or Update) sin adjuntar el <code>shard_key</code>. Obligará al <code>mongos</code> a despertar a TODOS los shards del clúster (Scatter) paralizando todo el bus.</li>
+<li><strong>Leer antes de Escribir en Cassandra:</strong> Utilizar LWTs (Lightweight Transactions / <code>IF EXISTS</code>) para hacer lógicas de App convencionales. Cassandra brilla en "Blind Writes" (Upserts puros masivos); forzar validaciones relacionales de estado destroza su velocidad.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-DB-MONGO-01 "Bounded Embedding"]:</strong> "Para esquemas MongoDB, favorece el Embedding solo para relaciones <code>1:Few</code> (Ej. Direcciones de un Usuario). Para relaciones <code>1:Many</code> mutables, usa referencias tipo Foreign Key. Evita estrictamente estructuras de array 'Unbounded'."</li>
+<li><strong>[HEURISTICA-DB-MONGO-02 "Oplog Mutability"]:</strong> "Ten cuidado proponiendo Change Streams sobre colecciones inestables. Eventos incesantes de inserción ahogarán la capacidad de re-transmisión del Oplog antes de que los suscriptores lo atrapen."</li>
+<li><strong>[HEURISTICA-DB-CASS-01 "Write-heavy Design"]:</strong> "Cassandra no es un sustituto de PostgreSQL. Proponer Cassandra solo asumiendo la topología distribuida de Gahenax es erróneo. Úsala exclusivamente para flujos de datos donde las ESCRITURAS sobrepasen aplastantemente a las LECTURAS (Logs, Telemetría IOT, Series Temporales), tolerando consistencia eventual."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Cloud Providers (AWS, Azure, Google Cloud)</h1>
+<h2>Arquitecturas Comparadas</h2>
+<h3>1. AWS (Infrastructure as Code &amp; Compute)</h3>
+<ul>
+<li><strong>IaC First:</strong> La creación manual desde la consola de AWS es un anti-patrón de seguridad operativa. Todo aprovisionamiento debe hacerse vía AWS CloudFormation, AWS CDK (TypeScript/Python) o Terraform (HCL).</li>
+<li><strong>IAM Principle of Least Privilege:</strong> Roles granulares sin llaves de acceso estáticas (Access Keys) preferentemente. Los roles asumen permisos dinámicos atados a instancias EC2 o funciones Lambda, en lugar de pasar credenciales quemadas en código.</li>
+<li><strong>Micro-segmentación:</strong> VPCs, Subnets privadas sin acceso externo a Internet para bases de datos, expuestas sólo vía Application Load Balancers (ALBs) o API Gateways en subnets públicas.</li>
+</ul>
+<h3>2. Azure (Enterprise Identity &amp; Patterns)</h3>
+<ul>
+<li><strong>Identity as the Perimeter:</strong> Microsoft Entra ID (antes Azure AD). En la nube corp, el perímetro de seguridad ya no es la red (VPNs), sino la Identidad. Todo requiere autenticación RBAC y Acceso Condicional (MFA basado en riesgo).</li>
+<li><strong>Enterprise Design Patterns:</strong> Microsoft empuja fuertemente a las arquitecturas CQS/CQRS (Command Query Responsibility Segregation) y Event Sourcing a escala global (Azure Cosmos DB) con integración masiva C#.</li>
+</ul>
+<h3>3. Google Cloud (Data &amp; ML MLOps)</h3>
+<ul>
+<li><strong>Pipeline-Driven AI:</strong> Dominado por Vertex AI y BigQuery. Vertex centraliza el Jupyter Notebook, los Jobs de Training, Model Registry, y Feature Stores.</li>
+<li><strong>TFX &amp; Kubeflow:</strong> Los flujos de IA corren sobre <em>Vertex AI Pipelines</em> (el orchestrador serverless de Google basado en Kubeflow Pipelines). MLOps prioriza el CI/CD completo de la metadata del modelo hacia producción de la mano de Cloud Build de GCP.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Manual Click-Ops:</strong> Configurar recursos (Clusters, S3/Buckets, Firewalls) a mano sin versionarlos en un repositorio de GitHub bajo <code>terraform/</code> o <code>aws-cdk/</code>. Rompe la trazabilidad y la reconstrucción en fallas críticas.</li>
+<li><strong>God-Mode IAM Roles:</strong> Asignar <code>AdministratorAccess</code> a una Lambda solo porque está fallando al subir un archivo a un bucket S3.</li>
+<li><strong>Silos de Notebooks de IA:</strong> En GCP/Vertex, un anti-patrón enorme es entrenar modelos sueltos en Jupyter y pasar los <em>weights</em> (.pt o .h5) manualmente por slack. Todo debe ejecutarse desde un <em>Pipeline</em> auditable.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-CLOUD-IAC-01 "The Code is the Truth"]:</strong> "Si el recurso Cloud no existe bajo una definición Declarativa (Terraform/CDK), el recurso no existe formalmente. Todo script que altere componentes del Sistema Nervioso Gahenax en la nube debe pasar por IaC y Pipeline de CI/CD."</li>
+<li><strong>[HEURISTICA-CLOUD-IAM-01 "Ephemeral Access"]:</strong> "Fuerza la negación de Access Keys fijas para interconexiones Server-to-Server. Utiliza protocolos OpenID Connect (OIDC) o Assumed Roles dinámicos controlando fuertemente las Policy Conditions."</li>
+<li><strong>[HEURISTICA-CLOUD-MLOPS-01 "Auditable Weights"]:</strong> "Todos los modelos resultantes (Vertex AI u otra plataforma) deben trazar a sus datasets, configuración (Hyperparameters) y código fuente usados. Invalida cualquier modelo sin proveniencia registrada en un Feature/Model Registry."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Containers &amp; Orchestration (Docker, Kubernetes)</h1>
+<h2>Arquitecturas y Conceptos Base</h2>
+<h3>1. Docker (Layer Cache &amp; Container Runtime)</h3>
+<ul>
+<li><strong>Union Filesystem (Overlay2):</strong> Una imagen de Docker no es un solo bloque masivo. Es un stack de capas inmutables de solo lectura (Read-Only Layers). Cuando el contenedor arranca, se le aplica una capa superior de Lectura/Escritura (Writable Layer) temporal.</li>
+<li><strong>Cache Invalidation:</strong> En herramientas de CI/CD (GitHub Actions), Docker reconstruirá la imagen entera desde cero si el caché no está montado (<code>actions/cache</code> o <code>docker/build-push-action</code>). Si una instrucción superior del <code>Dockerfile</code> cambia (ej. copiar el <code>package.json</code> antes de tiempo), el caché de TODAS las instrucciones siguientes se destruye (el <code>npm install</code> masivo).</li>
+</ul>
+<h3>2. Kubernetes (Control Plane &amp; Scheduling)</h3>
+<ul>
+<li><strong>The Control Plane:</strong> El cerebro inmutable. Maneja el etcd (Key-Value state store), la API Server (único punto de contacto), Controller Manager (bucle de reconciliación permanente entre el Estado Actual vs Deseado), y el Scheduler.</li>
+<li><strong>Kube-Scheduler:</strong> Decide asíncronamente a qué <code>Node</code> asinará un <code>Pod</code> recién creado, en base a métricas de carga, Taints &amp; Tolerations (Nodos rechazando Pods), y Node/Pod Affinities (Pods atrayéndose/repeliéndose entre ellos o hacia hardware específico).</li>
+<li><strong>El Anti-patrón "Master of None":</strong> Modificar el Control Plane directamente a través de máquinas virtuales en lugar de usar configuradores declarativos (YAML manifests o Helm Charts), matando la escalabilidad del clúster ("Drifts" incontrolables).</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Fat Docker Images:</strong> Incluir compiladores C++, repositorios Git descargados o carpetas temporales pesadas dentro del contenedor de Producción en el paso final, en lugar de usar arquitecturas <em>Multi-Stage Build</em>.</li>
+<li><strong><code>latest</code> Image Tagging en K8s:</strong> Utilizar la etiqueta <code>my-service:latest</code> en Deployments de Kubernetes. Rompe el control de versiones y, al escalar de 1 a 5 réplicas, algunas pueden jalar silenciosamente una versión subyacente diferente si la imagen remota cambió.</li>
+<li><strong>Ignorar Límites de Recursos (OOMKilled):</strong> No definir <code>limits.memory</code> y <code>requests.memory</code> en los Pods de Kubernetes. El Scheduler asume que el Pod requiere 'infinito', eventualmente matando al Nodo entero bajo carga pesada y tirando todos los servicios que albergaba.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-ORCH-DOCKER-01 "Cache Maximization"]:</strong> "Ordena los Dockerfiles estrictamente de 'Menos Cambiante' a 'Más Cambiante'. Instalar dependencias puras (<code>npm CI</code> o <code>pip install</code>) SIEMPRE debe ocurrir ANTES de cruzar (COPIAR) el código fuente volátil (<code>COPY . .</code>)."</li>
+<li><strong>[HEURISTICA-ORCH-DOCKER-02 "Multi-Stage Artifacts"]:</strong> "Las imágenes compiladas de Gahenax (Go, Rust, Node bundlers) deben usar Multi-Stage builds obligatoriamente. La imagen final de producción nunca debe contener utilidades de Build o package managers de SO (apk, apt) innecesarios."</li>
+<li><strong>[HEURISTICA-ORCH-K8S-01 "Stateless Declarative Truth"]:</strong> "Un clúster Kubernetes es intrínsecamente volátil; cualquier Node puede morir en un instante. Prohíbe el uso de bases de datos persistentes complejas dentro de K8s (StatefulSets) a menos que esté justificado; externalízalas o usa Cloud Managed DBs siempre que sea posible. Define TODO manifiesto en código antes de aplicar <code>kubectl</code>."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Mobile Native (Android SDK, iOS Swift/Obj-C)</h1>
+<h2>Arquitecturas y Ecosistemas</h2>
+<ul>
+<li><strong>Android SDK:</strong> Capa de abstracción Java/Kotlin interactuando con ART (Android Runtime) y servicios del SO vía Binder IPC. Basado históricamente en una arquitectura densa orientada a herencia de contextos (<code>Activity</code>, <code>Service</code>).</li>
+<li><strong>iOS (Swift / Objective-C):</strong> Ecosistema de Apple en transición. Interoperabilidad binaria masiva pero con choques de paradigma: Objective-C (Messaging methods, Dynamic Dispatch, MVC) vs Swift (Protocol-Oriented Programming, Value Types, MVVM/TCA).</li>
+</ul>
+<h2>1. Patrones Arquitectónicos</h2>
+<h3>1.1 Android (MVVM &amp; Single-Activity)</h3>
+<ul>
+<li><strong>Single-Activity Architecture:</strong> Atrás quedó instanciar una Activity por cada pantalla con un XML atado. El paradigma actual es una única <code>MainActivity</code> que hospeda una jerarquía de <code>Fragments</code> o directamente el grafo de navegación de <code>Jetpack Compose</code>.</li>
+<li><strong>UDF &amp; ViewModel:</strong> Unidirectional Data Flow. La UI empuja eventos de estado (Acciones) al <code>ViewModel</code>. El ViewModel consulta al <em>Repository</em> (que mapea bases de datos Room o APIs Retrofit) y emite un flujo (Kotlin <code>StateFlow</code> o <code>LiveData</code>) que la UI observa para re-renderizarse de forma reactiva.</li>
+</ul>
+<h3>1.2 iOS (MVVM, VIPER &amp; TCA)</h3>
+<ul>
+<li><strong>El fin de Massive-View-Controller:</strong> En Obj-C y primeros días de Swift, <code>UIViewController</code> concentraba navegación, acceso a datos y layout. Esto mutó hacia <em>MVVM-Coordinator</em> (MVVM-C) aislando el ruteo, o hacia <em>VIPER</em> (View, Interactor, Presenter, Entity, Router) para dominios altamente complejos.</li>
+<li><strong>The Composable Architecture (TCA):</strong> Para apps nativas complejas en SwiftUI, el paradigma está convergiendo a <em>TCA</em>, muy similar al Redux web: un único State Tree globally manejable mutado sólo mediante Reducers estáticos procesando Actions e inyectando Side-Effects.</li>
+<li><strong>Swift-Objective-C Interoperation:</strong> Usar <em>Bridging Headers</em> (<code>-Bridging-Header.h</code>) no es mágico. Traer Types de Swift que Obj-C no comprende (como Enums con Associated Values o Structs) impone envolver interfaces o degradar características de Swift (<code>@objc class</code>).</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Leak de <code>Context</code> o <code>UIViewController</code>:</strong> Inyectar la capa de Vista (o el <code>Context</code> general de Android) en corutinas/background threads que sobreviven a la rotación de pantalla. Resulta en Memory Leaks gigantescos destructores de la app.</li>
+<li><strong>Data-layer en el Main Thread:</strong> El "Application Not Responding" (ANR). Deserializar JSON masivos de red o acceder a SQLite on-device sin mover el trabajo explícitamente a theads O/I o Background (<code>DispatchQueue.global()</code> iterativo).</li>
+<li><strong>Herencia sobre Composición:</strong> Extender múltiples niveles de BaseActivities/BaseViewControllers atascando comportamientos ortogonales (Tracking, Theming) imposibles de desgranar después.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-MOBILE-ARCH-01 "UDF Enforcement"]:</strong> "Exige Unidirectional Data Flow en componentes celulares. La capa UI (Jetpack Compose / SwiftUI) jamás puede mutar sus propias propiedades; solo emite Actions y re-pinta reaccionando al StateFlow expuesto inmutablemente por el ViewModel/Store."</li>
+<li><strong>[HEURISTICA-MOBILE-IOS-01 "Obj-C Quarantine"]:</strong> "Al asistir en la migración de legados Objective-C, aísla el código antiguo vía Facades en Swift. Nunca permees patrones dinámicos de Obj-C (Selectors/KVO) en dominios limpios de lógica modular de Swift."</li>
+<li><strong>[HEURISTICA-MOBILE-AND-01 "Process Death Aware"]:</strong> "Asume que el OS de Android destruirá tu proceso background (Tombstoning) constantemente. Todo state valioso de la UI debe persistirse vía <code>SavedStateHandle</code> en ViewModel para reconstruirse transparente al usuario tras System-kill."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Mobile Cross-Platform (Flutter, Unity, Ionic)</h1>
+<h2>Arquitecturas Comparadas</h2>
+<h3>1. Flutter (Dart Engine &amp; Impeller)</h3>
+<ul>
+<li><strong>Motor de Renderizado Propio:</strong> Flutter no usa los componentes nativos del OS (no hay UIViews de iOS ni Views de Android). Dibuja cada pixel usando su motor de renderizado (originalmente Skia, ahora <em>Impeller</em> para mejor pre-compilación de shaders).</li>
+<li><strong>El Pipeline (Widget -&gt; Element -&gt; RenderObject):</strong></li>
+<li><em>Widgets:</em> Configuraciones inmutables (UI Declarativa).</li>
+<li><em>Elements:</em> Instancias mutables que manejan el ciclo de vida y estado (El hilo conductor).</li>
+<li><em>RenderObjects:</em> Computan el layout y pintan iterando sobre el espacio asignado por el parent (Constraint-based layout).</li>
+</ul>
+<h3>2. Unity (Game Engine &amp; DOTS/ECS)</h3>
+<ul>
+<li><strong>Data-Oriented Technology Stack (DOTS):</strong> Abandona el modelo <code>MonoBehaviour</code> (Orientado a Objetos) por ECS (Entity Component System) por razones de performance (evitar Cache Misses del CPU).</li>
+<li><strong>ECS (Entity Component System):</strong></li>
+<li><em>Entities:</em> Son solo un ID entero.</li>
+<li><em>Components:</em> Structs puros de datos contiguos (Positions, Velocities).</li>
+<li><em>Systems:</em> Lógica pura (<code>C# Job System</code> y <code>Burst Compiler</code>) que barre todos los componentes del mismo Archetype masivamente en paralelo.</li>
+<li><strong>Repository Pattern vs ECS:</strong> ECS ya es un gestor de datos in-memory ultra-rápido. En lugar de un "Database Repository", la data se accede vía <code>EntityQuery</code> en los <em>Systems</em>. </li>
+</ul>
+<h3>3. Ionic (WebView Wrapper &amp; Capacitor)</h3>
+<ul>
+<li><strong>Hybrid WebView:</strong> Embebido nativo de un browser completo a pantalla completa que corre código web (HTML/JS/CSS).</li>
+<li><strong>Capacitor vs Cordova:</strong> Cordova encapsulaba el proyecto nativo como un artefacto secundario construido. Capacitor (y su arquitectura de plugins moderna) asume el proyecto Xcode/AndroidStudio como <em>un asset de primer nivel</em>, inyectando dinámicamente el código JS que interactúa con la capa nativa (Mobile APIs).</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Rebuilds Masivos en Flutter:</strong> Recrear la mitad del árbol principal de Widgets invocando <code>setState()</code> arbitrariamente en la raíz de un formulario, en lugar de empujar el estado abajo al Textbox individualmente o usando manejadores reactivos (Riverpod/Bloc).</li>
+<li><strong>Lógica en MonoBehaviours (Unity 2024+):</strong> Tratar de simular físicas de 10,000 unidades en pantalla usando métodos <code>Update()</code> adheridos a instancias OOP (<code>GameObject</code>), destruyendo el framerate por overhead de virtualización e interrupción de caché.</li>
+<li><strong>Plugins Nativos Pesados en Ionic:</strong> Bloquear el hilo principal del WebView tratando de hacer computación intensiva de JavaScript mientras se comunican objetos masivos de base de datos a través del puente de comunicación asíncrono JS-Native Bridge de Capacitor.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-CROSS-FLUTTER-01 "Leaf-Node State"]:</strong> "Fuerza el diseño de estado en Flutter a nivel de nodos hoja (<em>Leaf-nodes</em>). Las mutaciones reactivas nunca deben ocurrir en Layout Wrappers superiores para evitar invalidaciones del RenderObject gigantescas."</li>
+<li><strong>[HEURISTICA-CROSS-UNITY-01 "Decoupled Data Components"]:</strong> "Al concebir sistemas computacionalmente rigurosos en C#, asume siempre arquitectura DOD/ECS. Trata como un error arquitectónico cualquier variable de 'estado dinámico' contenida dentro de una clase que también provea métodos heredados (OOP Clásico)."</li>
+<li><strong>[HEURISTICA-CROSS-HYBRID-01 "Bridge Optimization"]:</strong> "En arquitecturas WebView (Ionic/Capacitor/React Native antiguo), el puente serializa los datos JSON. Evita las invocaciones 'chatty' nativas. Pide grandes chunks de data de una sola vez en lugar de emitir comandos repetitivos a través del bridge inter-procesos."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Payment Integrations (Stripe, PayPal, Unified Gateways)</h1>
+<h2>Arquitecturas y Patrones de Integración</h2>
+<p>Este documento compila las directrices, arquitecturas y lecciones extraídas de repositorios oficiales y frameworks agnósticos para plataformas de pago (Stripe, PayPal).</p>
+<h3>1. Modelos de Integración Directa</h3>
+<ul>
+<li><strong>Stripe Elements &amp; Checkout (<code>stripe-samples/accept-a-payment</code>):</strong> </li>
+<li>La tendencia actual y más segura es <strong>nunca</strong> tocar los datos de la tarjeta en el frontend. Se utilizan <code>Stripe Elements</code> (iframes seguros inyectados) o redirigiendo al <code>Stripe Checkout</code> hospedado. </li>
+<li>El Backend se limita a crear un <em>PaymentIntent</em> temporal, devolviendo un <em>ClientSecret</em> al frontend para completar el pago.</li>
+<li><strong>PayPal REST API &amp; Checkout:</strong></li>
+<li>Patrón similar donde el backend actúa como orquestador seguro de tokens (OAuth2) y <em>Order IDs</em>, mientras el frontend (usando <code>paypal-checkout</code>) renderiza los botones y gestiona el ciclo de vida del <em>popup</em>.</li>
+</ul>
+<h3>2. Gateways Unificados (Agnostic Platforms)</h3>
+<ul>
+<li>Proyectos como <strong>Omnipay</strong> (PHP) o bifurcaciones de <strong>UnipayConnect</strong>: Implementan el patrón de diseño <em>Adapter/Gateway</em>.</li>
+<li><strong>Ventaja:</strong> El código muta muy poco si pasas de Stripe a PayPal. El backend habla con una interfaz común (ej. <code>unified_gateway.charge(amount, currency, source)</code>) y las clases concretas de cada proveedor realizan la llamada HTTP correspondiente.</li>
+</ul>
+<h3>3. Patrones de DevOps y Pipelines Seguros en Pagos</h3>
+<ul>
+<li>En repositorios serios (<code>stripe-payments</code>), los GithHub Actions (<code>ci.yml</code>, <code>deploy.yml</code>) tienen características muy estrictas:</li>
+<li><strong>Uso Estricto de Claves Sandbox:</strong> NUNCA se corren tests unitarios o E2E sin las <em>Test Keys</em> (las que empiezan por <code>sk_test_...</code>).</li>
+<li><strong>Aislamiento de Secrets:</strong> Fallo automático del pipeline si se detecta contaminación cruzada entre claves de <em>Staging</em> y <em>Production</em>.</li>
+<li><strong>Webhook Mocking:</strong> Uso de CLIs (como Stripe CLI) en los pipelines para hacer "forwarding" seguro a <code>localhost</code> y realizar tests de integración reales sobre los endpoins que reciben los webhooks de confirmación (<code>payment_intent.succeeded</code>).</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>PCI Scope Contamination:</strong> Permitir que un formulario HTML nativo envie campos llamados <code>card_number</code> o <code>cvc</code> directamente hacia el backend alojado en Gahenax. Estalla la responsabilidad legal y de PCI DSS.</li>
+<li><strong>Confiar en el Frontend para el Fulfillment:</strong> Liberar un producto digital o cambiar un estado en la base de datos basándose en que el frontend dijo "Pago completado" tras cerrar el popup de PayPal/Stripe.</li>
+<li><strong>Regla Inquebrantable:</strong> El producto solo se libera cuando el <em>Webhook Backend-to-Backend</em> oficial de Stripe/PayPal golpea tu API ratificando criptográficamente el cobro.</li>
+<li><strong>Hardcoding de Secretos:</strong> Incluir <code>sk_live_...</code> directamente en el código o en variables de entorno no encriptadas del repositorio.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-PAY-GATEWAY-01 "Agnostic Adapter Protocol"]:</strong> "Cuando se requieran múltiples pasarelas, exige la creación de una Interfaz/Clase unificada (Gateway Abstracto). El dominio de negocio nunca debe saber si está hablando con Stripe o PayPal directamente; solo debe enviar y recibir DTOs estandarizados de cobro."</li>
+<li><strong>[HEURISTICA-PAY-SEC-01 "Tokenized PCI Delegation"]:</strong> "Bajo ninguna circunstancia Gahenax gestionará rutados HTTP que contengan strings con números de tarjetas. Delega obligatoriamente la tokenización usando Drop-ins, Elements o Checkouts hospedados. El backend solo maneja <code>PaymentIntents</code> o tokens criptográficos."</li>
+<li><strong>[HEURISTICA-PAY-WEBHOOK-01 "Asynchronous Fulfillment"]:</strong> "Establece como obligación arquitectónica que cualquier tabla de base de datos como <code>orders</code> o <code>subscriptions</code> sea actualizada estrictamente por el receptor de Webhooks del proveedor, validando el payload secret. Nunca confíes en el success tick del Frontend."</li>
+<li><strong>[HEURISTICA-PAY-PIPELINE-01 "CI/CD Sandbox Keys"]:</strong> "Cualquier workflow propuesto en GitHub Actions o GitLab CI que interactúe con pagos DEBE inyectar explícitamente variables que se llamen <code>STRIPE_TEST_KEY</code> o <code>PAYPAL_SANDBOX_ID</code>. Reprueba cualquier pipeline que mezcle entornos."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Patrones Arquitectónicos: Event-Driven, CQRS y Event Sourcing</h1>
+<h2>Arquitecturas y Ecosistemas</h2>
+<h3>1. Event-Driven Architecture (EDA)</h3>
+<ul>
+<li><strong>Desacoplamiento asíncrono:</strong> Los microservicios no se llaman directamente (RPC/HTTP), sino que se comunican emitiendo y reaccionando a <strong>Eventos de Dominio</strong> (ej. <code>UserRegistered</code>, <code>OrderShipped</code>).</li>
+<li><strong>Resiliencia:</strong> Si el servicio de facturación falla, el servicio de órdenes sigue aceptando peticiones. Cuando facturación vuelve a levantarse, procesa la cola de eventos acumulada (Eventual Consistency).</li>
+</ul>
+<h3>2. CQRS (Command Query Responsibility Segregation)</h3>
+<ul>
+<li><strong>Separación de Responsabilidades:</strong> Divide las rutas de la arquitectura en dos modelos aislados:</li>
+<li><strong>Command Model (Writes):</strong> Encargado de validar la lógica de negocio y alterar el estado (INSERT/UPDATE/DELETE). Alta consistencia.</li>
+<li><strong>Query Model (Reads):</strong> Creado exclusivamente para consultas de lectura en alta disponibilidad. Frecuentemente desnormalizado como <em>Materialized Views</em> para leer de forma instantánea sin JOINs complejos.</li>
+</ul>
+<h3>3. Event Sourcing (ES)</h3>
+<ul>
+<li><strong>La fuente de la verdad es el historial:</strong> En lugar de guardar el estado actual de una entidad en una tabla (ej. <code>User { name: 'Juan', balance: 100 }</code>), se guarda el <strong>Historial de Eventos Inmutables</strong> (<code>UserCreated(name='Juan') -&gt; MoneyDeposited(150) -&gt; MoneyWithdrawn(50)</code>).</li>
+<li><strong>Auditabilidad absoluta:</strong> Permite "viajar en el tiempo" reconstruyendo el estado del sistema en cualquier punto del pasado.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Sync HTTP sobre EDA:</strong> Introducir colas de eventos pero hacer que el productor espere sincrónicamente (polling) a que el consumidor termine de procesar el evento para devolverle el HTTP 200 al cliente. Destruye el propósito de asincronía.</li>
+<li><strong>Microservicios "Distributed Monolith":</strong> Si 5 servicios deben acceder a la misma tabla de base de datos relacional para leer o escribir eventos concurrentemente sin un bus central.</li>
+<li><strong>Actualizar Eventos (Update Event):</strong> Editar o borrar un evento ya guardado en el Event Store. Los eventos son inmutables por ley natural (lo que ocurrió, ocurrió). Para revertir algo, se emite un "Compensation Event" (ej. <code>MoneyRefunded</code>).</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-ARCH-CQRS-01 "Read/Write Asymmetry"]:</strong> "Si en un sistema las lecturas superan a las escrituras en un orden de 1000:1 (o viceversa), aísla el modelo de Query usando CQRS. Construye vistas materializadas asíncronas optimizadas para lectura inmediata."</li>
+<li><strong>[HEURISTICA-ARCH-ES-01 "Event Immutability"]:</strong> "Cualquier diseño de base de datos basado en Event Sourcing tiene estrictamente prohibido permitir operaciones UPDATE o DELETE físicas sobre el Event Store. Implementa <code>append-only</code> tables como regla de oro."</li>
+<li><strong>[HEURISTICA-ARCH-EDA-01 "Eventual Consistency Tolerance"]:</strong> "Antes de proponer mensajería asíncrona (RabbitMQ/Kafka) para un flujo de negocio, exige que el usuario confirme que el dominio tolera <em>Eventual Consistency</em> (consistencia eventual). Si el dominio exige garantías ACID bancarias inmediatas transversales, revoca EDA y usa transacciones rígidamente bloqueantes."</li>
+</ul>
+<div class='page-break'></div>
+
+<h1>Patrones Arquitectónicos: Telemetría Distribuida (OpenTelemetry) y Edge Computing</h1>
+<h2>Arquitecturas y Ecosistemas</h2>
+<h3>1. Observabilidad y OpenTelemetry (OTel)</h3>
+<ul>
+<li><strong>Trilogía de la Observabilidad:</strong> Un sistema moderno no confía en hacer <code>console.log</code>. Se basa en <strong>Métricas</strong> (CPU, memoria, latencias), <strong>Logs Estruturados</strong> (JSON logs con IDs correlacionados) y <strong>Traces Distribuidos</strong> (peticiones viajando de microservicio a microservicio).</li>
+<li><strong>Vendor-Neutrality:</strong> OpenTelemetry es el estándar de oro (CNCF). La aplicación no sabe a dónde van los datos. Ella se instrumenta con OTel, expulsa los datos a un <strong>OTEL Collector</strong>, y el colector decide si los manda a DataDog, Grafana Loki, Jaeger, etc.</li>
+</ul>
+<h3>2. Edge Computing y Serverless (Cloudflare Workers / Vercel Edge)</h3>
+<ul>
+<li><strong>Ejecución V8 Isolate:</strong> Las arquitecturas en el Edge no arrancan un contenedor Docker pesado que tarda 2 segundos. Usan V8 Isolates (como Chrome) para arrancar el código en milisegundos en el CDN más cercano al usuario.</li>
+<li><strong>Serverless Databases:</strong> Correr computo en el Edge es inútil si la base de datos está en una sola región física. Herramientas como Neon (Postgres Serverless) o Turso (SQLite Edge) permiten a las funciones al borde de la red consultar datos sin cruzar el océano.</li>
+</ul>
+<h2>2. Anti-patrones de Integración</h2>
+<ul>
+<li><strong>Silenciamiento de Trace Contexts:</strong> Permitir que una petición HTTP entre a un servicio <code>Backend A</code>, el cual lanza un mensaje a RabbitMQ, lo tome <code>Backend B</code>, y no se pase el <code>trace-id</code> original en los headers HTTP/AMQP. Rompe la trazabilidad visual distribuida.</li>
+<li><strong>Logs No Estructurados ("Spaghetti Logs"):</strong> Usar sentencias planas de log: <code>INFO: El usuario 123 ha fallado el login</code>. Deben escribirse en diccionarios JSON nativos: <code>{"level":"info","event":"login_failed","user_id":123,"ip":"8.8.8.8"}</code>.</li>
+<li><strong>Node.js APIs en el Edge:</strong> Intentar ejecutar código fuertemente enlazado con la API de SO de Node.js (<code>fs</code>, <code>child_process</code>) dentro de Cloudflare Workers (que son V8 Isolates puros de API Web standard: <code>fetch()</code>, <code>Request</code>, <code>Response</code>). El despliegue fallará.</li>
+</ul>
+<h2>3. Heurísticas para GahenaxAI</h2>
+<ul>
+<li><strong>[HEURISTICA-OBS-OTEL-01 "Distributed Context Propagation"]:</strong> "Toda integración entre dos componentes distribuidos (sea vía REST, gRPC, o Mensajes Pub/Sub) DEBE inyectar el protocolo estandar de W3C Trace Context en sus headers (<code>traceparent</code>, <code>tracestate</code>). Nunca interrumpas la cadena de propagación."</li>
+<li><strong>[HEURISTICA-OBS-LOG-01 "Structured JSON Logging Only"]:</strong> "Queda formalmente vetado emitir logs de texto plano en servidores de producción. Todos los logs se estructurarán como JSON para su correcta ingesta e indexación en sistemas como Loki o Elasticsearch."</li>
+<li><strong>[HEURISTICA-EDGE-COMPUTE-01 "Stateless Edge Functions"]:</strong> "Al proponer funciones Edge (Cloudflare/Vercel), asume que son amnésicas e inestables (viven ms). Nunca declares variables globales esperando que se compartan entre peticiones diferentes. Todo estado persistente debe ir a bases de datos kv locales al edge (Workers KV) o remotas."</li>
+</ul>
+<div class='page-break'></div>
+</body>
+</html>

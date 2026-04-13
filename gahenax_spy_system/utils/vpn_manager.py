@@ -24,10 +24,10 @@ class VPNManager:
     def connect(self, config_file):
         config_path = os.path.join(self.config_dir, config_file)
         if not os.path.exists(config_path):
-            print(f"❌ Configuración no encontrada: {config_path}")
+            print(f" Configuración no encontrada: {config_path}")
             return False
 
-        print(f"🌐 Conectando a VPN usando: {config_file}...")
+        print(f" Conectando a VPN usando: {config_file}...")
         
         # En Windows OpenVPN requiere privilegios o el CLI específico
         # Intentamos con el comando 'openvpn' (debe estar en el PATH)
@@ -37,17 +37,17 @@ class VPNManager:
             self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             time.sleep(5) # Esperar a que Handshake ocurra
             self.current_ip = self.get_public_ip()
-            print(f"✅ VPN Conectada. Nueva IP: {self.current_ip}")
+            print(f" VPN Conectada. Nueva IP: {self.current_ip}")
             return True
         except Exception as e:
-            print(f"❌ Error al iniciar OpenVPN: {e}")
+            print(f" Error al iniciar OpenVPN: {e}")
             return False
 
     def disconnect(self):
         if self.process:
             self.process.terminate()
             self.process = None
-            print("🛑 VPN Desconectada.")
+            print(" VPN Desconectada.")
 
     def burn_current_ip(self, reason="Detected/Banned"):
         ip = self.get_public_ip()
@@ -62,7 +62,7 @@ class VPNManager:
             import json
             f.write(json.dumps(record) + "\n")
         
-        print(f"🔥 IP QUEMADA: {ip} | Motivo: {reason}")
+        print(f" IP QUEMADA: {ip} | Motivo: {reason}")
         return True
 
 if __name__ == "__main__":
@@ -71,4 +71,4 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         manager.connect(sys.argv[1])
     else:
-        print("💡 Uso: python vpn_manager.py <config.ovpn>")
+        print(" Uso: python vpn_manager.py <config.ovpn>")

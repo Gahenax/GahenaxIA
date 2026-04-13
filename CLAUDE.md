@@ -48,26 +48,26 @@ PASO 1 — INFERENCIA CIE
 PASO 2 — CATALOGACIÓN SIGIL
   Asigna la responsabilidad de cada componente de la solución:
 
-  ┌─────────┬──────────────────────────────────────────────────────────────┐
-  │  SIGIL  │  RESPONSABILIDAD                                             │
-  ├─────────┼──────────────────────────────────────────────────────────────┤
-  │  GATE   │ Validación de entrada, autenticación, firewalls, rate limits │
-  │  SWORD  │ Lógica destructiva, cálculo pesado (Riemann/Jules), mutación │
-  │  ALTAR  │ Almacenamiento, ORMs (Prisma/Eloquent), persistencia         │
-  │  MIRROR │ Observabilidad (OpenTelemetry), logs, telemetría             │
-  │  CHAIN  │ Flujos asíncronos, mensajería (Kafka/RabbitMQ), pipelines   │
-  │  MAP    │ Esquemas relacionales y mapas de entidades                   │
-  │  KEY    │ Secretos, credenciales, vault entries (idempotentes)         │
-  │  SEAL   │ Contratos sellados (interfaces inmutables publicadas)        │
-  │  SCALE  │ Configuración de escalado, métricas de carga                │
-  │  CIRCLE │ Bucles de feedback, auto-mejora, evaluación continua         │
-  └─────────┴──────────────────────────────────────────────────────────────┘
+  
+    SIGIL    RESPONSABILIDAD                                             
+  
+    GATE    Validación de entrada, autenticación, firewalls, rate limits 
+    SWORD   Lógica destructiva, cálculo pesado (Riemann/Jules), mutación 
+    ALTAR   Almacenamiento, ORMs (Prisma/Eloquent), persistencia         
+    MIRROR  Observabilidad (OpenTelemetry), logs, telemetría             
+    CHAIN   Flujos asíncronos, mensajería (Kafka/RabbitMQ), pipelines   
+    MAP     Esquemas relacionales y mapas de entidades                   
+    KEY     Secretos, credenciales, vault entries (idempotentes)         
+    SEAL    Contratos sellados (interfaces inmutables publicadas)        
+    SCALE   Configuración de escalado, métricas de carga                
+    CIRCLE  Bucles de feedback, auto-mejora, evaluación continua         
+  
 
 PASO 3 — INVARIANTES ONTOLÓGICAS (Linter Ontológico)
-  ❌ NUNCA construyas un ALTAR o SWORD sin pasar por un GATE primero.
-  ❌ Si detectas un endpoint FastAPI mutando DB sin middleware GATE, emite
-     "⚠️ CIE Alert: GATE ausente en ruta crítica."
-  ✅ Cuando el usuario pida "Construir X", responde:
+   NUNCA construyas un ALTAR o SWORD sin pasar por un GATE primero.
+   Si detectas un endpoint FastAPI mutando DB sin middleware GATE, emite
+     " CIE Alert: GATE ausente en ruta crítica."
+   Cuando el usuario pida "Construir X", responde:
      "Análisis CIE completado. Desplegando arquitectura Sigil: [GATE → SWORD → ALTAR]"
      y escribe el código modularizado respetando la taxonomía.
 </cie_sigil_routing>
@@ -158,10 +158,10 @@ FASE 4 — COMMIT ATÓMICO
   Ejemplo: feat(02-03): add stripe webhook endpoint
 
 ANTI-PATRONES:
-  ❌ Implementar todo en un solo contexto → Context Rot
-  ❌ Horizontal layers → alta contención inter-wave
-  ❌ Commits grandes al final → imposible hacer bisect
-  ❌ Saltarse Discuss Phase → gray areas emergen en ejecución
+   Implementar todo en un solo contexto → Context Rot
+   Horizontal layers → alta contención inter-wave
+   Commits grandes al final → imposible hacer bisect
+   Saltarse Discuss Phase → gray areas emergen en ejecución
 </gsd_wave_protocol>
 
 ---
@@ -269,36 +269,36 @@ En cada interacción, ejecuta mentalmente el ciclo OEDA:
 
 <pre_delivery_checklists>
 FRONTEND
-  ✅ Sin emojis como íconos — usar SVG (Heroicons/Lucide)
-  ✅ cursor-pointer en todos los elementos clickeables
-  ✅ Hover states con transición 150-300ms
-  ✅ Contraste texto/fondo mínimo 4.5:1 (WCAG AA)
-  ✅ Focus states visibles (navegación por teclado)
-  ✅ prefers-reduced-motion respetado
-  ✅ Responsive: 375px, 768px, 1024px, 1440px
-  ✅ RSC boundaries correctas — sin "use client" innecesarios (Next.js)
+   Sin emojis como íconos — usar SVG (Heroicons/Lucide)
+   cursor-pointer en todos los elementos clickeables
+   Hover states con transición 150-300ms
+   Contraste texto/fondo mínimo 4.5:1 (WCAG AA)
+   Focus states visibles (navegación por teclado)
+   prefers-reduced-motion respetado
+   Responsive: 375px, 768px, 1024px, 1440px
+   RSC boundaries correctas — sin "use client" innecesarios (Next.js)
 
 BACKEND / API
-  ✅ Sin UUIDv4 como PK en MySQL (usa ULIDv7 o INT auto-increment)
-  ✅ Rate limiting en todos los endpoints públicos
-  ✅ Inputs validados con schema (Zod, Pydantic, io-ts)
-  ✅ Errores → { "error": true, "message": "...", "code": 4xx }
-  ✅ Logs JSON estructurados con nivel + correlationId
-  ✅ Sin bloqueo del Event Loop en ASGI (FastAPI/Starlette)
+   Sin UUIDv4 como PK en MySQL (usa ULIDv7 o INT auto-increment)
+   Rate limiting en todos los endpoints públicos
+   Inputs validados con schema (Zod, Pydantic, io-ts)
+   Errores → { "error": true, "message": "...", "code": 4xx }
+   Logs JSON estructurados con nivel + correlationId
+   Sin bloqueo del Event Loop en ASGI (FastAPI/Starlette)
 
 HPC / SCIENTIFIC COMPUTE
-  ✅ Checkpoint implementado (no perder progreso si Jules timeout)
-  ✅ Rango de búsqueda documentado en el dispatch order
-  ✅ Output en JSON + PDF certificado (formato canonizado)
-  ✅ Resultado verificado contra valores conocidos (ground truth)
-  ✅ Commit del resultado al repo antes de cerrar sesión
+   Checkpoint implementado (no perder progreso si Jules timeout)
+   Rango de búsqueda documentado en el dispatch order
+   Output en JSON + PDF certificado (formato canonizado)
+   Resultado verificado contra valores conocidos (ground truth)
+   Commit del resultado al repo antes de cerrar sesión
 
 MCP SERVER
-  ✅ server.py expone tools con input_schema JSON Schema válido
-  ✅ Error handling → isError: true con mensaje descriptivo
-  ✅ Transport type documentado (stdio vs SSE)
-  ✅ Sin side effects en tools de solo lectura (resources)
-  ✅ Rate limits y timeouts configurados
+   server.py expone tools con input_schema JSON Schema válido
+   Error handling → isError: true con mensaje descriptivo
+   Transport type documentado (stdio vs SSE)
+   Sin side effects en tools de solo lectura (resources)
+   Rate limits y timeouts configurados
 </pre_delivery_checklists>
 
 ---

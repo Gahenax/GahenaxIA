@@ -4,7 +4,7 @@ Integrar a GahenaxAI directamente en tu comunidad de Discord transformará la ge
 
 ---
 
-## 🏗️ 1. Arquitectura Central del Bot
+##  1. Arquitectura Central del Bot
 
 Para aprovechar tu ecosistema actual de Python y los scripts de análisis que ya escribimos (CIE - Context Inference Engine), el bot debe estar construido en Python.
 
@@ -14,7 +14,7 @@ Para aprovechar tu ecosistema actual de Python y los scripts de análisis que ya
 
 ---
 
-## 🤖 2. Funciones y Workflows (El Embudo Discord)
+##  2. Funciones y Workflows (El Embudo Discord)
 
 ### A. Soporte Técnico "By-The-Book"
 Si un usuario de tu comunidad pregunta *"¿Cómo manejan la concurrencia en Node.js según sus estándares?"*, el bot:
@@ -36,7 +36,7 @@ Aquí es donde entra el candado comercial en Discord:
 
 ---
 
-## 📦 3. Requerimientos Técnicos para el Desarrollo (Tú y Yo)
+##  3. Requerimientos Técnicos para el Desarrollo (Tú y Yo)
 
 Para que yo pueda codificar y desplegar este bot en tu máquina hoy, necesitamos:
 

@@ -29,9 +29,16 @@ def launch():
     # Check if Chrome is listening on 9222
     try:
         requests.get("http://localhost:9222/json", timeout=1)
-        print("✅ DETECTADO: Navegador Chrome con puerto 9222 activo.")
+        print(" DETECTADO: Navegador Chrome con puerto 9222 activo.")
     except:
-        print("⚠️ AVISO: No se detecta Chrome en puerto 9222. Abre Chrome con el launcher primero.")
+        print(" AVISO: No se detecta Chrome en puerto 9222. Abre Chrome con el launcher primero.")
+
+    # Check for Cheat Engine MCP Bridge Pipe
+    pipe_name = r"\\.\pipe\CE_MCP_Bridge_v99"
+    if os.path.exists(pipe_name):
+        print(" ✅ DETECTADO: Cheat Engine MCP Bridge activo.")
+    else:
+        print(" ⚠️ AVISO: No se detecta el bridge de Cheat Engine. (Deep Infiltration OFF)")
 
     # 1. Start Dashboard
     dash_proc = subprocess.Popen([sys.executable, DASHBOARD_SCRIPT], 
@@ -65,7 +72,7 @@ def launch():
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print("\n🛑 Deteniendo...")
+        print("\n Deteniendo...")
         dash_proc.terminate()
         agent_proc.terminate()
         claude_proc.terminate()

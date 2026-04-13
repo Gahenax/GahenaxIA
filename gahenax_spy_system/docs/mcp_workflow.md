@@ -2,7 +2,7 @@
 
 Este documento detalla cómo permitir que el agente de IA (Antigravity) opere tu navegador directamente para una infiltración con "Zero-Manual-Effort".
 
-## 🛠️ Requisitos
+##  Requisitos
 1. Tener **Node.js** instalado.
 2. Ejecutar el servidor MCP en una terminal:
    ```bash
@@ -10,7 +10,7 @@ Este documento detalla cómo permitir que el agente de IA (Antigravity) opere tu
    ```
 3. Configurar el servidor en tu cliente de IA (Claude Desktop, etc.).
 
-## 🛰️ El Workflow "Ghost Agent"
+##  El Workflow "Ghost Agent"
 Una vez conectado, Antigravity puede ejecutar estas acciones de forma autónoma:
 
 1. **Reconocimiento de Pestañas**:
@@ -22,7 +22,7 @@ Una vez conectado, Antigravity puede ejecutar estas acciones de forma autónoma:
 4. **Análisis de Red**:
    - Inspecciono el tráfico de red via `inspect_network` para encontrar nuevos endpoints de Spribe.
 
-## 🏁 Ventajas
+##  Ventajas
 - **Sin Errores Humanos**: El agente inyecta el código perfecto en el frame correcto cada vez.
 - **Sigilo Nivel Kernel**: La interacción via DevTools Protocol es más difícil de detectar que las extensiones convencionales.
 - **Operación 100% Manos Libres**: Tú solo dejas el Chrome abierto y el Agente hace el resto.

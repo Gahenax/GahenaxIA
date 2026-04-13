@@ -59,7 +59,7 @@ def run_audit():
     
     with open(os.path.join(config.BASE_DIR, "analysis", "audit_semaforo.json"), "w") as f:
         json.dump(report, f, indent=4)
-    print("🚦 Audit Complete. Results saved in audit_semaforo.json")
+    print(" Audit Complete. Results saved in audit_semaforo.json")
 
 if __name__ == "__main__":
     run_audit()

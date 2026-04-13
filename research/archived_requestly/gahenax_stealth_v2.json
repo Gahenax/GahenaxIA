@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "rule_block_trackers",
+      "name": "Gahenax Stealth: Block Trackers",
+      "ruleType": "Cancel",
+      "url": "*tiktok*|*google-analytics*|*doubleclick*|*byteoversea*",
+      "active": true
+    },
+    {
+      "id": "rule_gahenax_headers",
+      "name": "Gahenax Trace: High Fidelity Headers",
+      "ruleType": "ModifyHeader",
+      "url": "*api.binance.com*|*stripe.com*|*github.com*",
+      "modifyHeaderConfig": [
+        {
+          "headerName": "X-Gahenax-Trace",
+          "headerValue": "AMALGAM-v0.4",
+          "headerOperation": "add"
+        }
+      ],
+      "active": true
+    },
+    {
+      "id": "rule_local_pivot",
+      "name": "Gahenax Link: Local Report Pivot",
+      "ruleType": "Redirect",
+      "url": "http://gahenax.local/*",
+      "redirectConfig": {
+        "to": "file:///C:/Users/jotam/OneDrive/Desktop/GahenaxAI/Repos_Auditoria/P-ATLAS-NP/evidence/report.md"
+      },
+      "active": true
+    }
+  ]
+}

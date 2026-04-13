@@ -44,7 +44,7 @@ def generate_recommendation():
         print(f"Error in Advisor: {e}")
 
 if __name__ == "__main__":
-    print("🛰️ Gahenax Tactical Advisor v17.0 Active Listening...")
+    print(" Gahenax Tactical Advisor v17.0 Active Listening...")
     while True:
         generate_recommendation()
         time.sleep(2)

@@ -15,7 +15,7 @@ history_raw = [
 ]
 
 def ingest_history():
-    print(f"🛰️ Inyectando {len(history_raw)} rondas en el motor de telemetría...")
+    print(f" Inyectando {len(history_raw)} rondas en el motor de telemetría...")
     now = time.time()
     
     # Asegurar directorio
@@ -29,7 +29,7 @@ def ingest_history():
             }
             f.write(json.dumps(entry) + "\n")
     
-    print("✅ Inyección completada. Los motores de análisis se auto-actualizarán.")
+    print(" Inyección completada. Los motores de análisis se auto-actualizarán.")
 
 if __name__ == "__main__":
     ingest_history()

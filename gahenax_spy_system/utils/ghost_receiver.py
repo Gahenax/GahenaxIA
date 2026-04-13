@@ -48,7 +48,7 @@ class TelemetryHandler(BaseHTTPRequestHandler):
             with open(LOG_FILE, "a", encoding="utf-8") as f:
                 f.write(json.dumps(data) + "\n")
             
-            print(f"📡 {timestamp} | PING RECIBIDO: {msg[:80]}...") # type: ignore
+            print(f" {timestamp} | PING RECIBIDO: {msg[:80]}...") # type: ignore
 
         self.send_response(200)
         self.send_header('Content-type', 'image/gif')
@@ -77,25 +77,25 @@ class TelemetryHandler(BaseHTTPRequestHandler):
             
             msg = data.get("msg", "")
             if "[CAPTURE]" in msg:
-                 print(f"📡 {timestamp} | RECIBIDO: {msg[:100]}...")
+                 print(f" {timestamp} | RECIBIDO: {msg[:100]}...")
 
             self.send_response(200)
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
         except Exception as e:
-            print(f"❌ Error decoding: {e}")
+            print(f" Error decoding: {e}")
             self.send_response(500)
             self.end_headers()
 
 def run_server():
     server_address = ('', PORT)
     httpd = HTTPServer(server_address, TelemetryHandler)
-    print(f"🦾 Gahenax Ghost Receiver v3.2 | PUERTO: {PORT}")
+    print(f" Gahenax Ghost Receiver v3.2 | PUERTO: {PORT}")
     print(f"Esperando inyecciones (POST/GET) en: http://localhost:{PORT}")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n🛑 Receptor detenido.")
+        print("\n Receptor detenido.")
 
 if __name__ == "__main__":
     if not os.path.exists(LOG_FILE):

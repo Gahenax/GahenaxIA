@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Curriculum Vitae - OEDA / GahenaxAI</title>
+    <style>
+        :root {
+            --bg-color: #0b1121;
+            --panel-bg: #131b2f;
+            --primary: #00E5FF;
+            --primary-dark: #008b99;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #ff0055;
+            --gradient: linear-gradient(135deg, #00E5FF 0%, #0077ff 100%);
+        }
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            width: 210mm;
+            min-height: 297mm; /* A4 size */
+            margin: 0 auto;
+            position: relative;
+            display: flex;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .sidebar {
+            width: 35%;
+            background-color: var(--panel-bg);
+            padding: 40px 30px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .photo-container {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid transparent;
+            background: var(--gradient);
+            padding: 3px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(0, 229, 255, 0.2);
+        }
+        .photo-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #000;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .photo-inner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* Fallback text if image not found */
+        .photo-inner::after {
+            content: "Sin Foto";
+            position: absolute;
+            color: var(--text-muted);
+            font-size: 12px;
+            z-index: -1;
+        }
+        .name {
+            font-size: 32px;
+            font-weight: 800;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .title {
+            font-size: 14px;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 35px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .section-side {
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        .section-side h3 {
+            font-size: 14px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .contact-item {
+            margin-bottom: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+        }
+        .contact-item svg {
+            width: 16px;
+            height: 16px;
+            margin-right: 10px;
+            fill: var(--primary);
+        }
+        .skill-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .skill-list li {
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(0, 229, 255, 0.1);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+        }
+        .language-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        .language-level {
+            font-weight: bold;
+            color: var(--primary);
+            background: rgba(0,229,255,0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .main-content {
+            width: 65%;
+            padding: 50px 45px;
+            background: var(--bg-color);
+        }
+        .profile-summary {
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            color: var(--text-main);
+            text-align: justify;
+        }
+        .section-main {
+            margin-bottom: 30px;
+        }
+        .section-main h2 {
+            font-size: 18px;
+            color: #fff;
+            border-bottom: 2px solid var(--primary-dark);
+            padding-bottom: 8px;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            position: relative;
+        }
+        .section-main h2::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -2px;
+            height: 2px;
+            width: 40%;
+            background: var(--primary);
+        }
+        .job {
+            margin-bottom: 30px;
+            position: relative;
+            padding-left: 20px;
+            border-left: 1px dashed rgba(255,255,255,0.2);
+        }
+        .job::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 5px;
+            width: 9px;
+            height: 9px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+        .job-header {
+            margin-bottom: 12px;
+        }
+        .job-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        .job-company {
+            font-size: 13px;
+            color: var(--primary);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .job-desc {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+        .job-desc ul {
+            margin-top: 10px;
+            padding-left: 18px;
+        }
+        .job-desc li {
+            margin-bottom: 8px;
+        }
+        .job-desc strong {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <!-- Foto de Perfil -->
+        <div class="photo-container">
+            <div class="photo-inner">
+                <!-- Se cargará la imagen si está en la misma carpeta como foto.jpg o foto.png -->
+                <img src="foto.jpg" onerror="this.src='foto.png'" alt="Foto de perfil">
+            </div>
+        </div>
+
+        <div class="name">Tu Nombre</div>
+        <div class="title">Arquitecto de Sistemas &<br>Investigador Científico</div>
+
+        <div class="section-side">
+            <h3>Contacto</h3>
+            <div class="contact-item">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                contacto@gahenaxai.com
+            </div>
+            <div class="contact-item">
+                <svg viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.19-3.51c-.85 0-1.67.35-2.27 1.25V9.36h-3.3v9.14h3.3v-5c0-1.33.25-2.61 1.9-2.61 1.62 0 1.64 1.5 1.64 2.69v4.92h3.3zM6.55 7.64c1.05 0 1.9-.86 1.9-1.91 0-1.05-.85-1.9-1.9-1.9-.94 0-1.8.85-1.8 1.9 0 1.05.86 1.91 1.8 1.91zm-1.63 1.72h3.31v9.14H4.92V9.36z"/></svg>
+                linkedin.com/in/tu-perfil
+            </div>
+        </div>
+
+        <div class="section-side">
+            <h3>Idiomas</h3>
+            <div class="language-item">
+                <span>Inglés</span>
+                <span class="language-level">C1</span>
+            </div>
+            <div class="language-item">
+                <span>Francés</span>
+                <span class="language-level">B2</span>
+            </div>
+            <div class="language-item">
+                <span>Español</span>
+                <span class="language-level">Nativo</span>
+            </div>
+        </div>
+
+        <div class="section-side">
+            <h3>Habilidades Core</h3>
+            <ul class="skill-list">
+                <li>Machine Learning / MLOps</li>
+                <li>Kubernetes & dbt</li>
+                <li>RAG Agents (LLMs)</li>
+                <li>n8n & Automatización</li>
+                <li>Matemáticas Computacionales</li>
+                <li>API Development (Gumroad)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="section-main">
+            <h2>Sobre Mí</h2>
+            <div class="profile-summary">
+                Ingeniero, Investigador y Arquitecto de Sistemas con profundo enfoque en infraestructuras avanzadas y computación científica. Especializado en diseñar puentes entre modelado físico-matemático de alta complejidad e implementaciones técnicas distribuidas de vanguardia (OEDA Labs). Sólida experiencia liderando integraciones <strong>DevOps/MLOps</strong>, desarrollando ecosistemas escalables e implementando agentes basados en <strong>Inteligencia Artificial (RAG)</strong> orientados al éxito del producto final.
+            </div>
+        </div>
+
+        <div class="section-main">
+            <h2>Portafolio de Proyectos y Experiencia</h2>
+            
+            <div class="job">
+                <div class="job-header">
+                    <div class="job-title">Física Matemática y Teoría Computacional</div>
+                    <div class="job-company">Investigación Académica - OEDA Research</div>
+                </div>
+                <div class="job-desc">
+                    <ul>
+                        <li><strong>Yang-Mills & Brechas de Masa:</strong> Diseño e implementación de simulaciones enfocadas en el entendimiento analítico y modelado del comportamiento del "mass gap".</li>
+                        <li><strong>Riemann GUE & Primos de Mersenne:</strong> Liderazgo en la auditoría científica para validar correlaciones entre los ceros de la función Zeta de Riemann y los desiertos espectrales en computación de números de Mersenne.</li>
+                        <li><strong>Complejidad P vs NP:</strong> Análisis sistemático y experimentación algorítmica de heurísticas para problemas de complejidad acopladas a la infraestructura del lab distribuido.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="job">
+                <div class="job-header">
+                    <div class="job-title">Arquitectura MLOps y Computación Distribuida</div>
+                    <div class="job-company">Laboratorio Jules / Infraestructura OEDA</div>
+                </div>
+                <div class="job-desc">
+                    <ul>
+                        <li><strong>Despliegue Distribuido (JXP):</strong> Empaquetado de dependencias e integración del motor científico bajo el framework JXP para escalamiento de cómputo en Jules Lab.</li>
+                        <li><strong>Automatización & DataOps:</strong> Modernización integral de pipelines e incorporación de <strong>Kubernetes</strong> y <strong>dbt</strong> garantizando control riguroso bajo estándares de auditoría (S1-S4).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="job">
+                <div class="job-header">
+                    <div class="job-title">Desarrollo e Integración de IA Productiva</div>
+                    <div class="job-company">Agentes GahenaxAI</div>
+                </div>
+                <div class="job-desc">
+                    <ul>
+                        <li><strong>RAG Agents (Discord):</strong> Arquitectura de modelos RAG privados con control de acceso por roles (Tier de suscripción) para soporte técnico y validación posventa.</li>
+                        <li><strong>Operaciones Autónomas:</strong> Establecimiento de ciclos MLOps, traqueando métricas de inferencia con contenedores <strong>MLflow</strong> manejados mediante workflows de <strong>n8n</strong>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="job">
+                <div class="job-header">
+                    <div class="job-title">Comercialización & Data Products</div>
+                    <div class="job-company">Lanzamiento Comercial</div>
+                </div>
+                <div class="job-desc">
+                    <ul>
+                        <li>Procesamiento y curación de extensos sets de datos científicos listos para despliegue público.</li>
+                        <li>Construcción de rutinas automatizadas de ingesta y despliegue contra la <strong>API de Gumroad</strong>, asegurando ventas digitales fluidas.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>

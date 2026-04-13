@@ -1,0 +1,621 @@
+{
+  "mission_id": "b5651911",
+  "timestamp": "2026-03-20T22:40:51.921339+00:00",
+  "target_url": "https://tienda.betplay.com.co/",
+  "mode": "full",
+  "tech": {
+    "url": "https://tienda.betplay.com.co/",
+    "server": "cloudflare",
+    "powered_by": "",
+    "cdn": "Cloudflare",
+    "waf": "",
+    "cms": "",
+    "http_version": "HTTP/HTTP/1.1",
+    "has_https": true,
+    "signals": [
+      {
+        "name": "Cloudflare",
+        "category": "cdn",
+        "confidence": 0.99,
+        "evidence": "Header 'server': 'cloudflare'"
+      },
+      {
+        "name": "Cloudflare CDN",
+        "category": "cdn",
+        "confidence": 0.99,
+        "evidence": "Header 'cf-ray': '9df8397bfa26b3b6-mia'"
+      },
+      {
+        "name": "Cloudflare WAF",
+        "category": "waf",
+        "confidence": 0.99,
+        "evidence": "Script src: 'https://challenges.cloudflare.com/turnstile/v0/api.js'"
+      }
+    ],
+    "frameworks": [],
+    "analytics": [],
+    "raw_headers": {
+      "date": "Fri, 20 Mar 2026 22:41:29 GMT",
+      "content-type": "text/html",
+      "transfer-encoding": "chunked",
+      "connection": "keep-alive",
+      "content-encoding": "br",
+      "last-modified": "Thu, 05 Mar 2026 14:00:01 GMT",
+      "x-frame-options": "DENY",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "content-security-policy": "frame-ancestors 'self' https://apicms.betplay.com.co",
+      "cf-cache-status": "DYNAMIC",
+      "set-cookie": "__cf_bm=CVe4yfwJyBrV6PjK2d.lFTs4McBlqPTYUdr0Ipsxw5k-1774046489-1.0.1.1-mxJMXXTDDAeB5jDrVH39c9Us48wvXqi44BVQCqjDqq42N20Q51kY.Bn0n3cmgReu0Yk40wbFUFs4SqbegRp3BT8uExuGOKB1t86.l4.T0qg; path=/; expires=Fri, 20-Mar-26 23:11:29 GMT; domain=.betplay.com.co; HttpOnly; Secure; SameSite=None, __cflb=02DiuJUE9AXu3yz1L2YACoG4sowbKtjeTSgoGxCVQVVoS; SameSite=None; Secure; path=/; expires=Sat, 21-Mar-26 21:41:29 GMT; HttpOnly, _cfuvid=r8WeazFa9YEuvk0SVGBaniH99plZR2LwTpjS6BIOO5I-1774046489054-0.0.1.1-604800000; path=/; domain=.betplay.com.co; HttpOnly; Secure; SameSite=None",
+      "server": "cloudflare",
+      "cf-ray": "9df8397bfa26b3b6-MIA"
+    },
+    "confidence_avg": 0.99
+  },
+  "structure": {
+    "url": "https://tienda.betplay.com.co/",
+    "title": "Apuestas deportivas y juegos online en BetPlay Colombia",
+    "page_type": "unknown",
+    "routing_type": "mpa",
+    "layout_system": "flex",
+    "has_sticky_nav": false,
+    "has_hero": false,
+    "has_cta": false,
+    "cta_text": "",
+    "colors": [],
+    "fonts": [
+      "Material Icons",
+      "Montserrat",
+      "Roboto",
+      "var(--bs-body-font-family)",
+      "var(--bs-btn-font-family)",
+      "var(--bs-font-sans-serif)"
+    ],
+    "section_count": 0,
+    "component_tree": [],
+    "design_notes": [
+      "Multi-font system: Material Icons, Montserrat, Roboto"
+    ]
+  },
+  "competitor": {
+    "url": "https://tienda.betplay.com.co/",
+    "seo": {
+      "title": "Apuestas deportivas y juegos online en BetPlay Colombia",
+      "description": "Apuesta en vivo las 24 hrs en tus deportes favoritos, juega casino online, recibe bonos y vive la mejor experiencia con BetPlay, legal en Colombia.",
+      "h1": "",
+      "h_structure": {},
+      "canonical": "https://betplay.com.co/",
+      "og_image": "https://apicms.betplay.com.co/logos/5ec2701df747d45830e667cf.png",
+      "schema_types": []
+    },
+    "social_links": [],
+    "third_party_tools": [
+      "HotJar",
+      "Microsoft Clarity"
+    ],
+    "trust_signals": [
+      "Press mentions section",
+      "Security badge"
+    ],
+    "contact_methods": [
+      "Email"
+    ],
+    "has_blog": true,
+    "has_pricing": false,
+    "has_free_trial": false,
+    "language": "es-CO",
+    "word_count": 37
+  },
+  "pricing": {
+    "url": "https://tienda.betplay.com.co/",
+    "plans": [
+      {
+        "label": "Las",
+        "amount": "$24",
+        "currency": "",
+        "period": "unknown",
+        "features": []
+      },
+      {
+        "label": "D2kl3vz0o",
+        "amount": "$53",
+        "currency": "",
+        "period": "unknown",
+        "features": []
+      },
+      {
+        "label": "5ec2701df747d45830e6",
+        "amount": "$67",
+        "currency": "",
+        "period": "unknown",
+        "features": []
+      },
+      {
+        "label": "Radius",
+        "amount": "$12",
+        "currency": "",
+        "period": "unknown",
+        "features": []
+      },
+      {
+        "label": "Roboto",
+        "amount": "$300,400,500,700,900",
+        "currency": "",
+        "period": "unknown",
+        "features": []
+      }
+    ],
+    "has_free_tier": false,
+    "has_trial": false,
+    "pricing_model": "saas-tiered",
+    "urgency_signals": [],
+    "diff_from_last": [],
+    "snapshot_ts": "2026-03-20T22:41:34.165905+00:00"
+  },
+  "sitemap": {
+    "root_url": "https://tienda.betplay.com.co/",
+    "pages": [
+      {
+        "url": "https://betplay.com.co/blog/Gu%C3%ADa-Juega-Bien,-apuestas-por-diversi%C3%B3n-y-establece-un-l%C3%ADmite-en-el-juego",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Caras-nuevas-en-la-Selecci%C3%B3n-Colombia-para-los-amistosos-en-USA",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Junior-venci%C3%B3-en-penales-al-%E2%80%98Poderoso%E2%80%99-y-se-coron%C3%B3-campe%C3%B3n-de-Liga",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/El-f%C3%BAtbol-femenino-se-robar%C3%A1-las-miradas-en-2024",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Por-la-cabeza-de-Guardiola",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/%C2%A1Hist%C3%B3rico!-Luka-Doncic-anot%C3%B3-50-puntos-y-le-dio-la-victoria-a-los-Mavs-ante-los-Suns-este-fin-de-semana",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Las-apuestas-y-el-f%C3%BAtbol",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Regreso-de-Rafael-Nadal-con-sabor-a-victoria",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-Selecci%C3%B3n-Colombia-de-cara-al-2024",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Clubes-colombianos-a-recuperar-el-prestigio",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Franz-Beckenbauer,-la-historia-detr%C3%A1s-del-Kaiser-alem%C3%A1n",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Novak-Djokovic-llamado-a-cambiar-la-historia-en-Australia",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Este-2024-regresa-la-emoci%C3%B3n-de-la-Liga-BetPlay",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Inicia-una-semana-de-cl%C3%A1sicos-y-rivalidades-en-la-NBA",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/%C2%A1La-Liga-BetPlay-se-posiciona-como-una-de-las-mejores-del-mundo!",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Millonarios,-el-nuevo-Supercampe%C3%B3n-colombiano",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/El-amor-es-finito",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Inicia-la-temporada-de-refuerzos-en-el-f%C3%BAtbol-profesional-colombiano",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Comienza-la-Superliga-colombiana-entre-Junior-y-Millonarios",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-realidad-de-nuestros-juveniles",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/%C3%9Altimo-cap%C3%ADtulo-de-amor-entre-Teo-y-el-Junior",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Tras-el-casino:-Historia-del-p%C3%B3ker-y-c%C3%B3mo-jugarlo",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-pasi%C3%B3n-por-la-rueda-y-la-biela-vuelven-a-Colombia",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/El-Torneo-BetPlay-pone-primera-y-arranca-en-2024",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/El-anhelado-regreso-de-James-Rodr%C3%ADguez",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Show,-fama-y-gloria-en-el-Super-Bowl-LVIII",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-Liga-BetPlay-empieza-a-cobrar-v%C3%ADctimas",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Vuelve-la-m%C3%A1s-deseada-en-Europa",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Vuelve-la-emoci%C3%B3n-del-mejor-f%C3%BAtbol-con-la-UEFA-Europa-League",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/El-evento-m%C3%A1s-esperado-de-la-NBA-ya-est%C3%A1-aqu%C3%AD,-llega-el-All-Star-Weekend",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Mbapp%C3%A9-%C2%BFSoluci%C3%B3n-o-problema%3F",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Una-traga-que-entreg%C3%B3-incre%C3%ADbles-premios",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/El-atractivo-T%C3%ADo-Sam",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-esperanza-est%C3%A1-puesta-en-la-selecci%C3%B3n-femenina-de-f%C3%BAtbol",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Arranca-la-F%C3%B3rmula-Uno-entre-pol%C3%A9micas-y-emociones",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Una-gloria-internacional-perdida",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-grieta-del-invocador-espera-por-los-campeones",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Estos-son-los-eventos-recomendados-BetPlay-de-la-semana",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Tras-el-casino:-Blackjack,-de-la-clandestinidad-a-Las-Vegas",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Colombia,-Selecci%C3%B3n-que-ilusiona-y-nos-da-esperanza",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-Revelaci%C3%B3n-de-los-%22Chicos%22",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/En-Inglaterra-est%C3%A1n-los-mejores-del-mundo",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Millonarios-F%C3%BAtbol-Club,-un-equipo-en-crisis",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-fase-final-de-la-Champions-League-huele-a-revancha",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Marca-tus-cartones,-lev%C3%A1ntate-y-grita-%C2%A1Bingo!",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Clubes-colombianos-a-la-conquista-de-la-gloria",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Un-nuevo-reto-para-La-Tricolor",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Rebeli%C3%B3n-en-la-Liga-BetPlay-2024",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Egan-Bernal,-la-resurrecci%C3%B3n-de-un-escarabajo-colombiano",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Colombia,-potencia-del-f%C3%BAtbol-femenino-juvenil",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-pasi%C3%B3n-por-los-premios-dej%C3%B3-felices-ganadores-en-BetPlay",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/El-fen%C3%B3meno-del-Bayer-Leverkusen",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Los-focos-de-la-Europa-League-en-Liverpool-y-Leverkusen",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/%C2%BFEl-fin-de-la-era-James-Rodr%C3%ADguez%3F",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Tras-el-trono-de-los-Denver-Nuggets",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Inglaterra-est%C3%A1-al-rojo-vivo",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Definidos-los-cuatro-m%C3%A1s-grandes-de-Europa",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Ya-es-oficial-la-vuelta-de-McGregor-a-la-UFC",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/Duelo-de-mexicanos-en-el-ring-por-los-4-cinturones-de-las-168-libras",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      },
+      {
+        "url": "https://betplay.com.co/blog/La-Copa-BetPlay-Dimayor,-la-gran-proyecci%C3%B3n",
+        "page_type": "blog",
+        "depth": 1,
+        "title": "",
+        "lang": ""
+      }
+    ],
+    "total_urls": 60,
+    "max_depth_reached": 1,
+    "has_sitemap_xml": true,
+    "has_robots_txt": true,
+    "sitemap_url": "",
+    "disallowed": [
+      "/admin/",
+      "/tag/"
+    ],
+    "languages": []
+  },
+  "cyber": {
+    "url": "https://tienda.betplay.com.co/",
+    "status": "Success",
+    "mode": "implant",
+    "identity": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 OPR/128.0.0.0",
+    "timestamp": "2026-03-20T22:41:25.455Z",
+    "assets_count": 0,
+    "bridge_data": {},
+    "reasoning_file": "spy_data\\b5651911\\agent_reasoning.json",
+    "output_dir": "spy_data\\b5651911"
+  },
+  "ux": {
+    "url": "https://tienda.betplay.com.co/",
+    "status": "Error: 'Response' object has no attribute 'status_code'",
+    "identity": "",
+    "has_cloudflare": false,
+    "load_time_ms": 0,
+    "navigation_tree": [],
+    "interactive_elements": 0,
+    "scrapling_stats": {}
+  },
+  "ai_synthesis": {
+    "summary": "Analysis for https://tienda.betplay.com.co/ completed based on goal: Analyze categories, payment methods, and UX elements.",
+    "extracted_data": {
+      "mission_status": "infiltrated",
+      "stack_analysis": "complex"
+    },
+    "confidence": 0.9,
+    "raw_response": "SIMULATED_AI_RESPONSE"
+  },
+  "errors": [],
+  "duration_ms": 43999
+}

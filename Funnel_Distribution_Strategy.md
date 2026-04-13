@@ -4,7 +4,7 @@ El pivote a un modelo de embudo "Inbound" (Papers Libres o Semi-Libres) hacia un
 
 ---
 
-## 🌪️ Fase 1: El Top of the Funnel (Generación de Autoridad)
+##  Fase 1: El Top of the Funnel (Generación de Autoridad)
 
 En esta fase regalas o vendes muy barato el "Saber Qué" (The What & The Why), pero retienes celosamente el "Saber Cómo" (The How - El Código).
 
@@ -19,7 +19,7 @@ Todos tus `Tier1_..._Paper_Authority.zip` que generamos. Son PDFs limpios, rigur
 
 ---
 
-## 🔒 Fase 2: The Gated Checkpoint (Fricción Deseable)
+##  Fase 2: The Gated Checkpoint (Fricción Deseable)
 
 Cuando alguien lee el Paper de "Observatorio de Gaps de Mersenne" y queda impresionado por tus hallazgos teóricos de Telemetría GUE con Ouroboros, querrá el código para correrlo él mismo o aplicarlo a su sistema financiero.
 
@@ -29,13 +29,13 @@ Al final de *cada Paper*, se inyecta un CTA (Call To Action / Llamado a la Acci�
 >
 > Para firmas analíticas, agencias, laboratorios privados o individuos que requieran replicar o integrar el `Gahenax-Riemann-Engine` en su propia infraestructura:
 > 
-> 📩 **Request Core Access:** [Tu email: licencias@gahenax.ai o tu perfil de LinkedIn]
+>  **Request Core Access:** [Tu email: licencias@gahenax.ai o tu perfil de LinkedIn]
 > 
 > *Incluya su caso de uso, nombre y empresa. Evaluaremos la viabilidad técnica y emitiremos una cotización personalizada de licenciamiento de la tecnología."*
 
 ---
 
-## 💼 Fase 3: La Venta por Solicitud (Consultoría y Licenciamiento)
+##  Fase 3: La Venta por Solicitud (Consultoría y Licenciamiento)
 
 Este modelo te posiciona como *El Guardián* de la tecnología, no como un vendedor masivo en Fiverr. 
 
@@ -45,7 +45,7 @@ Este modelo te posiciona como *El Guardián* de la tecnología, no como un vende
 
 ---
 
-## 🛠️ ¿Qué falta hacer en código local para aplicar este pívote hoy?
+##  ¿Qué falta hacer en código local para aplicar este pívote hoy?
 Si aplicamos esta metodología de embudo 1 a 1, todas tus investigaciones de `Tesis` y `Kernel` actuales ya son papers. Solo bastaría:
 - Generar un pequeño script que inyecte automáticamente la frase *"Request Core Access at [EMAIL]"* al final de todos los PDFs que generamos y re-generarlos.
 - Guardar de forma privada (solo para tus ojos o OneDrive restringido) los archivos `Tier3_Engine_Premium_B2B.zip` en una carpeta que simule ser la bóveda matriz o "La Caja Fuerte" de la cual solo tú sacas el zip para enviárselo al cliente tras su comprobante de pago bancario y solicitud aprobada.

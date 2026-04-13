@@ -1,0 +1,15 @@
+# JULES HTCONDOR SUBMIT - MERSENNE FRONTIER
+executable              = jules_worker.sh
+arguments               = $(Process) 136000000 100000 140000000
+output                  = logs/mersenne_$(Process).out
+error                   = logs/mersenne_$(Process).err
+log                     = logs/mersenne_$(Process).log
+request_cpus            = 1
+request_memory          = 4GB
+request_disk            = 2GB
+universe                = vanilla
+should_transfer_files   = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files    = tools/mersenne-worker-rs, JULES_ORDER_M136M_140M.json
+
+queue 40

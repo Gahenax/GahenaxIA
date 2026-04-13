@@ -31,5 +31,5 @@ def find_mass_gap(multipliers):
     return float(mass_gap)
 
 if __name__ == "__main__":
-    print("🧬 Gahenax Yang-Mills Gauge Engine v14.0")
+    print(" Gahenax Yang-Mills Gauge Engine v14.0")
     # [Integración con HDF5 Tensores y PINN Predictor]

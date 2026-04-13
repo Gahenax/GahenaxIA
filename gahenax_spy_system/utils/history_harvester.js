@@ -3,7 +3,7 @@
  * Run this in the Aviator Chrome Console (F12) to extract the last ~100 multipliers.
  */
 (function() {
-    console.log("🚀 Gahenax History Harvester Initiated...");
+    console.log(" Gahenax History Harvester Initiated...");
     
     // 1. Find all multiplier elements in the history bar or modal
     // Spribe Aviator uses specific classes for history items
@@ -19,11 +19,11 @@
     });
 
     if (multipliers.length === 0) {
-        console.error("❌ No se encontraron multiplicadores. ¿Está abierto el panel de historial?");
+        console.error(" No se encontraron multiplicadores. ¿Está abierto el panel de historial?");
         return;
     }
 
-    console.log(`✅ Extraídas ${multipliers.length} rondas. Enviando a la telemetría Gahenax...`);
+    console.log(` Extraídas ${multipliers.length} rondas. Enviando a la telemetría Gahenax...`);
 
     // 2. Send to local telemetry server
     fetch('http://localhost:5000/telemetry', {
@@ -38,8 +38,8 @@
             })
         })
     })
-    .then(r => console.log("🔥 Datos sincronizados exitosamente."))
-    .catch(e => console.error("❌ Error de sincronización (¿Está gahenax_launcher.py corriendo?):", e));
+    .then(r => console.log(" Datos sincronizados exitosamente."))
+    .catch(e => console.error(" Error de sincronización (¿Está gahenax_launcher.py corriendo?):", e));
 
     return multipliers;
 })();

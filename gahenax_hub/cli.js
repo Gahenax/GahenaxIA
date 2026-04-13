@@ -97,7 +97,7 @@ program
             console.log(chalk.green(`Sending initial greeting to ${target}...`));
             const cleanTarget = target.replace(/\D/g, '');
             const jid = `${cleanTarget}@s.whatsapp.net`;
-            await sock.sendMessage(jid, { text: "Gahenax Hub: Conexión Establecida. El Lóbulo Parietal está operativo y escuchando tus órdenes. 🧠🤖" });
+            await sock.sendMessage(jid, { text: "Gahenax Hub: Conexión Establecida. El Lóbulo Parietal está operativo y escuchando tus órdenes. " });
             console.log(chalk.green('Greeting sent!'));
         }
     });

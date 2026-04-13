@@ -1,0 +1,103 @@
+{
+  "mission_id": "426b0a97",
+  "timestamp": "2026-03-20T22:32:26.118594+00:00",
+  "target_url": "https://tienda.betplay.com.co/",
+  "mode": "full",
+  "tech": {
+    "url": "https://tienda.betplay.com.co/",
+    "server": "",
+    "powered_by": "",
+    "cdn": "",
+    "waf": "",
+    "cms": "",
+    "http_version": "",
+    "has_https": false,
+    "signals": [],
+    "frameworks": [],
+    "analytics": [],
+    "raw_headers": {},
+    "confidence_avg": 0.0
+  },
+  "structure": {
+    "url": "https://tienda.betplay.com.co/",
+    "title": "",
+    "page_type": "",
+    "routing_type": "",
+    "layout_system": "",
+    "has_sticky_nav": false,
+    "has_hero": false,
+    "has_cta": false,
+    "cta_text": "",
+    "colors": [],
+    "fonts": [],
+    "section_count": 0,
+    "component_tree": [],
+    "design_notes": []
+  },
+  "competitor": {
+    "url": "https://tienda.betplay.com.co/",
+    "seo": {
+      "title": "",
+      "description": "",
+      "h1": "",
+      "h_structure": {},
+      "canonical": "",
+      "og_image": "",
+      "schema_types": []
+    },
+    "social_links": [],
+    "third_party_tools": [],
+    "trust_signals": [],
+    "contact_methods": [],
+    "has_blog": false,
+    "has_pricing": false,
+    "has_free_trial": false,
+    "language": "",
+    "word_count": 0
+  },
+  "pricing": {
+    "url": "https://tienda.betplay.com.co/",
+    "plans": [],
+    "has_free_tier": false,
+    "has_trial": false,
+    "pricing_model": "",
+    "urgency_signals": [],
+    "diff_from_last": [],
+    "snapshot_ts": "2026-03-20T22:32:26.653201+00:00"
+  },
+  "sitemap": {
+    "root_url": "https://tienda.betplay.com.co/",
+    "pages": [],
+    "total_urls": 0,
+    "max_depth_reached": 0,
+    "has_sitemap_xml": false,
+    "has_robots_txt": false,
+    "sitemap_url": "",
+    "disallowed": [],
+    "languages": []
+  },
+  "cyber": null,
+  "ux": {
+    "url": "https://tienda.betplay.com.co/",
+    "status": "Error: Scrapling not installed (pip install scrapling)",
+    "identity": "",
+    "has_cloudflare": false,
+    "load_time_ms": 0,
+    "navigation_tree": [],
+    "interactive_elements": 0,
+    "scrapling_stats": {}
+  },
+  "ai_synthesis": {
+    "summary": "Analysis for https://tienda.betplay.com.co/ completed based on goal: Analyze categories, payment methods, and UX elements.",
+    "extracted_data": {
+      "mission_status": "infiltrated",
+      "stack_analysis": "complex"
+    },
+    "confidence": 0.9,
+    "raw_response": "SIMULATED_AI_RESPONSE"
+  },
+  "errors": [
+    "Wave0/cyber: CyberAgent.run() got an unexpected keyword argument 'use_tor'"
+  ],
+  "duration_ms": 534
+}

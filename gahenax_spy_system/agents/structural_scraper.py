@@ -23,9 +23,9 @@ from gahenax_spy_system.models import ColorToken, StructuralProfile
 from gahenax_spy_system.utils import StealthHTTPClient
 
 
-# ═══════════════════════════════════════════════════
+# 
 #  Utilidades de color
-# ═══════════════════════════════════════════════════
+# 
 
 def _hex_to_hsl(hex_color: str) -> str:
     """Convierte color hex a HSL string. Retorna '' si falla."""
@@ -52,9 +52,9 @@ def _hex_to_hsl(hex_color: str) -> str:
         return ""
 
 
-# ═══════════════════════════════════════════════════
+# 
 #  PAGE TYPE HEURISTICS
-# ═══════════════════════════════════════════════════
+# 
 
 _PAGE_TYPE_SIGNALS: list[tuple[str, list[str]]] = [
     ("saas",       ["pricing", "free trial", "get started", "sign up", "dashboard", "api"]),
@@ -98,7 +98,7 @@ class StructuralScraper:
 
         return profile
 
-    # ── Routing detection ─────────────────────────────────────────────────────
+    #  Routing detection 
 
     def _detect_routing(self, soup: BeautifulSoup, raw: str) -> str:
         spa_markers = [
@@ -114,7 +114,7 @@ class StructuralScraper:
             return "spa"
         return "mpa"
 
-    # ── Layout detection ──────────────────────────────────────────────────────
+    #  Layout detection 
 
     def _detect_layout(self, soup: BeautifulSoup, raw: str) -> str:
         text = raw.lower()
@@ -130,7 +130,7 @@ class StructuralScraper:
             return "table"
         return "unknown"
 
-    # ── Font extraction ───────────────────────────────────────────────────────
+    #  Font extraction 
 
     def _extract_fonts(self, soup: BeautifulSoup, raw: str) -> list[str]:
         fonts: set[str] = set()
@@ -160,7 +160,7 @@ class StructuralScraper:
 
         return sorted(fonts)[:8]
 
-    # ── Color extraction ──────────────────────────────────────────────────────
+    #  Color extraction 
 
     def _extract_colors(self, soup: BeautifulSoup, raw: str) -> list[ColorToken]:
         hex_pat = re.compile(r"#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b")
@@ -196,7 +196,7 @@ class StructuralScraper:
             ))
         return tokens
 
-    # ── Component tree ────────────────────────────────────────────────────────
+    #  Component tree 
 
     def _build_component_tree(self, soup: BeautifulSoup) -> list[str]:
         tree = []
@@ -225,7 +225,7 @@ class StructuralScraper:
             tree.append("footer")
         return tree
 
-    # ── CTA detection ─────────────────────────────────────────────────────────
+    #  CTA detection 
 
     def _find_cta(self, soup: BeautifulSoup) -> tuple[bool, str]:
         cta_patterns = re.compile(
@@ -241,7 +241,7 @@ class StructuralScraper:
                     return True, text[:80]
         return False, ""
 
-    # ── Sticky nav ────────────────────────────────────────────────────────────
+    #  Sticky nav 
 
     def _has_sticky_nav(self, soup: BeautifulSoup, raw: str) -> bool:
         raw_l = raw.lower()
@@ -252,7 +252,7 @@ class StructuralScraper:
             soup.find(attrs={"class": re.compile(r"sticky|fixed.*nav|navbar-fixed", re.I)}) is not None
         )
 
-    # ── Hero detection ────────────────────────────────────────────────────────
+    #  Hero detection 
 
     def _has_hero(self, soup: BeautifulSoup) -> bool:
         return bool(
@@ -260,7 +260,7 @@ class StructuralScraper:
             soup.find("h1")
         )
 
-    # ── Page type ─────────────────────────────────────────────────────────────
+    #  Page type 
 
     def _detect_page_type(self, text: str) -> str:
         scores: dict[str, int] = {}
@@ -270,7 +270,7 @@ class StructuralScraper:
             return "unknown"
         return max(scores, key=scores.get)
 
-    # ── Design notes ─────────────────────────────────────────────────────────
+    #  Design notes 
 
     def _generate_design_notes(self, profile: StructuralProfile,
                                 soup: BeautifulSoup, raw: str) -> list[str]:

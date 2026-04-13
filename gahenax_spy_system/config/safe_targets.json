@@ -1,0 +1,25 @@
+{
+  "programs": [
+    {
+      "name": "ProjectDiscovery VDP",
+      "url": "https://hackerone.com/projectdiscovery",
+      "scope": ["*.projectdiscovery.io", "projectdiscovery.io"],
+      "type": "VDP (Points only)",
+      "safe": true
+    },
+    {
+      "name": "HackerOne VDP",
+      "url": "https://hackerone.com/security",
+      "scope": ["*.hackerone.com", "hackerone.com"],
+      "type": "VDP (Points only)",
+      "safe": true
+    },
+    {
+      "name": "Cloudflare VDP",
+      "url": "https://hackerone.com/cloudflare",
+      "scope": ["*.cloudflare.com", "cloudflare.com"],
+      "type": "VDP",
+      "safe": true
+    }
+  ]
+}

@@ -45,7 +45,7 @@
             };
             
             ctx.GAHENAX_EXT_ACTIVE = true;
-            console.log("🦾 Gahenax Extension Active in Frame: " + ctx.location.href);
+            console.log(" Gahenax Extension Active in Frame: " + ctx.location.href);
         } catch(e) {}
     };
 

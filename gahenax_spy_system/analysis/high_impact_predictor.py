@@ -79,7 +79,7 @@ def predict_hot_slots(days_lookback=1.0):
     avg_cycle = high_impact['diff'].mean()
     
     print("\n" + "="*50)
-    print("🚀 MATRIZ DE PREDICCIÓN TEMPORAL (GSD-OMEGA)")
+    print(" MATRIZ DE PREDICCIÓN TEMPORAL (GSD-OMEGA)")
     print("="*50)
     
     # Slot más probable en la próxima hora
@@ -98,8 +98,8 @@ def predict_hot_slots(days_lookback=1.0):
         print(f"Próxima racha rosa estimada (por intervalo intradiario): {next_dt.strftime('%H:%M:%S')}")
     
     print("-" * 50)
-    print("💡 ESTRATEGIA: Entrar 1 minuto antes de los 'Minutos Calientes'.")
-    print("💡 ESTADO: Esperando sincronización de 624 muestras para modo DETERMINISTA.")
+    print(" ESTRATEGIA: Entrar 1 minuto antes de los 'Minutos Calientes'.")
+    print(" ESTADO: Esperando sincronización de 624 muestras para modo DETERMINISTA.")
     print("="*50 + "\n")
 
 if __name__ == "__main__":

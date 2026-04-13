@@ -75,7 +75,7 @@ def analyze_glm_multimodal():
         print(f"Error in GLM Analyzer: {e}")
 
 if __name__ == "__main__":
-    print("🧬 Gahenax GLM Advanced Analyzer v20.0 ACTIVE...")
+    print(" Gahenax GLM Advanced Analyzer v20.0 ACTIVE...")
     while True:
         analyze_glm_multimodal()
         time.sleep(10)

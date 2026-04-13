@@ -17,7 +17,7 @@ def get_spectral_status():
     return rigidity, ghosts
 
 def generate_table() -> Table:
-    table = Table(title="💎 GAHENAX SPECTRAL RIGIDITY DASHBOARD")
+    table = Table(title=" GAHENAX SPECTRAL RIGIDITY DASHBOARD")
     table.add_column("Módulo", justify="left", style="cyan")
     table.add_column("Rigidez (Hodge)", justify="center", style="green")
     table.add_column("Status", justify="right")

@@ -60,7 +60,7 @@ class NeuralTomography:
 tomography_scanner = NeuralTomography()
 
 if __name__ == "__main__":
-    print("🧬 GAHENAX NEURAL TOMOGRAPHY v1.0")
+    print(" GAHENAX NEURAL TOMOGRAPHY v1.0")
     # Simulación de escaneo de un modelo 'Ghostly' (con ruido)
     ghost_weights = np.random.randn(64, 64) * 0.5
     report = tomography_scanner.scan_weight_matrix(ghost_weights)

@@ -17,7 +17,7 @@
     const POLL_MS   = 4000;   // poll for Antigravity replies
     const SESSION   = () => window.location.pathname.split('/').pop();
 
-    // ── Widget ────────────────────────────────────────────────────────────────
+    //  Widget 
     const widget = document.createElement('div');
     widget.innerHTML = `
         <div id="ghx-widget" style="position:fixed;bottom:80px;right:20px;z-index:9999;
@@ -44,7 +44,7 @@
         if (el) el.innerText = txt;
     };
 
-    // ── Capture chat messages ─────────────────────────────────────────────────
+    //  Capture chat messages 
     const getMessages = () => {
         const msgs = [];
         document.querySelectorAll('[data-testid="user-message"], [data-testid="assistant-message"]')
@@ -60,7 +60,7 @@
         return msgs;
     };
 
-    // ── Push telemetry to bridge ──────────────────────────────────────────────
+    //  Push telemetry to bridge 
     const syncToBridge = () => {
         const messages = getMessages();
         if (!messages.length) { setStatus("No messages yet", "#888"); return; }
@@ -80,7 +80,7 @@
         });
     };
 
-    // ── Poll for Antigravity replies ──────────────────────────────────────────
+    //  Poll for Antigravity replies 
     const pollOutbox = () => {
         GM_xmlhttpRequest({
             method: "GET",
@@ -99,7 +99,7 @@
         });
     };
 
-    // ── Inject Antigravity reply as a banner in the chat ─────────────────────
+    //  Inject Antigravity reply as a banner in the chat 
     const injectMessage = (text) => {
         const banner = document.createElement('div');
         banner.style.cssText = `
@@ -113,7 +113,7 @@
         setTimeout(() => banner.remove(), 8000);
     };
 
-    // ── Event handlers ────────────────────────────────────────────────────────
+    //  Event handlers 
     document.getElementById('ghx-sync').addEventListener('click', syncToBridge);
 
     let syncTimer;
@@ -122,7 +122,7 @@
         syncTimer = setTimeout(syncToBridge, SYNC_MS);
     }).observe(document.querySelector('div.flex-1.overflow-y-auto') || document.body, { childList: true, subtree: true });
 
-    // ── Polling loops ─────────────────────────────────────────────────────────
+    //  Polling loops 
     setInterval(syncToBridge, SYNC_MS + 1000);  // periodic full sync
     setInterval(pollOutbox, POLL_MS);            // poll for Antigravity replies
 

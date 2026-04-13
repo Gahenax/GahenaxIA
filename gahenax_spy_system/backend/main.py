@@ -33,7 +33,7 @@ def _get_queue(store, session_id):
         store[session_id] = deque(maxlen=200)
     return store[session_id]
 
-# ─── Userscript → Bridge ───────────────────────────────────────────────────────
+#  Userscript → Bridge 
 @app.route("/telemetry", methods=["POST"])
 def telemetry():
     data = request.json
@@ -63,7 +63,7 @@ def telemetry():
     return jsonify({"status": "ok", "synced": len(messages)})
 
 
-# ─── Antigravity reads Claude's messages ──────────────────────────────────────
+#  Antigravity reads Claude's messages 
 @app.route("/messages/antigravity/pending", methods=["GET"])
 def antigravity_pending():
     session_id = request.args.get("session_id", "default")
@@ -74,7 +74,7 @@ def antigravity_pending():
     return jsonify({"session_id": session_id, "messages": msgs, "count": len(msgs)})
 
 
-# ─── Antigravity writes to Claude ─────────────────────────────────────────────
+#  Antigravity writes to Claude 
 @app.route("/send", methods=["POST"])
 def send():
     data = request.json
@@ -96,7 +96,7 @@ def send():
     return jsonify({"status": "queued", "session_id": session_id})
 
 
-# ─── Userscript polls for Antigravity replies ──────────────────────────────────
+#  Userscript polls for Antigravity replies 
 @app.route("/messages/claude/pending", methods=["GET"])
 def claude_pending():
     session_id = request.args.get("session_id", "default")
@@ -106,7 +106,7 @@ def claude_pending():
     return jsonify({"session_id": session_id, "messages": msgs, "count": len(msgs)})
 
 
-# ─── Snapshot ─────────────────────────────────────────────────────────────────
+#  Snapshot 
 @app.route("/state/<session_id>", methods=["GET"])
 def get_state(session_id):
     state = SESSIONS.get(session_id)

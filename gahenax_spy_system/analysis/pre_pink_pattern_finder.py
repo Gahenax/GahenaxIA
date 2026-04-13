@@ -45,7 +45,7 @@ def find_pre_pink_patterns(lookback=5):
 
     pinks = df[df['multiplier'] >= 10.0]
     print("\n" + "="*60)
-    print("🎯 RECONOCIMIENTO DE FIRMAS PRE-PINK (HOY)")
+    print(" RECONOCIMIENTO DE FIRMAS PRE-PINK (HOY)")
     print("="*60)
     print(f"Total de premios >10x detectados en las últimas 24h: {len(pinks)}\n")
 
@@ -57,7 +57,7 @@ def find_pre_pink_patterns(lookback=5):
         seq = [f"{m:.2f}x" for m in preceding['multiplier']]
         time_str = row['dt'].strftime('%H:%M:%S')
         
-        print(f"🚀 PINK [{time_str}] | Premio: {row['multiplier']:.2f}x")
+        print(f" PINK [{time_str}] | Premio: {row['multiplier']:.2f}x")
         print(f"   Secuencia previa ({len(seq)} rondas): {' -> '.join(seq)}")
         
         # Clasificador básico

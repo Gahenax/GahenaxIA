@@ -1,0 +1,33 @@
+# GAHENAX SOVEREIGN SEARCH CORE (SSC) v3.0 - LIGHT BRIEFCASE
+FROM node:18-slim
+
+# Impedir prompts interactivos
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Dependencias mínimas para Chromium en debian-slim
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    libgbm-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Directorio de trabajo
+WORKDIR /app
+
+# Instalar Chromium ligero via Puppeteer
+COPY Gahenax_Omni_Scraper/package*.json ./
+RUN npm install --only=production \
+    && npx puppeteer browsers install chrome
+
+# Copiar solo el motor motor de búsqueda
+COPY Gahenax_Omni_Scraper/ ./Gahenax_Omni_Scraper/
+
+# Espacio temporal RAM
+RUN mkdir -p /spy_data
+
+ENTRYPOINT ["node", "Gahenax_Omni_Scraper/gsk_engine.mjs"]

@@ -21,7 +21,7 @@ def start():
     print("   a) Abre el juego en el navegador lanzado por Gahenax.")
     print("   b) Abre el PANEL DE HISTORIAL en Aviator.")
     print("   c) Copia el contenido de 'utils/history_harvester.js' y pégalo en la CONSOLA (F12).")
-    print("\n💡 Esto cargará 100 rondas instantáneamente en el motor de análisis.")
+    print("\n Esto cargará 100 rondas instantáneamente en el motor de análisis.")
     print("Repite esto un par de veces para llegar a las 624 muestras críticas.")
     
     input("\nPresiona ENTER cuando hayas terminado para cerrar este asistente...")

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gahenax AI Solutions</title>
+  <meta name="description" content="Gahenax AI Solutions — Auditoría, optimización y sistemas de IA diseñados para reducir fricción y devolver control decisional." />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #050507;            /* negro profundo */
+      --panel: #0b0c10;         /* negro técnico */
+      --text: #e6e6eb;          /* blanco suave */
+      --muted: #9aa0a6;         /* gris técnico */
+      --purple: #6d4aff;        /* criterio / estrategia */
+      --green: #23e6a8;         /* lógica viva / optimización */
+      --border: rgba(255,255,255,0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(1200px 800px at 70% -10%, rgba(109,74,255,0.15), transparent 40%),
+                  radial-gradient(900px 600px at 10% 20%, rgba(35,230,168,0.12), transparent 45%),
+                  var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* Layout */
+    .container {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    section { padding: 96px 0; }
+
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(5,5,7,0.75);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .brand {
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-size: 1.1rem;
+    }
+
+    .brand span { color: var(--green); }
+
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    /* Hero */
+    .hero {
+      padding-top: 120px;
+      padding-bottom: 140px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.6rem, 4vw, 4.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 24px 0;
+    }
+
+    .hero h1 span { color: var(--purple); }
+
+    .hero p {
+      font-size: 1.1rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 36px;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 26px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--purple), var(--green));
+      color: #050507;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      box-shadow: 0 20px 60px rgba(109,74,255,0.25);
+    }
+
+    /* Isotipo */
+    .logo-panel {
+      background: linear-gradient(160deg, rgba(109,74,255,0.15), rgba(35,230,168,0.12));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+    }
+
+    .logo {
+      width: 220px;
+      height: 220px;
+      border-radius: 48px;
+      background: radial-gradient(circle at 30% 30%, var(--green), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.2rem;
+      font-weight: 900;
+      color: #050507;
+      letter-spacing: -0.08em;
+    }
+
+    /* Sections */
+    .section-title {
+      font-size: 2.4rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      max-width: 720px;
+      margin-bottom: 56px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 1.2rem;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    /* Process */
+    .process {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px;
+    }
+
+    .step {
+      padding: 28px;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+    }
+
+    .step span {
+      color: var(--green);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 64px 0;
+      color: var(--muted);
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr;
+      gap: 32px;
+    }
+
+    .footer-brand {
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .process { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <div class="brand" style="display:flex; align-items:center; gap:12px;">
+      <img src="assets/logo.png" alt="Gahenax AI Solutions" style="height:36px; width:auto; object-fit:contain;" />
+      <span style="font-weight:800; letter-spacing:-0.02em;">Gahenax <span style=\"color:var(--green)\">AI</span></span>
+    </div>
+    <nav class="nav-links">
+      <a href="#servicios">Servicios</a>
+      <a href="#metodo">Método</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <h1>Reducimos fricción.<br><span>Devolvemos control.</span></h1>
+        <p>
+          Gahenax AI Solutions diseña auditorías, planes de mejora y sistemas de inteligencia
+          artificial a medida para organizaciones que necesitan claridad decisional,
+          no promesas vacías.
+        </p>
+        <a href="#contacto" class="cta">Solicitar auditoría estratégica</a>
+        <div style="margin-top:32px; display:grid; gap:20px; max-width:560px;">
+          <div>
+            <strong style="color: var(--green); font-size:0.9rem; letter-spacing:0.02em;">Misión</strong>
+            <p style="margin:6px 0 0 0; color: var(--muted); font-size:0.95rem;">
+              Reducir fricción decisional en sistemas reales mediante auditoría estratégica,
+              diseño de control y soluciones de inteligencia artificial aplicadas con criterio,
+              transparencia y consecuencias medibles.
+            </p>
+          </div>
+          <div>
+            <strong style="color: var(--purple); font-size:0.9rem; letter-spacing:0.02em;">Visión</strong>
+            <p style="margin:6px 0 0 0; color: var(--muted); font-size:0.95rem;">
+              Convertirnos en el referente en ingeniería cognitiva aplicada,
+              ayudando a organizaciones a recuperar control, claridad y autonomía
+              en entornos cada vez más complejos y automatizados.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="logo-panel" style="background:transparent; border:none; padding:0;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+          <div class="card">
+            <h3>Decisiones con criterio</h3>
+            <p>Diseñamos sistemas que reducen ambigüedad y devuelven trazabilidad a cada decisión crítica.</p>
+          </div>
+          <div class="card">
+            <h3>IA sin cajas negras</h3>
+            <p>Modelos comprensibles, auditables y alineados al contexto real del negocio.</p>
+          </div>
+          <div class="card">
+            <h3>Impacto medible</h3>
+            <p>Cada intervención define métricas, riesgo aceptable y criterio de éxito desde el inicio.</p>
+          </div>
+          <div class="card">
+            <h3>Acompañamiento real</h3>
+            <p>No entregamos PDFs y desaparecemos: monitoreamos la implementación.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="servicios">
+    <div class="container">
+      <h2 class="section-title">Servicios</h2>
+      <p class="section-sub">
+        No vendemos IA genérica. Intervenimos sistemas reales con fricción medible y
+        consecuencias claras.
+      </p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>Auditoría Estratégica</h3>
+          <p>
+            Diagnóstico profundo de procesos, decisiones y puntos de fuga.
+            Identificamos dónde se pierde control y por qué.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Plan de Mejora</h3>
+          <p>
+            Traducción del diagnóstico en acciones priorizadas,
+            con métricas, riesgos y criterio de éxito.
+          </p>
+        </div>
+        <div class="card">
+          <h3>IA a Medida</h3>
+          <p>
+            Sistemas diseñados para tu contexto real.
+            Sin cajas negras, sin dependencia innecesaria.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="metodo">
+    <div class="container">
+      <h2 class="section-title">Método</h2>
+      <p class="section-sub">
+        Cada intervención sigue una secuencia cerrada. Sin saltos. Sin humo.
+      </p>
+      <div class="process">
+        <div class="step"><span>01</span><h4>Lectura del sistema</h4><p>Análisis estructural sin suposiciones.</p></div>
+        <div class="step"><span>02</span><h4>Reducción de ruido</h4><p>Separación señal / distracción.</p></div>
+        <div class="step"><span>03</span><h4>Diseño de control</h4><p>Decisiones recuperables y medibles.</p></div>
+        <div class="step"><span>04</span><h4>Monitoreo</h4><p>Seguimiento real durante la ejecución.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="contacto">
+  <div class="container footer-grid">
+    <div>
+      <div class="footer-brand">Gahenax AI Solutions</div>
+      <p>Ingeniería cognitiva aplicada a sistemas reales.</p>
+    </div>
+    <div>
+      <strong>Contacto</strong>
+      <p>contacto@gahenax.ai</p>
+    </div>
+    <div>
+      <strong>Ubicación</strong>
+      <p>Operación remota · Global</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

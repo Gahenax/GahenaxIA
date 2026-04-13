@@ -110,6 +110,9 @@ class StealthHTTPClient:
                 if self.proxy:
                     # httpx expects a dict for proxies or a single string for all
                     proxies = {"all://": self.proxy}
+                else:
+                    # Default to Requestly on Windows if active
+                    proxies = {"all://": "http://127.0.0.1:8281"}
 
                 with httpx.Client(
                     timeout=self.timeout,

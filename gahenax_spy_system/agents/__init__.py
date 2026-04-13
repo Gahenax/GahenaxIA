@@ -1,11 +1,13 @@
-from gahenax_spy_system.agents.tech_fingerprinter  import TechFingerprinter
-from gahenax_spy_system.agents.structural_scraper  import StructuralScraper
-from gahenax_spy_system.agents.competitor_profiler import CompetitorProfiler
-from gahenax_spy_system.agents.price_watcher       import PriceWatcher
-from gahenax_spy_system.agents.sitemap_crawler     import SitemapCrawler
-from gahenax_spy_system.agents.cyber_agent        import CyberAgent
-from gahenax_spy_system.agents.ux_agent           import UXAgent
-from gahenax_spy_system.agents.llm_agent          import LLMAgent
+# Gahenax Agents Package
+from .tech_fingerprinter  import TechFingerprinter
+from .structural_scraper  import StructuralScraper
+from .competitor_profiler import CompetitorProfiler
+from .price_watcher       import PriceWatcher
+from .sitemap_crawler      import SitemapCrawler
+from .cyber_agent          import CyberAgent
+from .ux_agent             import UXAgent
+from .llm_agent            import LLMAgent
+from .discovery_amalgamator import DiscoveryAmalgamator
 
 __all__ = [
     "TechFingerprinter",
@@ -16,4 +18,5 @@ __all__ = [
     "CyberAgent",
     "UXAgent",
     "LLMAgent",
+    "DiscoveryAmalgamator",
 ]

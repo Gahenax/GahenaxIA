@@ -73,7 +73,7 @@ class SitemapCrawler:
 
         return sitemap
 
-    # ── Sitemap XML ───────────────────────────────────────────────────────────
+    #  Sitemap XML 
 
     def _discover_sitemap_urls(self, base_url: str, disallowed: list[str]) -> list[str]:
         candidates = [
@@ -124,7 +124,7 @@ class SitemapCrawler:
                     ))
         return pages
 
-    # ── BFS Crawl ─────────────────────────────────────────────────────────────
+    #  BFS Crawl 
 
     def _bfs_crawl(self, start_url: str, base_url: str) -> list[SitePage]:
         visited: set[str] = set()
@@ -161,7 +161,7 @@ class SitemapCrawler:
 
         return pages
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
+    #  Helpers 
 
     def _classify_url(self, url: str) -> str:
         url_lower = url.lower()

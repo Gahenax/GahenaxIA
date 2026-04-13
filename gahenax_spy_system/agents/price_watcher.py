@@ -59,7 +59,7 @@ class PriceWatcher:
 
         return report
 
-    # ── Plan extraction ───────────────────────────────────────────────────────
+    #  Plan extraction 
 
     def _extract_plans(self, soup: BeautifulSoup, raw: str) -> list[PricePoint]:
         plans: list[PricePoint] = []
@@ -166,7 +166,7 @@ class PriceWatcher:
                 plans.append(PricePoint(label=label.capitalize(), amount=amount, period=period))
         return plans[:5]
 
-    # ── Tier detection ────────────────────────────────────────────────────────
+    #  Tier detection 
 
     def _detect_free_tier(self, soup: BeautifulSoup, raw: str) -> bool:
         return bool(re.search(r"free tier|free plan|free forever|freemium|\$0", raw, re.I))
@@ -187,7 +187,7 @@ class PriceWatcher:
             return "usage"
         return "saas-tiered"
 
-    # ── Urgency ───────────────────────────────────────────────────────────────
+    #  Urgency 
 
     def _detect_urgency(self, soup: BeautifulSoup, raw: str) -> list[str]:
         signals = []
@@ -204,7 +204,7 @@ class PriceWatcher:
                 signals.append(label)
         return signals
 
-    # ── Diff vs previous snapshot ─────────────────────────────────────────────
+    #  Diff vs previous snapshot 
 
     def _compute_diff(self, url: str, plans: list[PricePoint],
                       save: bool) -> list[str]:

@@ -1,0 +1,335 @@
+{
+  "mission_id": "MERSENNE_FRONTIER_136M_140M",
+  "global_order_id": "[GAHENAX] MERSENNE-W3-ALPHA",
+  "p_range": [
+    136000000,
+    140000000
+  ],
+  "block_width": 100000,
+  "total_blocks": 40,
+  "architecture": "OEDA_V4.1",
+  "worker_image": "ubuntu:latest",
+  "gate_policy": "STRICT_GIMPS_64BIT",
+  "blocks": [
+    {
+      "id": 0,
+      "range": [
+        136000000,
+        136100000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 1,
+      "range": [
+        136100000,
+        136200000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 2,
+      "range": [
+        136200000,
+        136300000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 3,
+      "range": [
+        136300000,
+        136400000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 4,
+      "range": [
+        136400000,
+        136500000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 5,
+      "range": [
+        136500000,
+        136600000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 6,
+      "range": [
+        136600000,
+        136700000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 7,
+      "range": [
+        136700000,
+        136800000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 8,
+      "range": [
+        136800000,
+        136900000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 9,
+      "range": [
+        136900000,
+        137000000
+      ],
+      "priority": "HIGH"
+    },
+    {
+      "id": 10,
+      "range": [
+        137000000,
+        137100000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 11,
+      "range": [
+        137100000,
+        137200000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 12,
+      "range": [
+        137200000,
+        137300000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 13,
+      "range": [
+        137300000,
+        137400000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 14,
+      "range": [
+        137400000,
+        137500000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 15,
+      "range": [
+        137500000,
+        137600000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 16,
+      "range": [
+        137600000,
+        137700000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 17,
+      "range": [
+        137700000,
+        137800000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 18,
+      "range": [
+        137800000,
+        137900000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 19,
+      "range": [
+        137900000,
+        138000000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 20,
+      "range": [
+        138000000,
+        138100000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 21,
+      "range": [
+        138100000,
+        138200000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 22,
+      "range": [
+        138200000,
+        138300000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 23,
+      "range": [
+        138300000,
+        138400000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 24,
+      "range": [
+        138400000,
+        138500000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 25,
+      "range": [
+        138500000,
+        138600000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 26,
+      "range": [
+        138600000,
+        138700000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 27,
+      "range": [
+        138700000,
+        138800000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 28,
+      "range": [
+        138800000,
+        138900000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 29,
+      "range": [
+        138900000,
+        139000000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 30,
+      "range": [
+        139000000,
+        139100000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 31,
+      "range": [
+        139100000,
+        139200000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 32,
+      "range": [
+        139200000,
+        139300000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 33,
+      "range": [
+        139300000,
+        139400000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 34,
+      "range": [
+        139400000,
+        139500000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 35,
+      "range": [
+        139500000,
+        139600000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 36,
+      "range": [
+        139600000,
+        139700000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 37,
+      "range": [
+        139700000,
+        139800000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 38,
+      "range": [
+        139800000,
+        139900000
+      ],
+      "priority": "NORMAL"
+    },
+    {
+      "id": 39,
+      "range": [
+        139900000,
+        140000000
+      ],
+      "priority": "NORMAL"
+    }
+  ]
+}

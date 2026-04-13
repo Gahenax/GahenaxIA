@@ -1,0 +1,98 @@
+{
+    "target": "Binance Homepage (EN)",
+    "api_endpoints_detected": 42,
+    "sample_endpoints": [
+        {
+            "url": "https://bin.bnbstatic.com/api/i18n/-/web/cms/en/home-extra",
+            "status": 200,
+            "type": "application/json"
+        },
+        {
+            "url": "https://bin.bnbstatic.com/api/i18n/-/web/cms/en/LocalHomepage",
+            "status": 200,
+            "type": "application/json"
+        },
+        {
+            "url": "https://o529943.ingest.sentry.io/api/6149229/envelope/?sentry_key=949d37812f604f039041170b5601fa1a&sentry_version=7&sentry_client=sentry.javascript.browser%2F7.38.0",
+            "status": 200,
+            "type": "application/json"
+        },
+        {
+            "url": "https://www.binance.com/bapi/accounts/v1/public/authcenter/auth",
+            "status": 200,
+            "type": "application/json; charset=utf-8"
+        },
+        {
+            "url": "https://bin.bnbstatic.com/api/i18n/-/web/cms/en/Navigation",
+            "status": 200,
+            "type": "application/json"
+        },
+        {
+            "url": "https://bin.bnbstatic.com/api/i18n/-/web/cms/en/LocalHomepage",
+            "status": 200,
+            "type": "application/json"
+        },
+        {
+            "url": "https://bin.bnbstatic.com/api/i18n/-/web/cms/en/home-extra",
+            "status": 200,
+            "type": "application/json"
+        },
+        {
+            "url": "https://bin.bnbstatic.com/api/i18n/-/web/cms/en/com-widget",
+            "status": 200,
+            "type": "application/json"
+        },
+        {
+            "url": "https://www.binance.com/bapi/accounts/v2/public/account/ip/country-city-short",
+            "status": 200,
+            "type": "application/json;charset=UTF-8"
+        },
+        {
+            "url": "https://www.binance.com/bapi/apex/v1/public/apex/marketing/web/commonConfig",
+            "status": 200,
+            "type": "application/json;charset=UTF-8"
+        },
+        {
+            "url": "https://www.binance.com/bapi/compliance/v1/friendly/compliance/market/banner-compliance-check",
+            "status": 200,
+            "type": "application/json;charset=UTF-8"
+        },
+        {
+            "url": "https://www.binance.com/bapi/apex/v1/friendly/apex/marketing/complianceActionCheck?requestLink=www.binance.com%2Fen",
+            "status": 200,
+            "type": "application/json;charset=UTF-8"
+        },
+        {
+            "url": "https://www.binance.com/bapi/composite/v1/public/growth-activity/loyalty/onboarding/topBarAndTopCTA",
+            "status": 200,
+            "type": "application/json;charset=UTF-8"
+        },
+        {
+            "url": "https://www.binance.com/bapi/compliance/v1/friendly/compliance/businessCheckV2?platform=WEB",
+            "status": 200,
+            "type": "application/json;charset=UTF-8"
+        },
+        {
+            "url": "https://www.binance.com/bapi/fe/cms/region/language",
+            "status": 200,
+            "type": "application/json; charset=utf-8"
+        }
+    ],
+    "websockets_detected": [
+        "wss://stream.binance.com/stream",
+        "wss://nbstream.binance.com/market?uuid=800834a7-9bb6-42eb-9e3c-adfd755a1c4b&clienttype=web"
+    ],
+    "frontend_state": {
+        "hasBncState": false,
+        "hasNextData": false,
+        "frameworks": [
+            "React"
+        ]
+    },
+    "dom_structure": {
+        "trading_links_found": 8,
+        "text_elements_found": 0,
+        "buttons_found": 20,
+        "page_title": "Binance: The World\u2019s Most Trusted Cryptocurrency Exchange to Buy, Trade & Invest in Crypto"
+    }
+}

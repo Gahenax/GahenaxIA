@@ -20,11 +20,11 @@ recoverer = MersenneRecoverer()
 def analyze_patterns():
     hourly_stats: dict[int, list[float]] = defaultdict(list)
     
-    print("🧠 Analizando patrones horarios en los datasets...")
+    print(" Analizando patrones horarios en los datasets...")
     
     for file_path in FILES:
         if not os.path.exists(file_path):
-            print(f"⚠️ No se encontró: {file_path}")
+            print(f" No se encontró: {file_path}")
             continue
             
         with open(file_path, "r", encoding="utf-8") as f:
@@ -57,7 +57,7 @@ def analyze_patterns():
                         if recoverer.submit_value(raw_int):
                             pred = recoverer.predict_next()
                             if pred:
-                                print(f"🔮 PREDICCIÓN ALGEBRAICA (Mersenne): Prox mult ~ {pred % 5:.2f}x")
+                                print(f" PREDICCIÓN ALGEBRAICA (Mersenne): Prox mult ~ {pred % 5:.2f}x")
                     except:
                         pass
                 except Exception as e:
@@ -65,7 +65,7 @@ def analyze_patterns():
                     continue
 
     if not hourly_stats:
-        print("⚠️ No hay suficientes datos para extraer patrones aún.")
+        print(" No hay suficientes datos para extraer patrones aún.")
         return
 
     print("\n" + "="*60)
@@ -81,8 +81,8 @@ def analyze_patterns():
         crash_p = (crashes / count) * 100
         
         # Heurística de Patrón
-        pattern_type = "🔥 CALIENTE" if avg > 2.0 else "❄️ FRÍO"
-        if mx > 50: pattern_type += " 🌋 BURST"
+        pattern_type = " CALIENTE" if avg > 2.0 else " FRÍO"
+        if mx > 50: pattern_type += "  BURST"
         
         print(f"{hour:02d}:00      | {count:<10} | {avg:<10.2f} | {mx:<10.2f} | {crash_p:<9.1f}% -> {pattern_type}")
 

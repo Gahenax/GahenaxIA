@@ -24,7 +24,7 @@ def ingest():
             f.write(json.dumps(data) + "\n")
             count += 1
     
-    print(f"✅ Ingesta completada: {count} rounds añadidos al DNA de Gahenax.")
+    print(f" Ingesta completada: {count} rounds añadidos al DNA de Gahenax.")
 
 if __name__ == "__main__":
     ingest()

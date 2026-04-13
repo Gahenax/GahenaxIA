@@ -99,7 +99,7 @@
                 if (response.status === 200) {
                     updateStatus(`Synced ${messages.length} msgs`, "#00ff00");
                     lastSyncCount = messages.length;
-                    console.log("🦾 Gahenax: Sync successful.");
+                    console.log(" Gahenax: Sync successful.");
                 } else {
                     updateStatus("Sync Failed (Server?)", "#ff0000");
                 }
@@ -130,5 +130,5 @@
     const chatContainer = document.querySelector('div.flex-1.overflow-y-auto') || document.body;
     observer.observe(chatContainer, { childList: true, subtree: true });
 
-    console.log("🦾 Gahenax Claude Implant Active.");
+    console.log(" Gahenax Claude Implant Active.");
 })();

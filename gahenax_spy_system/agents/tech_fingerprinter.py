@@ -21,10 +21,10 @@ from gahenax_spy_system.models import TechProfile, TechSignal
 from gahenax_spy_system.utils import StealthHTTPClient
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# 
 #  DICCIONARIO DE SEÑALES (clave → {name, category, evidence_pattern})
 #  Todos los patterns son búsquedas sobre el HTML + headers combinados.
-# ══════════════════════════════════════════════════════════════════════════════
+# 
 
 _HEADER_SIGNALS: list[tuple[str, str, str, float]] = [
     # (header_name, contains_value, tech_name, confidence)
@@ -103,16 +103,16 @@ class TechFingerprinter:
         profile.http_version = f"HTTP/{resp.http_version}" if hasattr(resp, "http_version") else ""
         profile.raw_headers  = dict(resp.headers)
 
-        # ── Header Analysis ──────────────────────────────────────────────────
+        #  Header Analysis 
         headers_lower = {k.lower(): v.lower() for k, v in resp.headers.items()}
         self._analyze_headers(headers_lower, profile)
 
-        # ── HTML / DOM Analysis ──────────────────────────────────────────────
+        #  HTML / DOM Analysis 
         if "text/html" in resp.headers.get("content-type", ""):
             soup = BeautifulSoup(resp.text, "lxml")
             self._analyze_html(soup, resp.text, profile)
 
-        # ── Compute summary fields ───────────────────────────────────────────
+        #  Compute summary fields 
         profile.frameworks = list({
             s.name for s in profile.signals
             if s.category in ("framework", "cms")
@@ -127,7 +127,7 @@ class TechFingerprinter:
 
         return profile
 
-    # ── Internal helpers ─────────────────────────────────────────────────────
+    #  Internal helpers 
 
     def _analyze_headers(self, headers: dict[str, str], profile: TechProfile) -> None:
         for header_name, contains, tech, confidence in _HEADER_SIGNALS:

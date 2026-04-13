@@ -10,10 +10,10 @@ import time
 LOG_FILE = "../utils/aviator_telemetry.jsonl"
 
 def parse_pcap_json(filepath):
-    print(f"🕵️‍♂️ Procesando captura de red: {filepath}...")
+    print(f"‍ Procesando captura de red: {filepath}...")
     
     if not os.path.exists(filepath):
-        print(f"❌ Error: El archivo {filepath} no existe.")
+        print(f" Error: El archivo {filepath} no existe.")
         return
 
     count = 0
@@ -21,7 +21,7 @@ def parse_pcap_json(filepath):
         try:
             packets = json.load(f)
         except Exception as e:
-            print(f"❌ Error cargando JSON de Wireshark: {e}")
+            print(f" Error cargando JSON de Wireshark: {e}")
             return
 
         for packet in packets:
@@ -46,7 +46,7 @@ def parse_pcap_json(filepath):
                         out.write(json.dumps(telemetry_data) + "\n")
                     count += 1
 
-    print(f"✅ Ingesta Packet-Layer completada: {count} frames extraídos.")
+    print(f" Ingesta Packet-Layer completada: {count} frames extraídos.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gahenax Wireshark Ingester")

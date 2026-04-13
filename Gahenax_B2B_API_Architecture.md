@@ -6,7 +6,7 @@ Al empaquetar tu cerebro técnico (RAG de PDFs) en una API, le permites a tus cl
 
 ---
 
-## 🏗️ 1. Arquitectura del Servicio (FastAPI + LangChain)
+##  1. Arquitectura del Servicio (FastAPI + LangChain)
 
 Para mantener el asincronismo y la velocidad de respuesta, construiremos la API usando **FastAPI**.
 
@@ -16,7 +16,7 @@ Para mantener el asincronismo y la velocidad de respuesta, construiremos la API 
 
 ---
 
-## 🛣️ 2. Diseño de Endpoints (Rutas)
+##  2. Diseño de Endpoints (Rutas)
 
 La API expondrá microservicios claros para el consumidor B2B:
 
@@ -45,7 +45,7 @@ La API expondrá microservicios claros para el consumidor B2B:
 
 ---
 
-## 🔒 3. El Beneficio Comercial de la API
+##  3. El Beneficio Comercial de la API
 
 1. **Agnosticismo Total:** Ya no dependes de las caídas de servidores de Discord ni de que tus clientes tengan cuentas allí.
 2. **"API as a Service" (AaaS):** Puedes vender el acceso a tu API como una membresía mensual separada. *"Gahenax Architecture Consultant API - $49/mo"*.
@@ -53,6 +53,6 @@ La API expondrá microservicios claros para el consumidor B2B:
 
 ---
 
-## 🛠️ 4. Pasos de Ejecución (Para Antigravity)
+##  4. Pasos de Ejecución (Para Antigravity)
 
 Si apruebas este documento, crearé una nueva carpeta `Gahenax_B2B_API`, instalaré `fastapi` y `uvicorn`, migraré el motor de LangChain hacia el nuevo framework, y te crearé un Cliente de Prueba para que veamos a la API cobrar vida.

@@ -1,0 +1,4 @@
+# Gahenax Identity Hub - Proxies List
+# Formato: ip:port:user:pass (un proxy por línea)
+# Ejemplo: 127.0.0.1:9050 (para Tor local)
+#          192.168.1.50:8080:gahenax:secret123

@@ -62,7 +62,7 @@ def analyze_temporal_correlation():
         print(f"Error in Temporal Tracker: {e}")
 
 if __name__ == "__main__":
-    print("🧬 Gahenax Temporal Spectral Tracker v18.0 ACTIVE...")
+    print(" Gahenax Temporal Spectral Tracker v18.0 ACTIVE...")
     while True:
         analyze_temporal_correlation()
         time.sleep(5)

@@ -6,7 +6,7 @@ Basado en modelos exitosos de venta SaaS B2B, info-productos de nicho técnico y
 
 ---
 
-## 🏗️ 1. Definición de Formatos y Marca Personal
+##  1. Definición de Formatos y Marca Personal
 
 ### Formato "Research Notes" (Marca de Autoridad)
 Los 100+ PDFs que acabamos de generar serán categorizados estrictamente bajo el paraguas **"Gahenax Research Notes"**.
@@ -21,7 +21,7 @@ El código de tus arquitecturas (el Context Inference Engine, Antigravity, Ourob
 
 ---
 
-## 💎 2. Estudio de Empaquetado y Tiers Estratégicos (El Bundle)
+##  2. Estudio de Empaquetado y Tiers Estratégicos (El Bundle)
 
 Para cada temática vertical (Ej: *El "Riemann Spectral Pack"*, el *"Mersenne Gap Engine"*, o el *"Enterprise Architect Ruleset"*), aplicaremos el siguiente embudo de tres *Tiers* (Niveles):
 
@@ -50,7 +50,7 @@ Para cada temática vertical (Ej: *El "Riemann Spectral Pack"*, el *"Mersenne Ga
 
 ---
 
-## 🚀 3. Flujo Siguiente (Roadmap de Acción)
+##  3. Flujo Siguiente (Roadmap de Acción)
 
 Si apruebas esta estructura, los próximos pasos directos en código y archivos serán:
 

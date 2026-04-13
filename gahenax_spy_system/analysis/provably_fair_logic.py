@@ -56,4 +56,4 @@ if __name__ == "__main__":
     # Test Bench (Valores ejemplo de documentación de Spribe)
     s_seed = "test_server_seed"
     c_seeds = "test_client_seeds_combined"
-    print(f"🧬 Test Multiplier: {calculate_multiplier(s_seed, c_seeds)}x")
+    print(f" Test Multiplier: {calculate_multiplier(s_seed, c_seeds)}x")

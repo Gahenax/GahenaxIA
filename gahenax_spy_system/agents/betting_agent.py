@@ -48,7 +48,7 @@ class BettingAgent:
         """Simula la ejecución de apuesta en la UI (Requiere Selenium Driver)."""
         confidence = self.check_telemetry_confidence()
         if confidence > 0.8:
-            print(f"🔥 ALTA CONFIANZA ({confidence:.2f}): EJECUTANDO APUESTA...")
+            print(f" ALTA CONFIANZA ({confidence:.2f}): EJECUTANDO APUESTA...")
             if self.driver:
                 # Localizar botones y realizar click (Lógica específica de WPlay Aviator)
                 # self.driver.find_element("xpath", "//button[contains(., 'BET')]").click()
@@ -58,8 +58,8 @@ class BettingAgent:
 
 if __name__ == "__main__":
     agent = BettingAgent()
-    print("🛰️ Gahenax Betting Agent v16.0 Warm-up...")
+    print(" Gahenax Betting Agent v16.0 Warm-up...")
     while True:
         conf = agent.check_telemetry_confidence()
-        print(f"📊 Confidence Baseline: {conf:.4f}")
+        print(f" Confidence Baseline: {conf:.4f}")
         time.sleep(5)

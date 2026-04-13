@@ -13,11 +13,11 @@ results = []
 def check(name, module_name):
     try:
         __import__(module_name)
-        results.append(f"✅ {name}: OK")
+        results.append(f" {name}: OK")
     except ImportError as e:
-        results.append(f"❌ {name}: ERROR ({e})")
+        results.append(f" {name}: ERROR ({e})")
 
-print("🧪 GAHENAX SYSTEM IMPORT AUDIT")
+print(" GAHENAX SYSTEM IMPORT AUDIT")
 print("==============================")
 check("Config", "config")
 check("Provably Fair Logic", "provably_fair_logic")
@@ -30,8 +30,8 @@ for r in results:
     print(r)
 
 if any("ERROR" in r for r in results):
-    print("\n⚠️ ALERTA: Fallo de integridad de dependencias detectado.")
+    print("\n ALERTA: Fallo de integridad de dependencias detectado.")
     sys.exit(1)
 else:
-    print("\n✅ INTEGRIDAD CONFIRMADA.")
+    print("\n INTEGRIDAD CONFIRMADA.")
     sys.exit(0)

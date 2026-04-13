@@ -108,13 +108,13 @@ docker cp gahenax-vaultwarden:/data ./backups/vault-$(date +%F)
 
 ```
 infrastructure/
-├── docker-compose.yml      ← Stack completo (12 servicios, 4 waves)
-├── Caddyfile               ← Reverse proxy + HTTPS automático
-├── .env.example            ← Template de secrets (copiar a .env)
-├── deploy.sh               ← Script de deploy en 1 comando
-├── .gitignore              ← Excluye .env y datos de Docker
-├── monitoring/
-│   ├── prometheus.yml      ← Métricas: VPS + Jules Katsina drones
-│   └── grafana/            ← Dashboards provisionados
-└── README.md               ← Este archivo
+ docker-compose.yml      ← Stack completo (12 servicios, 4 waves)
+ Caddyfile               ← Reverse proxy + HTTPS automático
+ .env.example            ← Template de secrets (copiar a .env)
+ deploy.sh               ← Script de deploy en 1 comando
+ .gitignore              ← Excluye .env y datos de Docker
+ monitoring/
+    prometheus.yml      ← Métricas: VPS + Jules Katsina drones
+    grafana/            ← Dashboards provisionados
+ README.md               ← Este archivo
 ```

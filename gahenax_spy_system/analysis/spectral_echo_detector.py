@@ -22,9 +22,9 @@ def detect_spectral_echoes(multipliers):
     z_score = (peak_val - mean_noise) / np.std(fft_vals)
     
     if z_score > 3.0:
-        return z_score, "⚠️ ALERTA: ECO ESPECTRAL DETECTADO (Posible Quiet Planting)"
+        return z_score, " ALERTA: ECO ESPECTRAL DETECTADO (Posible Quiet Planting)"
     else:
-        return z_score, "✅ Espectro Natural"
+        return z_score, " Espectro Natural"
 
 def check_critical_point(multipliers):
     """Calcula la densidad de complejidad para mapear la transición de fase."""
@@ -33,9 +33,9 @@ def check_critical_point(multipliers):
     entropy = -np.sum([p * np.log2(p) for p in np.histogram(multipliers, bins=10, density=True)[0] if p > 0])
     
     if entropy < 1.5:
-        return "🔴 TRANSICIÓN DE FASE: RÉGIMEN DETERMINISTA (ALTA PROBABILIDAD)"
-    return "🟢 RÉGIMEN CAÓTICO (BAJA PROBABILIDAD)"
+        return " TRANSICIÓN DE FASE: RÉGIMEN DETERMINISTA (ALTA PROBABILIDAD)"
+    return " RÉGIMEN CAÓTICO (BAJA PROBABILIDAD)"
 
 if __name__ == "__main__":
-    print("🧬 Gahenax P-ATLAS-NP Mapper v13.0")
+    print(" Gahenax P-ATLAS-NP Mapper v13.0")
     # [Integración con telemetry para detección en vivo]

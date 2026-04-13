@@ -29,9 +29,9 @@ def launch(url="https://www.wplay.co/"):
         url
     ]
     
-    print(f"🚀 Lanzando Chrome en: {url}...")
+    print(f" Lanzando Chrome en: {url}...")
     subprocess.Popen(args)
-    print("✅ Navegador abierto con puerto 9222.")
+    print(" Navegador abierto con puerto 9222.")
 
 if __name__ == "__main__":
     target = sys.argv[1] if len(sys.argv) > 1 else "https://www.wplay.co/"

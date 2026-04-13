@@ -1,0 +1,22 @@
+{
+  "sources": {
+    "php": ["$_GET", "$_POST", "$_REQUEST", "$_COOKIE", "$_FILES", "$_SERVER"],
+    "python": ["request.args.get", "request.form.get", "request.values.get", "request.json.get", "request.view_args", "os.environ.get"]
+  },
+  "sinks": {
+    "php": {
+      "RCE": ["eval", "exec", "system", "shell_exec", "passthru", "preg_replace", "create_function"],
+      "SQLI": ["mysqli_query", "pg_query", "db->query"],
+      "XSS": ["echo", "print", "printf"]
+    },
+    "python": {
+      "RCE": ["eval", "exec", "subprocess.run", "os.system", "os.popen"],
+      "SQLI": ["cursor.execute", "engine.execute", "db.session.execute"],
+      "XSS": ["render_template_string", "Markup"]
+    }
+  },
+  "sanitizers": {
+    "php": ["htmlspecialchars", "htmlentities", "mysqli_real_escape_string", "filter_var"],
+    "python": ["escape", "html.escape", "bleach.clean"]
+  }
+}

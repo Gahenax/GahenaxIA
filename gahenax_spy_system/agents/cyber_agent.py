@@ -29,9 +29,9 @@ class CyberAgent:
         if script_path:
             self.script_path = script_path
         else:
-            # Por defecto, buscar en Limpiamax-page
+            # Reenfocando hacia el Omni-Scraper soberano oficial
             root = Path(__file__).parent.parent.parent
-            self.script_path = str(root / "Limpiamax-page" / "scrape.mjs")
+            self.script_path = str(root / "Gahenax_Omni_Scraper" / "omni_scraper.mjs")
 
     def run(self, url: str, output_dir: str, implant: bool = False, goal: Optional[str] = None, use_tor: bool = False) -> CyberProfile:
         """
@@ -39,12 +39,16 @@ class CyberAgent:
         """
         profile = CyberProfile(url=url, output_dir=output_dir, mode="implant" if implant else "standard")
         
+        # Alineación con Gahenax Omni-Scraper:
+        # 1. MODE (mirror/spy/hybrid)
+        # 2. TARGET_URL
+        # 3. OUTPUT_DIR
         cmd = [
             self.node_path, 
             self.script_path, 
+            "hybrid" if implant else "spy",
             url, 
-            output_dir, 
-            "0"  # recursion off by default for agentic analysis
+            output_dir
         ]
         
         if implant:
@@ -54,7 +58,7 @@ class CyberAgent:
         if use_tor:
             cmd.append("--tor")
 
-        print(f"🚀 [CyberAgent] Iniciando infiltración en {url}...")
+        print(f" [CyberAgent] Iniciando infiltración en {url}...")
         try:
             # Ejecutar y esperar a que termine (el scraper de Node tiene sus propios scrolls/timeouts)
             result = subprocess.run(
@@ -82,13 +86,13 @@ class CyberAgent:
             if bridge_path.exists():
                 with open(bridge_path, "r", encoding="utf-8") as f:
                     profile.bridge_data = json.load(f)
-                    print(f"🧠 [CyberAgent] Bridge semántico capturado ({len(profile.bridge_data.get('links', []))} links).")
+                    print(f" [CyberAgent] Bridge semántico capturado ({len(profile.bridge_data.get('links', []))} links).")
             
         except subprocess.CalledProcessError as e:
             profile.status = "Failed"
-            print(f"❌ [CyberAgent] Error en subproceso Node: {e.stderr}")
+            print(f" [CyberAgent] Error en subproceso Node: {e.stderr}")
         except Exception as e:
             profile.status = "Error"
-            print(f"❌ [CyberAgent] Error inesperado: {str(e)}")
+            print(f" [CyberAgent] Error inesperado: {str(e)}")
 
         return profile

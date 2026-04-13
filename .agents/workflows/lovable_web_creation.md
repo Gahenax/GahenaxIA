@@ -2,7 +2,7 @@
 description: Workflow paso a paso para la creación de páginas web premium usando Lovable (AI Web Builder)
 ---
 
-# 🚀 Workflow: Creación de Páginas Web con Lovable
+#  Workflow: Creación de Páginas Web con Lovable
 
 Este workflow define los pasos para crear aplicaciones web visualmente impactantes, modernas y responsivas utilizando **Lovable**.
 
