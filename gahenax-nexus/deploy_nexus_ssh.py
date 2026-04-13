@@ -66,7 +66,7 @@ def deploy(dry_run=True):
                 print(f"  UP: Subiendo: {item}")
                 scp.put(full_path, recursive=True, remote_path=target_path)
 
-        print("\n✨ DESPLIEGUE SSH COMPLETADO ✨")
+        print("\n[OK] DESPLIEGUE SSH COMPLETADO [OK]")
 
     except Exception as e:
         print(f"ERR: Error: {e}")

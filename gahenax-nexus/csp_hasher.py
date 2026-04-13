@@ -185,7 +185,7 @@ def main():
             print(f"\nProximos pasos:")
             print(f"   1. Hacer git commit de los cambios")
             print(f"   2. Hacer deploy a Hostinger")
-            print(f"   3. Verificar CSP en browser: DevTools → Network → Response Headers")
+            print(f"   3. Verificar CSP en browser: DevTools -> Network -> Response Headers")
             sys.exit(0)
         else:
             sys.exit(1)

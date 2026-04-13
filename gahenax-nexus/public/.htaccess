@@ -26,7 +26,7 @@
 # Security Headers (OEDA Hardening)
 <IfModule mod_headers.c>
   # CSP: Allow self and Next.js internal inline scripts, block external frames and object execution.
-  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=' 'sha256-jkbv5bucxlgGHdFWNnTGyFOtXAmvPF95ETNdCnhGYjU=' 'sha256-WwTThUimx4EDkPy8+Yeq3qrMaWjJ1MSRaaV76Pv8yow=' 'sha256-ajfemlE+d5nCIG4s0mAPqt5mNglFOXYX3s04gGqdE7o=' 'sha256-DESFCzuHFZ4t/Pk+0P5ry+gUmEvtdM2nMKBJvwbhO5M=' 'sha256-qqAGRmnGQ4ul+pbdNiNu7qQiXUT2vPncoldltdsGl54=' 'sha256-v1qf4Vv1LiR5DgJ7owHTUR1dZFQ7mb95ZM0bbzEI6io=' 'sha256-HjJIdpoeO22xrU30iwXUu5Tj1/ZOy10MXUSVKtoHI3U=' 'sha256-tpDcREQ4p+FPYlHCoMmpUg7ovCgbcmHXUm2azXAiiZc=' 'sha256-DF5LyvHmoH2+ii2JkLSepakwDIu+LCGfnOM6B6gSGJA='; style-src 'self'; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+  Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-OBTN3RiyCV4Bq7dFqZ5a2pAXjnCcCYeTJMO2I/LYKeo=' 'sha256-NXAjhEqx/sW0PXIsSxi7fy/hAjthpfNaNiNH6APHn0o=' 'sha256-HpOXmV+fzOQyblYG6pmCobUZJ6cPJbYJEO0VWvCJD0U=' 'sha256-gh0ocM60AjOX2NHCF+rtdK5M08Nq3W7CpzuJDtkz73I=' 'sha256-DESFCzuHFZ4t/Pk+0P5ry+gUmEvtdM2nMKBJvwbhO5M=' 'sha256-qqAGRmnGQ4ul+pbdNiNu7qQiXUT2vPncoldltdsGl54=' 'sha256-v1qf4Vv1LiR5DgJ7owHTUR1dZFQ7mb95ZM0bbzEI6io=' 'sha256-h4Qs+O9EPRI3JbgL51vYdT82WvolNlgBnPIvVoSMW8A=' 'sha256-tpDcREQ4p+FPYlHCoMmpUg7ovCgbcmHXUm2azXAiiZc=' 'sha256-Fe/3aBZm+BCqX1J21SeNl/zaLgu5CyJZz1MlYgzN2HM=' 'sha256-qWIwPICerShDUc9qQg4/Ma0DdmTm9P8ckhC7giSsIpo='; style-src 'self'; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
   
   # Prevent MIME type sniffing
   Header set X-Content-Type-Options "nosniff"
@@ -36,4 +36,7 @@
   
   # Strict Referrer Policy
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+  
+  # HSTS (Strict-Transport-Security)
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 </IfModule>

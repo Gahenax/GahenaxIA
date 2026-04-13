@@ -59,6 +59,7 @@ export default function Home() {
                   fill 
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   className="object-cover"
+                  style={{ aspectRatio: "16/9", objectFit: "cover" }}
                   priority
                 />
               </div>
