@@ -13,7 +13,9 @@ def load_env_file():
                     continue
                 if "=" in line:
                     key, val = line.split("=", 1)
-                    os.environ[key.strip()] = val.strip()
+                    key = key.strip()
+                    if key not in os.environ:
+                        os.environ[key] = val.strip()
 
 # Load environment
 load_env_file()
