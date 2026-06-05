@@ -8,18 +8,10 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ollama-data:/root/.ollama
+      - c:/Users/jotam/.ollama:/root/.ollama
     restart: unless-stopped
 
-  # 2. Descarga automática del modelo Qwen al primer arranque
-  ollama-helper:
-    image: curlimages/curl:latest
-    container_name: cripta-ollama-helper
-    depends_on:
-      - ollama
-    entrypoint: [ "sh", "-c", "sleep 5 && curl -s -X POST http://ollama:11434/api/pull -d '{\"name\": \"qwen2.5:1.5b\"}'" ]
-
-  # 3. El backend secundario de Cripta (FastAPI)
+  # 2. El backend secundario de Cripta (FastAPI)
   cripta-backend:
     build:
       context: ./app/sidecar
@@ -38,6 +30,3 @@ services:
       - LLM_MODEL=qwen2.5:1.5b
     restart: unless-stopped
 
-volumes:
-  ollama-data:
-    name: cripta-ollama-data
