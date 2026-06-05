@@ -663,48 +663,79 @@ function App() {
               {bookPages[currentPageIdx] && (
                 <div style={{ minHeight: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    {bookPages[currentPageIdx].player_text && (
-                      <div style={{ 
-                        fontStyle: 'italic', 
-                        color: 'rgba(30, 29, 26, 0.6)', 
-                        marginBottom: '20px',
-                        borderLeft: '3px solid var(--color-gold-dim)',
-                        paddingLeft: '12px',
-                        fontSize: '14px'
+                    {!selectedCharacter ? (
+                      <div style={{
+                        padding: '30px 20px',
+                        backgroundColor: 'rgba(140, 110, 51, 0.05)',
+                        border: '1px solid rgba(140, 110, 51, 0.2)',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        marginTop: '45px'
                       }}>
-                        &ldquo;{bookPages[currentPageIdx].player_text}&rdquo;
+                        <h3 style={{ fontFamily: 'var(--font-serif)', color: '#8c6e33', margin: '0 0 10px 0', fontSize: '20px' }}>El Libro está Sellado</h3>
+                        <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#5a4a35', margin: '0 0 20px 0' }}>
+                          Antes de cruzar el umbral de la cripta y comenzar tu gesta, debes dar vida a tu héroe. Completa la ficha de personaje o responde a las preguntas del destino en la página derecha.
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                          <span style={{ 
+                            padding: '4px 12px', 
+                            border: '1px solid #8c6e33', 
+                            fontSize: '11px', 
+                            fontFamily: 'monospace', 
+                            color: '#8c6e33', 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '1px' 
+                          }}>
+                            Esperando Héroe
+                          </span>
+                        </div>
                       </div>
-                    )}
-                    
-                    <div style={{ 
-                      fontSize: '17px', 
-                      lineHeight: '1.6', 
-                      fontFamily: 'var(--font-readable)',
-                      color: '#1a1815',
-                      whiteSpace: 'pre-line'
-                    }}>
-                      {bookPages[currentPageIdx].dm_text}
-                    </div>
+                    ) : (
+                      <>
+                        {bookPages[currentPageIdx].player_text && (
+                          <div style={{ 
+                            fontStyle: 'italic', 
+                            color: 'rgba(30, 29, 26, 0.6)', 
+                            marginBottom: '20px',
+                            borderLeft: '3px solid var(--color-gold-dim)',
+                            paddingLeft: '12px',
+                            fontSize: '14px'
+                          }}>
+                            &ldquo;{bookPages[currentPageIdx].player_text}&rdquo;
+                          </div>
+                        )}
+                        
+                        <div style={{ 
+                          fontSize: '17px', 
+                          lineHeight: '1.6', 
+                          fontFamily: 'var(--font-readable)',
+                          color: '#1a1815',
+                          whiteSpace: 'pre-line'
+                        }}>
+                          {bookPages[currentPageIdx].dm_text}
+                        </div>
 
-                    {bookPages[currentPageIdx].mechanics && (
-                      <div style={{ 
-                        marginTop: '25px', 
-                        padding: '10px 15px',
-                        backgroundColor: 'rgba(140, 110, 51, 0.08)',
-                        borderRadius: '4px',
-                        fontSize: '12px', 
-                        fontFamily: 'monospace', 
-                        color: '#5a4a35',
-                        border: '1px solid rgba(140, 110, 51, 0.15)'
-                      }}>
-                        <strong>
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
-                            <circle cx="12" cy="12" r="3" />
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                          </svg>
-                          Mecánicas:
-                        </strong> {bookPages[currentPageIdx].mechanics}
-                      </div>
+                        {bookPages[currentPageIdx].mechanics && (
+                          <div style={{ 
+                            marginTop: '25px', 
+                            padding: '10px 15px',
+                            backgroundColor: 'rgba(140, 110, 51, 0.08)',
+                            borderRadius: '4px',
+                            fontSize: '12px', 
+                            fontFamily: 'monospace', 
+                            color: '#5a4a35',
+                            border: '1px solid rgba(140, 110, 51, 0.15)'
+                          }}>
+                            <strong>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                              </svg>
+                              Mecánicas:
+                            </strong> {bookPages[currentPageIdx].mechanics}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
