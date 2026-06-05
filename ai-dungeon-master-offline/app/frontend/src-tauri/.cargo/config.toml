@@ -1,0 +1,5 @@
+[source.crates-io]
+replace-with = "local-proxy"
+
+[source.local-proxy]
+registry = "sparse+http://127.0.0.1:8080/index/"
