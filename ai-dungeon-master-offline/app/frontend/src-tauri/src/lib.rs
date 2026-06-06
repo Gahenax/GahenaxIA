@@ -28,6 +28,7 @@ struct AppState {
 async fn get_status(state: State<'_, AppState>) -> Result<Value, String> {
     let ollama_ok = state.orchestrator.ollama.is_available().await;
     let whisper_ok = true; // Subprocess check always returns true because helper fallback exists
+    let active_model = state.orchestrator.ollama.default_model.lock().unwrap().clone();
     
     let base_dir = find_data_dir();
     let parent = base_dir.parent().unwrap_or(&base_dir);
@@ -40,7 +41,7 @@ async fn get_status(state: State<'_, AppState>) -> Result<Value, String> {
     Ok(serde_json::json!({
         "status": "online",
         "ollama_available": ollama_ok,
-        "ollama_model": state.orchestrator.ollama.default_model,
+        "ollama_model": active_model,
         "whisper_available": whisper_ok,
         "piper_binary_exists": piper_exists
     }))
@@ -49,29 +50,56 @@ async fn get_status(state: State<'_, AppState>) -> Result<Value, String> {
 #[tauri::command]
 async fn get_model_status(state: State<'_, AppState>) -> Result<Value, String> {
     let client = reqwest::Client::builder().no_proxy().build().unwrap_or_default();
-    let active_model = state.orchestrator.ollama.default_model.clone();
+    let active_model = state.orchestrator.ollama.default_model.lock().unwrap().clone();
+    let provider = state.orchestrator.ollama.provider.clone();
     let mut installed = Vec::new();
     
-    let url = format!("{}/api/tags", state.orchestrator.ollama.host);
-    if let Ok(res) = client.get(&url).send().await {
-        if res.status().is_success() {
-            if let Ok(val) = res.json::<Value>().await {
-                if let Some(models) = val["models"].as_array() {
-                    for m in models {
-                        if let Some(name) = m["name"].as_str() {
-                            installed.push(name.to_string());
+    if provider == "ollama" {
+        let url = format!("{}/api/tags", state.orchestrator.ollama.host);
+        if let Ok(res) = client.get(&url).send().await {
+            if res.status().is_success() {
+                if let Ok(val) = res.json::<Value>().await {
+                    if let Some(models) = val["models"].as_array() {
+                        for m in models {
+                            if let Some(name) = m["name"].as_str() {
+                                installed.push(name.to_string());
+                            }
                         }
                     }
                 }
             }
         }
+    } else if provider == "openai" {
+        installed.push("gpt-4o-mini".to_string());
+        installed.push("gpt-4o".to_string());
+        installed.push("gpt-3.5-turbo".to_string());
+    } else if provider == "groq" {
+        installed.push("llama-3.3-70b-versatile".to_string());
+        installed.push("llama-3.1-8b-instant".to_string());
+        installed.push("mixtral-8x7b-32768".to_string());
+    } else {
+        installed.push(active_model.clone());
     }
 
     Ok(serde_json::json!({
+        "provider": provider,
         "active_model": active_model,
         "installed_models": installed,
         "is_qwen25": active_model.starts_with("qwen2.5")
     }))
+}
+
+#[tauri::command]
+async fn set_active_model(state: State<'_, AppState>, model: String) -> Result<Value, String> {
+    if let Ok(mut lock) = state.orchestrator.ollama.default_model.lock() {
+        *lock = model.clone();
+        Ok(serde_json::json!({
+            "status": "success",
+            "active_model": model
+        }))
+    } else {
+        Err("No se pudo bloquear la configuración de modelos en Rust".to_string())
+    }
 }
 
 #[tauri::command]
@@ -308,6 +336,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_status,
             get_model_status,
+            set_active_model,
             create_campaign,
             list_campaigns,
             create_character,

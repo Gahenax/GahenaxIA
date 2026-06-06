@@ -17,7 +17,7 @@ pub const PREFERRED_MODELS: &[&str] = &[
 pub struct OllamaClient {
     pub provider: String,
     pub host: String,
-    pub default_model: String,
+    pub default_model: std::sync::Arc<std::sync::Mutex<String>>,
     pub api_key: Option<String>,
     client: Client,
 }
@@ -27,7 +27,8 @@ impl OllamaClient {
         // Read configuration (can default to direct Ollama)
         let provider = std::env::var("LLM_PROVIDER").unwrap_or_else(|_| "ollama".to_string());
         let host = std::env::var("LLM_HOST").unwrap_or_else(|_| "http://127.0.0.1:11434".to_string());
-        let default_model = std::env::var("LLM_MODEL").unwrap_or_else(|_| "magicworld-gm".to_string());
+        let default_model_val = std::env::var("LLM_MODEL").unwrap_or_else(|_| "magicworld-gm".to_string());
+        let default_model = std::sync::Arc::new(std::sync::Mutex::new(default_model_val));
         let api_key = std::env::var("LLM_API_KEY").ok();
 
         let client = Client::builder()
@@ -76,11 +77,11 @@ impl OllamaClient {
                         }
 
                         if let Some(sel) = selected {
-                            self.default_model = sel;
-                            println!("[Ollama] Active model auto-detected: '{}'", self.default_model);
+                            *self.default_model.lock().unwrap() = sel;
+                            println!("[Ollama] Active model auto-detected: '{}'", *self.default_model.lock().unwrap());
                         } else if !model_names.is_empty() {
-                            self.default_model = model_names[0].to_string();
-                            println!("[Ollama] No preferred model found. Using fallback: '{}'", self.default_model);
+                            *self.default_model.lock().unwrap() = model_names[0].to_string();
+                            println!("[Ollama] No preferred model found. Using fallback: '{}'", *self.default_model.lock().unwrap());
                         }
                     }
                 }
@@ -105,7 +106,14 @@ impl OllamaClient {
     }
 
     pub async fn generate_chat(&self, messages: &[Value], model: Option<&str>) -> String {
-        let model_name = model.unwrap_or(&self.default_model);
+        let model_fallback;
+        let model_name = match model {
+            Some(m) => m,
+            None => {
+                model_fallback = self.default_model.lock().unwrap().clone();
+                &model_fallback
+            }
+        };
 
         if self.provider == "odysseus" || self.provider == "openai_compatible" || self.provider == "groq" || self.provider == "openai" {
             let mut host_url = self.host.clone();
@@ -193,7 +201,7 @@ impl OllamaClient {
             }
 
             let payload = serde_json::json!({
-                "model": self.default_model,
+                "model": self.default_model.lock().unwrap().clone(),
                 "input": text
             });
 
@@ -210,7 +218,7 @@ impl OllamaClient {
         } else {
             let url = format!("{}/api/embeddings", self.host);
             let payload = serde_json::json!({
-                "model": self.default_model,
+                "model": self.default_model.lock().unwrap().clone(),
                 "prompt": text,
                 "keep_alive": "10m"
             });

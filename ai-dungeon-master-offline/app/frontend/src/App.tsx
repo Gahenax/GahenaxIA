@@ -29,7 +29,7 @@ interface Character {
 function App() {
   // Navigation & Setup State
   const [status, setStatus] = useState<any>(null);
-  const [modelInfo, setModelInfo] = useState<{active_model: string, is_qwen25: boolean} | null>(null);
+  const [modelInfo, setModelInfo] = useState<{active_model: string, is_qwen25: boolean, installed_models?: string[], provider?: string} | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -203,6 +203,15 @@ function App() {
       setModelInfo(data);
     } catch (e) {
       console.error("Model status check failed", e);
+    }
+  };
+
+  const handleModelChange = async (newModel: string) => {
+    try {
+      await invoke('set_active_model', { model: newModel });
+      await fetchModelInfo();
+    } catch (e) {
+      console.error("Failed to change active model", e);
     }
   };
 
@@ -574,9 +583,9 @@ function App() {
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: '5px',
               padding: '3px 10px', borderRadius: '12px',
-              backgroundColor: modelInfo.is_qwen25 ? 'rgba(139, 92, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)',
-              border: `1px solid ${modelInfo.is_qwen25 ? '#8b5cf6' : '#3b82f6'}`,
-              fontSize: '11px', fontFamily: 'monospace', color: modelInfo.is_qwen25 ? '#c4b5fd' : '#93c5fd'
+              backgroundColor: 'rgba(140, 110, 51, 0.15)',
+              border: '1px solid var(--color-gold-dim)',
+              fontSize: '11px', fontFamily: 'monospace', color: 'var(--color-gold)'
             }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '13px', height: '13px', display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
                 <rect x="4" y="4" width="16" height="16" rx="2" />
@@ -590,7 +599,29 @@ function App() {
                 <path d="M1 9h3" />
                 <path d="M1 15h3" />
               </svg>
-              {modelInfo.active_model}
+              {modelInfo.installed_models && modelInfo.installed_models.length > 0 ? (
+                <select
+                  value={modelInfo.active_model}
+                  onChange={(e) => handleModelChange(e.target.value)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    color: 'var(--color-gold)',
+                    border: 'none',
+                    fontFamily: 'monospace',
+                    fontSize: '11px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {modelInfo.installed_models.map((m) => (
+                    <option key={m} value={m} style={{ backgroundColor: '#1a1815', color: '#fff' }}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                modelInfo.active_model
+              )}
             </span>
           )}
           {status ? (
