@@ -1,0 +1,135 @@
+.character-sheet {
+  background-color: #fcf8f2;
+  border: 1px solid rgba(140, 110, 51, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  font-family: var(--font-serif);
+}
+
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f3ebd8;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid rgba(140, 110, 51, 0.15);
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-main h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #1e1d1a;
+}
+
+.level-badge {
+  font-size: 10px;
+  background-color: #8c6e33;
+  color: #fcf8f2;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.header-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 11px;
+}
+
+.stat-label {
+  color: #8c6e33;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #1e1d1a;
+}
+
+.sheet-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheet-section h4 {
+  margin: 0 0 6px 0;
+  font-size: 12px;
+  color: #8c6e33;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.hp-bar {
+  height: 8px;
+  background-color: rgba(140, 110, 51, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.hp-fill {
+  height: 100%;
+}
+
+.hp-text {
+  margin: 0;
+  font-size: 11px;
+  text-align: right;
+  color: #6b7280;
+}
+
+.attributes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.attribute {
+  background-color: #fbf6ec;
+  border: 1px solid rgba(140, 110, 51, 0.12);
+  border-radius: 4px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.attr-name {
+  font-size: 9px;
+  color: #8c6e33;
+  font-weight: bold;
+}
+
+.attr-score {
+  font-size: 14px;
+  font-weight: bold;
+  color: #1e1d1a;
+}
+
+.attr-mod {
+  font-size: 9px;
+  color: #6b7280;
+}
+
+.class-text {
+  margin: 0;
+  font-size: 12px;
+  color: #1e1d1a;
+}

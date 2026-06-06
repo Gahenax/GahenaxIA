@@ -102,3 +102,33 @@ class DatabaseManager:
             return dict(row) if row else None
         finally:
             conn.close()
+
+    def get_recent_context(self, campaign_id: str, limit: int = 8) -> list:
+        conn = self.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT role, content FROM campaign_messages 
+                WHERE campaign_id = ? AND is_active = 1
+                ORDER BY created_at DESC LIMIT ?
+            ''', (campaign_id, limit))
+            rows = cursor.fetchall()
+            return [{"role": r["role"], "content": r["content"]} for r in reversed(rows)]
+        finally:
+            conn.close()
+
+    def log_action(self, campaign_id: str, action_data: dict):
+        role = action_data.get("character_id", "user")
+        content = action_data.get("description", "")
+        import uuid
+        msg_id = str(uuid.uuid4())
+        conn = self.get_connection()
+        try:
+            conn.execute('''
+                INSERT INTO campaign_messages (id, campaign_id, role, content, is_active)
+                VALUES (?, ?, ?, ?, 1)
+            ''', (msg_id, campaign_id, role, content))
+            conn.commit()
+        finally:
+            conn.close()
+

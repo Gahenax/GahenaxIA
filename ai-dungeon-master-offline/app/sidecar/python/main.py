@@ -18,7 +18,7 @@ from memory.db_manager import DatabaseManager
 from memory.repositories import CampaignRepository, CharacterRepository, MessageRepository
 from rules.story_simulator import StorySimulator
 from rules.personality_quiz import PersonalityQuiz
-from orchestrator import Orchestrator
+from rules.orchestrator import Orchestrator
 
 app = FastAPI(
     title="Cripta Sidecar Server",
@@ -50,7 +50,7 @@ class CampaignCreate(BaseModel):
 from pydantic import BaseModel, Field
 
 class CharacterCreate(BaseModel):
-    campaign_id: str
+    campaign_id: Optional[str] = None
     name: str
     char_class: str = Field(..., alias="class")
     race: str
@@ -112,13 +112,32 @@ def list_campaigns():
 
 @app.post("/characters")
 def create_character(char: CharacterCreate):
-    existing = character_repo.get_by_campaign(char.campaign_id)
-    if len(existing) >= 6:
-        raise HTTPException(status_code=400, detail="La campaña ya tiene el límite máximo de 6 personajes.")
+    if char.campaign_id:
+        existing = character_repo.get_by_campaign(char.campaign_id)
+        if len(existing) >= 6:
+            raise HTTPException(status_code=400, detail="La campaña ya tiene el límite máximo de 6 personajes.")
     return character_repo.create(
         char.campaign_id, char.name, char.char_class, char.race, char.background,
         char.hp_max, char.armor_class, char.stats, char.inventory
     )
+
+@app.get("/characters")
+def list_all_characters(campaign_id: Optional[str] = None, unassigned_only: bool = False):
+    if unassigned_only:
+        return character_repo.get_global_characters()
+    if campaign_id:
+        return character_repo.get_by_campaign(campaign_id)
+    return character_repo.get_all_characters()
+
+class AssignPayload(BaseModel):
+    campaign_id: str
+
+@app.post("/characters/{character_id}/assign")
+def assign_character(character_id: str, payload: AssignPayload):
+    success = character_repo.assign_to_campaign(character_id, payload.campaign_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Fallo al asignar personaje a la campaña.")
+    return {"status": "success", "character_id": character_id, "campaign_id": payload.campaign_id}
 
 @app.get("/campaigns/{campaign_id}/characters")
 def list_characters(campaign_id: str):

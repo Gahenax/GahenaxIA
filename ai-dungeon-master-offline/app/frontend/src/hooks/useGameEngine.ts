@@ -6,6 +6,8 @@ interface GameState {
   maxHp: number;
   ac: number;
   level: number;
+  xp?: number;
+  room?: string;
 }
 
 interface ActionResult {

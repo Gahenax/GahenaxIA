@@ -1,0 +1,51 @@
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #1e1d1a;
+  color: #fcf8f2;
+  font-family: var(--font-serif);
+}
+
+.loading-box {
+  text-align: center;
+  padding: 32px;
+  background-color: #fcf8f2;
+  border: 2px solid #8c6e33;
+  border-radius: 8px;
+  color: #1e1d1a;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.loading-spinner {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.loading-message {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #8c6e33;
+}
+
+.loading-error {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #fde8e8;
+  border: 1px solid #f8b4b4;
+  border-radius: 4px;
+  color: #9b1c1c;
+  font-size: 12px;
+  text-align: left;
+  word-break: break-all;
+}

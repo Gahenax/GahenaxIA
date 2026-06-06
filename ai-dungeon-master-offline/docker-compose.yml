@@ -27,6 +27,6 @@ services:
     environment:
       - LLM_PROVIDER=ollama
       - LLM_HOST=http://ollama:11434
-      - LLM_MODEL=qwen2.5:1.5b
+      - LLM_MODEL=qwen2.5:3b
     restart: unless-stopped
 
