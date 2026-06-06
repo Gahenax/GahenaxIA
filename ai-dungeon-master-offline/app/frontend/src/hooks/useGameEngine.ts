@@ -6,23 +6,25 @@ interface GameState {
   maxHp: number;
   ac: number;
   level: number;
-  xp?: number;
-  room?: string;
+  xp: number;
+  room: string;
 }
 
 interface ActionResult {
   success: boolean;
   message: string;
   narrative: string;
-  game_state?: GameState;
+  state?: any;
 }
 
 export function useGameEngine() {
   const [gameState, setGameState] = useState<GameState>({
     hp: 10,
     maxHp: 10,
-    ac: 10,
+    ac: 12,
     level: 1,
+    xp: 0,
+    room: "Entrada de la Cripta"
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +39,19 @@ export function useGameEngine() {
           description,
           character_id: "player_1",
         });
-        if (result?.game_state) {
-          setGameState(prev => ({ ...prev, ...result.game_state }));
+
+        if (result?.state) {
+          const s = result.state;
+          setGameState(prev => ({
+            ...prev,
+            hp: s.enemy_damage_to_player !== undefined
+              ? Math.max(0, prev.hp - (s.enemy_damage_to_player || 0))
+              : prev.hp,
+            xp: s.xp !== undefined ? s.xp : prev.xp,
+            room: s.room || prev.room,
+          }));
         }
+
         return result;
       } catch (err) {
         setError(String(err));

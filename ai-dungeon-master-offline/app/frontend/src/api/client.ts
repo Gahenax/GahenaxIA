@@ -9,15 +9,23 @@ export async function processAction(payload: { action_type: string; description:
       audioBytes: null
     });
     
+    // Parse damage to player from mechanics text if available
+    let enemy_damage_to_player = 0;
+    if (res.mechanics) {
+      const match = res.mechanics.match(/(?:Sufres|daño).*?(\d+)/i);
+      if (match) {
+        enemy_damage_to_player = parseInt(match[1], 10);
+      }
+    }
+    
     return {
       success: true,
       message: "Turn processed",
       narrative: res.narrative || "La mazmorra permanece en silencio...",
-      game_state: {
-        hp: res.hp_current || 10,
-        maxHp: res.hp_max || 10,
-        ac: res.armor_class || 10,
-        level: res.level || 1
+      state: {
+        enemy_damage_to_player,
+        xp: res.xp_gained || 0,
+        room: `Sala (${res.coordinates?.x || 2}, ${res.coordinates?.y || 4})`
       }
     };
   } catch (error) {
