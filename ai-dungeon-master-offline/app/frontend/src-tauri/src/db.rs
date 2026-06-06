@@ -53,6 +53,49 @@ pub fn get_connection() -> Result<Connection> {
 
 pub fn init_db() -> Result<()> {
     let conn = get_connection()?;
+
+    // Migration: make campaign_id nullable in characters table if it is currently NOT NULL
+    if let Ok(mut stmt) = conn.prepare("PRAGMA table_info(characters)") {
+        let mut needs_migration = false;
+        if let Ok(mut rows) = stmt.query([]) {
+            while let Ok(Some(row)) = rows.next() {
+                let name: String = row.get(1)?;
+                let notnull: i32 = row.get(3)?;
+                if name == "campaign_id" && notnull == 1 {
+                    needs_migration = true;
+                    break;
+                }
+            }
+        }
+        if needs_migration {
+            println!("[Database] Migrating characters table to make campaign_id nullable...");
+            let migration_sql = r#"
+                PRAGMA foreign_keys=OFF;
+                CREATE TABLE characters_new (
+                    id TEXT PRIMARY KEY,
+                    campaign_id TEXT,
+                    name TEXT NOT NULL,
+                    class TEXT NOT NULL,
+                    race TEXT NOT NULL,
+                    background TEXT NOT NULL,
+                    level INTEGER NOT NULL DEFAULT 1,
+                    hp_current INTEGER NOT NULL,
+                    hp_max INTEGER NOT NULL,
+                    armor_class INTEGER NOT NULL,
+                    stats_json TEXT NOT NULL,
+                    inventory_json TEXT NOT NULL,
+                    xp INTEGER NOT NULL DEFAULT 0,
+                    FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE SET NULL
+                );
+                INSERT INTO characters_new (id, campaign_id, name, class, race, background, level, hp_current, hp_max, armor_class, stats_json, inventory_json, xp)
+                SELECT id, campaign_id, name, class, race, background, level, hp_current, hp_max, armor_class, stats_json, inventory_json, COALESCE(xp, 0) FROM characters;
+                DROP TABLE characters;
+                ALTER TABLE characters_new RENAME TO characters;
+                PRAGMA foreign_keys=ON;
+            "#;
+            let _ = conn.execute_batch(migration_sql);
+        }
+    }
     
     // Check if schema.sql exists in the resolved data directory
     let schema_file = find_data_dir().join("schema.sql");
@@ -87,7 +130,7 @@ pub fn init_db() -> Result<()> {
         stats_json TEXT NOT NULL,
         inventory_json TEXT NOT NULL,
         xp INTEGER NOT NULL DEFAULT 0,
-        FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+        FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE SET NULL
     );
     CREATE TABLE IF NOT EXISTS npcs (
         id TEXT PRIMARY KEY,

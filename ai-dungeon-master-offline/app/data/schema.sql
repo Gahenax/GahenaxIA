@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
 
 CREATE TABLE IF NOT EXISTS characters (
     id TEXT PRIMARY KEY,
-    campaign_id TEXT NOT NULL,
+    campaign_id TEXT,
     name TEXT NOT NULL,
     class TEXT NOT NULL,
     race TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS characters (
     armor_class INTEGER NOT NULL,
     stats_json TEXT NOT NULL, -- JSON string containing ability scores (STR, DEX, etc.)
     inventory_json TEXT NOT NULL, -- JSON string containing items, weapons, gold
-    FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+    FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS npcs (

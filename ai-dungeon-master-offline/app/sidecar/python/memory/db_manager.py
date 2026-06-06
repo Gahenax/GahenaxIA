@@ -57,7 +57,7 @@ class DatabaseManager:
                 );
                 CREATE TABLE IF NOT EXISTS characters (
                     id TEXT PRIMARY KEY,
-                    campaign_id TEXT NOT NULL,
+                    campaign_id TEXT,
                     name TEXT NOT NULL,
                     class TEXT NOT NULL,
                     race TEXT NOT NULL,
@@ -68,7 +68,7 @@ class DatabaseManager:
                     armor_class INTEGER NOT NULL,
                     stats_json TEXT NOT NULL,
                     inventory_json TEXT NOT NULL,
-                    FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+                    FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE SET NULL
                 );
                 """
                 conn.executescript(fallback_schema)
