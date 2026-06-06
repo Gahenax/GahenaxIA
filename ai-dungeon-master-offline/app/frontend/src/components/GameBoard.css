@@ -1,0 +1,124 @@
+.game-board {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #fcf8f2;
+  border: 1px solid rgba(140, 110, 51, 0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f3ebd8;
+  border-bottom: 1px solid rgba(140, 110, 51, 0.15);
+}
+
+.board-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-family: var(--font-serif);
+  color: #1e1d1a;
+}
+
+.status-loading {
+  font-size: 11px;
+  color: #8c6e33;
+  font-style: italic;
+}
+
+.chat-container {
+  flex-grow: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 400px;
+}
+
+.message {
+  display: flex;
+  gap: 8px;
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  line-height: 1.4;
+  font-size: 13px;
+}
+
+.message.narrator {
+  align-self: flex-start;
+  background-color: rgba(140, 110, 51, 0.08);
+  border: 1px solid rgba(140, 110, 51, 0.12);
+  color: #3e2d1d;
+}
+
+.message.player {
+  align-self: flex-end;
+  background-color: #f7eed7;
+  border: 1px solid rgba(140, 110, 51, 0.25);
+  color: #1e1d1a;
+}
+
+.role-badge {
+  font-size: 14px;
+}
+
+.message-text {
+  margin: 0;
+}
+
+.action-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #f3ebd8;
+  border-top: 1px solid rgba(140, 110, 51, 0.15);
+}
+
+.action-select {
+  padding: 6px 12px;
+  border: 1px solid rgba(140, 110, 51, 0.25);
+  background-color: #fcf8f2;
+  color: #1e1d1a;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.action-input {
+  flex-grow: 1;
+  padding: 6px 12px;
+  border: 1px solid rgba(140, 110, 51, 0.25);
+  background-color: #fcf8f2;
+  color: #1e1d1a;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.action-input:focus {
+  outline: none;
+  border-color: #8c6e33;
+}
+
+.action-button {
+  padding: 6px 16px;
+  border: none;
+  background-color: #8c6e33;
+  color: #fcf8f2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.action-button:hover:not(:disabled) {
+  background-color: #705828;
+}
+
+.action-button:disabled, .action-select:disabled, .action-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
