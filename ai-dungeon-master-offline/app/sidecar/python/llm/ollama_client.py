@@ -51,13 +51,13 @@ class OllamaClient:
                     
                     if selected:
                         self.default_model = selected
-                        print(f"[Ollama] ✅ Active model: '{self.default_model}'")
+                        print(f"[Ollama] ✅ Active model: '{self.default_model}'", flush=True)
                     else:
                         # Absolute fallback: use whatever is installed
                         self.default_model = model_names[0]
-                        print(f"[Ollama] ⚠️ No preferred model found. Using: '{self.default_model}'")
+                        print(f"[Ollama] ⚠️ No preferred model found. Using: '{self.default_model}'", flush=True)
         except Exception as e:
-            print(f"[Ollama] Auto-detect models failed: {e}")
+            print(f"[Ollama] Auto-detect models failed: {e}", flush=True)
             pass
 
     def _pull_target_model(self):
@@ -78,6 +78,8 @@ class OllamaClient:
 
     def is_available(self) -> bool:
         """Checks if the local Ollama service is up and running."""
+        if self.provider in ("groq", "openai"):
+            return True
         if self.provider != "ollama":
             try:
                 # Ping base url or models list
@@ -92,15 +94,22 @@ class OllamaClient:
             return False
 
     def generate_chat(self, messages: List[Dict[str, str]], model: Optional[str] = None) -> str:
-        """Sends chat messages to Ollama/Odysseus and returns the narrative response text."""
+        """Sends chat messages to Ollama/Odysseus/Groq/OpenAI and returns the narrative response text."""
         model_name = model or self.default_model
         
-        # Option A: Connect via OpenAI-compatible endpoint (Odysseus)
-        if self.provider in ("odysseus", "openai_compatible"):
-            url = f"{self.host.rstrip('/')}/chat/completions"
+        # Option A: Connect via OpenAI-compatible endpoint (Odysseus / Groq / OpenAI)
+        if self.provider in ("odysseus", "openai_compatible", "groq", "openai"):
+            host_url = self.host
+            if self.provider == "groq" and ("127.0.0.1" in host_url or "localhost" in host_url or "ollama" in host_url):
+                host_url = "https://api.groq.com/openai/v1"
+            elif self.provider == "openai" and ("127.0.0.1" in host_url or "localhost" in host_url or "ollama" in host_url):
+                host_url = "https://api.openai.com/v1"
+                
+            url = f"{host_url.rstrip('/')}/chat/completions"
             headers = {"Content-Type": "application/json"}
-            if self.api_key:
-                headers["Authorization"] = f"Bearer {self.api_key}"
+            api_key = os.environ.get("OPENAI_API_KEY") if self.provider == "openai" else (self.api_key or os.environ.get("GROQ_API_KEY"))
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
                 
             payload = {
                 "model": model_name,
@@ -110,7 +119,7 @@ class OllamaClient:
             }
             
             try:
-                res = requests.post(url, json=payload, headers=headers, timeout=60.0)
+                res = requests.post(url, json=payload, headers=headers, timeout=300.0)
                 if res.status_code == 200:
                     data = res.json()
                     choices = data.get("choices", [])
@@ -118,13 +127,14 @@ class OllamaClient:
                         return choices[0].get("message", {}).get("content", "").strip()
                     return ""
                 else:
-                    return f"[Error de conexión con Odysseus: {res.status_code} - {res.text}]"
+                    return f"[Error de conexión con {self.provider}: {res.status_code} - {res.text}]"
             except Exception as e:
-                print(f"[Odysseus] Connection error: {e}.")
-                return "El Dungeon Master necesita un momento para recomponerse... (Odysseus no disponible)"
+                print(f"[{self.provider}] Connection error: {e}.")
+                return f"El Dungeon Master necesita un momento para recomponerse... ({self.provider} no disponible)"
 
         # Option B: Direct Ollama endpoint
         url = f"{self.host}/api/chat"
+        print(f"[Ollama] Sending chat request to {url} using model {model_name}...", flush=True)
         payload = {
             "model": model_name,
             "messages": messages,
@@ -139,14 +149,17 @@ class OllamaClient:
         }
         
         try:
-            res = requests.post(url, json=payload, timeout=60.0)
+            res = requests.post(url, json=payload, timeout=300.0)
             if res.status_code == 200:
                 data = res.json()
                 return data.get("message", {}).get("content", "").strip()
             else:
+                print(f"[Ollama] Error status code: {res.status_code} - {res.text}", flush=True)
                 return f"[Error de conexión con el modelo: {res.status_code}]"
         except Exception as e:
-            print(f"[Ollama] Connection error: {e}.")
+            import traceback
+            traceback.print_exc()
+            print(f"[Ollama] Connection error: {e}.", flush=True)
             return "El Dungeon Master necesita un momento para recomponerse... (modelo no disponible)"
 
     def generate_embeddings(self, text: str) -> List[float]:

@@ -1,5 +1,6 @@
 import json
 import uuid
+import re
 from typing import List, Dict, Any, Optional
 from memory.db_manager import DatabaseManager
 import datetime
@@ -43,8 +44,59 @@ class CampaignRepository:
 class CharacterRepository:
     def __init__(self, db: DatabaseManager):
         self.db = db
+        self._ensure_nullable_campaign()
 
-    def create(self, campaign_id: str, name: str, char_class: str, race: str, background: str, hp_max: int, armor_class: int, stats: dict, inventory: dict) -> Dict[str, Any]:
+    def _ensure_nullable_campaign(self):
+        conn = self.db.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(characters);")
+            columns = cursor.fetchall()
+            campaign_id_col = next((c for c in columns if c["name"] == "campaign_id"), None)
+            
+            if campaign_id_col and campaign_id_col["notnull"] == 1:
+                print("[Migration] Recreating characters table to make campaign_id nullable...")
+                conn.execute("PRAGMA foreign_keys=OFF;")
+                conn.execute("BEGIN TRANSACTION;")
+                conn.execute("ALTER TABLE characters RENAME TO characters_old;")
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS characters (
+                        id TEXT PRIMARY KEY,
+                        campaign_id TEXT,
+                        name TEXT NOT NULL,
+                        class TEXT NOT NULL,
+                        race TEXT NOT NULL,
+                        background TEXT NOT NULL,
+                        level INTEGER NOT NULL DEFAULT 1,
+                        hp_current INTEGER NOT NULL,
+                        hp_max INTEGER NOT NULL,
+                        armor_class INTEGER NOT NULL,
+                        stats_json TEXT NOT NULL,
+                        inventory_json TEXT NOT NULL,
+                        xp INTEGER NOT NULL DEFAULT 0,
+                        FOREIGN KEY(campaign_id) REFERENCES campaigns(id) ON DELETE CASCADE
+                    );
+                """)
+                # Copy existing data
+                xp_select = "xp" if any(c["name"] == "xp" for c in columns) else "0"
+                conn.execute(f"""
+                    INSERT INTO characters (id, campaign_id, name, class, race, background, level, hp_current, hp_max, armor_class, stats_json, inventory_json, xp)
+                    SELECT id, campaign_id, name, class, race, background, level, hp_current, hp_max, armor_class, stats_json, inventory_json, {xp_select} FROM characters_old;
+                """)
+                conn.execute("DROP TABLE characters_old;")
+                conn.execute("COMMIT;")
+                conn.execute("PRAGMA foreign_keys=ON;")
+                print("[Migration] Recreated characters table successfully.")
+        except Exception as e:
+            print(f"[Migration] Failed to migrate characters table: {e}")
+            try:
+                conn.execute("ROLLBACK;")
+            except Exception:
+                pass
+        finally:
+            conn.close()
+
+    def create(self, campaign_id: Optional[str], name: str, char_class: str, race: str, background: str, hp_max: int, armor_class: int, stats: dict, inventory: dict) -> Dict[str, Any]:
         char_id = str(uuid.uuid4())
         query = """
             INSERT INTO characters (id, campaign_id, name, class, race, background, hp_current, hp_max, armor_class, stats_json, inventory_json)
@@ -73,6 +125,30 @@ class CharacterRepository:
             c["inventory"] = json.loads(c["inventory_json"])
             result.append(c)
         return result
+
+    def get_all_characters(self) -> List[Dict[str, Any]]:
+        chars = self.db.fetch_all("SELECT * FROM characters")
+        result = []
+        for char in chars:
+            c = dict(char)
+            c["stats"] = json.loads(c["stats_json"])
+            c["inventory"] = json.loads(c["inventory_json"])
+            result.append(c)
+        return result
+
+    def get_global_characters(self) -> List[Dict[str, Any]]:
+        chars = self.db.fetch_all("SELECT * FROM characters WHERE campaign_id IS NULL")
+        result = []
+        for char in chars:
+            c = dict(char)
+            c["stats"] = json.loads(c["stats_json"])
+            c["inventory"] = json.loads(c["inventory_json"])
+            result.append(c)
+        return result
+
+    def assign_to_campaign(self, char_id: str, campaign_id: str) -> bool:
+        query = "UPDATE characters SET campaign_id = ? WHERE id = ?"
+        return self.db.execute(query, (campaign_id, char_id)) > 0
 
     def update_hp(self, char_id: str, hp: int) -> bool:
         query = "UPDATE characters SET hp_current = ? WHERE id = ?"

@@ -31,7 +31,7 @@ impl OllamaClient {
         let api_key = std::env::var("LLM_API_KEY").ok();
 
         let client = Client::builder()
-            .timeout(Duration::from_secs(60))
+            .timeout(Duration::from_secs(300))
             .no_proxy()
             .build()
             .unwrap_or_default();
@@ -89,6 +89,9 @@ impl OllamaClient {
     }
 
     pub async fn is_available(&self) -> bool {
+        if self.provider == "groq" || self.provider == "openai" {
+            return true;
+        }
         let url = if self.provider == "ollama" {
             format!("{}/api/tags", self.host)
         } else {
@@ -104,10 +107,22 @@ impl OllamaClient {
     pub async fn generate_chat(&self, messages: &[Value], model: Option<&str>) -> String {
         let model_name = model.unwrap_or(&self.default_model);
 
-        if self.provider == "odysseus" || self.provider == "openai_compatible" {
-            let url = format!("{}/chat/completions", self.host.trim_end_matches('/'));
+        if self.provider == "odysseus" || self.provider == "openai_compatible" || self.provider == "groq" || self.provider == "openai" {
+            let mut host_url = self.host.clone();
+            if self.provider == "groq" && (host_url.contains("127.0.0.1") || host_url.contains("localhost") || host_url.contains("ollama")) {
+                host_url = "https://api.groq.com/openai/v1".to_string();
+            } else if self.provider == "openai" && (host_url.contains("127.0.0.1") || host_url.contains("localhost") || host_url.contains("ollama")) {
+                host_url = "https://api.openai.com/v1".to_string();
+            }
+            let url = format!("{}/chat/completions", host_url.trim_end_matches('/'));
             let mut req = self.client.post(&url).header("Content-Type", "application/json");
-            if let Some(ref key) = self.api_key {
+            
+            let api_key = if self.provider == "openai" {
+                self.api_key.clone().or_else(|| std::env::var("OPENAI_API_KEY").ok())
+            } else {
+                self.api_key.clone().or_else(|| std::env::var("GROQ_API_KEY").ok())
+            };
+            if let Some(ref key) = api_key {
                 req = req.header("Authorization", format!("Bearer {}", key));
             }
 
@@ -127,10 +142,10 @@ impl OllamaClient {
                     }
                     String::new()
                 }
-                Ok(res) => format!("[Error de conexión con Odysseus: {}]", res.status()),
+                Ok(res) => format!("[Error de conexión con {}: {}]", self.provider, res.status()),
                 Err(e) => {
-                    eprintln!("[Odysseus] Connection error: {}", e);
-                    "El Dungeon Master necesita un momento para recomponerse... (Odysseus no disponible)".to_string()
+                    eprintln!("[{}] Connection error: {}", self.provider, e);
+                    format!("El Dungeon Master necesita un momento para recomponerse... ({} no disponible)", self.provider)
                 }
             }
         } else {

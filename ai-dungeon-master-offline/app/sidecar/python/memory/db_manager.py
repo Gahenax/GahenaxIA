@@ -24,7 +24,13 @@ class DatabaseManager:
         conn = sqlite3.connect(self.db_path, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         # Enable WAL mode for concurrency and foreign key enforcement
-        conn.execute("PRAGMA journal_mode=WAL;")
+        try:
+            conn.execute("PRAGMA journal_mode=WAL;")
+        except sqlite3.OperationalError:
+            try:
+                conn.execute("PRAGMA journal_mode=delete;")
+            except Exception:
+                pass
         conn.execute("PRAGMA foreign_keys=ON;")
         return conn
 

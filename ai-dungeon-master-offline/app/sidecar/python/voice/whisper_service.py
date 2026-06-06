@@ -1,66 +1,50 @@
 import os
-import subprocess
 from pathlib import Path
 from typing import Optional
 
-# Force bypass python-whisper to save RAM/VRAM resource starvation
-HAS_PYTHON_WHISPER = False
+try:
+    from faster_whisper import WhisperModel
+    HAS_FASTER_WHISPER = True
+except ImportError:
+    HAS_FASTER_WHISPER = False
 
 class WhisperService:
-    def __init__(self, binary_path: Optional[str] = None, model_path: Optional[str] = None):
-        # Default local engine structure: /app/engines/whisper.cpp/ relative to sidecar/python/
-        base_dir = Path(__file__).resolve().parents[3] # memory -> python -> sidecar -> app
-        
-        self.binary_path = binary_path or str(base_dir / "engines" / "whisper.cpp" / "whisper")
-        self.model_path = model_path or str(base_dir / "engines" / "whisper.cpp" / "models" / "ggml-base.bin")
-
-        # Handle Windows binary naming
-        if os.name == "nt" and not self.binary_path.endswith(".exe"):
-            self.binary_path += ".exe"
-
-        # Load python whisper model if available
-        self.python_model = None
-        if HAS_PYTHON_WHISPER:
+    def __init__(self, model_size: str = "base"):
+        self.model = None
+        if HAS_FASTER_WHISPER:
             try:
-                print("[Whisper] Loading Python Whisper 'base' model...")
-                self.python_model = whisper.load_model("base")
-                print("[Whisper] Python Whisper model loaded successfully.")
-            except Exception as e:
-                print(f"[Whisper] Failed to load Python Whisper model: {e}")
+                # Attempt to load using CUDA if available
+                print(f"[Whisper] Loading faster-whisper '{model_size}' on CUDA GPU...", flush=True)
+                self.model = WhisperModel(model_size, device="cuda", compute_type="float16")
+                print(f"[Whisper] faster-whisper '{model_size}' loaded successfully on GPU.", flush=True)
+            except Exception as e_cuda:
+                print(f"[Whisper] CUDA loading failed: {e_cuda}. Falling back to CPU...", flush=True)
+                try:
+                    # Fallback to CPU with int8 optimization (extremely fast and light)
+                    self.model = WhisperModel(model_size, device="cpu", compute_type="int8")
+                    print(f"[Whisper] faster-whisper '{model_size}' loaded successfully on CPU.", flush=True)
+                except Exception as e_cpu:
+                    print(f"[Whisper] CPU loading failed: {e_cpu}. Transcription will fallback to mock.", flush=True)
+                    self.model = None
+        else:
+            print("[Whisper] faster-whisper library is not installed. Using mock fallback.", flush=True)
 
     def transcribe(self, audio_file_path: str) -> str:
         """
-        Transcribes a WAV file (16kHz, mono) using Python whisper library or whisper.cpp.
-        If both are missing, falls back to a simulated dummy transcript.
+        Transcribes a WAV file using faster-whisper, falling back to a dummy action if model is offline.
         """
-        # Option A: Use Python whisper library if successfully loaded
-        if self.python_model is not None:
+        if self.model is not None:
             try:
-                print(f"[Whisper] Transcribing {audio_file_path} using Python Whisper library...")
-                result = self.python_model.transcribe(audio_file_path, language="es")
-                transcript = result.get("text", "").strip()
-                print(f"[Whisper] Transcription result: '{transcript}'")
-                return transcript
-            except Exception as e:
-                print(f"[Whisper] Python Whisper library transcription error: {e}. Trying whisper.cpp fallback.")
-
-        # Option B: Use whisper.cpp subprocess fallback
-        if os.path.exists(self.binary_path) and os.path.exists(self.model_path):
-            try:
-                cmd = [
-                    self.binary_path,
-                    "-m", self.model_path,
-                    "-f", audio_file_path,
-                    "--no-timestamps",
-                    "-l", "es" # Force Spanish language
-                ]
+                print(f"[Whisper] Transcribing {audio_file_path} using faster-whisper...", flush=True)
+                segments, info = self.model.transcribe(audio_file_path, language="es", beam_size=5)
                 
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                transcript = result.stdout.strip()
+                # Combine segments text
+                transcript = "".join([segment.text for segment in segments]).strip()
+                print(f"[Whisper] Transcription result: '{transcript}'", flush=True)
                 return transcript
             except Exception as e:
-                print(f"[Whisper] whisper.cpp subprocess execution error: {e}.")
+                print(f"[Whisper] faster-whisper transcription error: {e}.", flush=True)
 
-        # Option C: Mock fallback
-        print("[Whisper] No transcription engine available. Returning fallback.")
-        return "Ataco al goblin con mi espada"
+        # Fallback
+        print("[Whisper] No transcription engine active. Returning mock action.", flush=True)
+        return "Miro a mi alrededor buscando una salida."

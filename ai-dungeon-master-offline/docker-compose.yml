@@ -24,9 +24,5 @@ services:
     volumes:
       - ./app/data:/app/data
       - ./app/sidecar/python:/app/sidecar/python
-    environment:
-      - LLM_PROVIDER=ollama
-      - LLM_HOST=http://ollama:11434
-      - LLM_MODEL=qwen2.5:3b
     restart: unless-stopped
 

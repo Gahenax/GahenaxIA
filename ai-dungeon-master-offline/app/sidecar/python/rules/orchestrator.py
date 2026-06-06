@@ -19,7 +19,7 @@ class Orchestrator:
     def __init__(self, database):
         self.db = database
         self.dice_engine = DiceEngine()
-        self.combat_engine = CombatEngine(self.dice_engine)
+        self.combat_engine = CombatEngine()
         self.game_state = GameStateManager()
         self._conversation: List[Dict[str, str]] = self.db.get_recent_context("campaign_1", CONTEXT_WINDOW)
         self._world_context = self._load_world_context()
@@ -165,7 +165,7 @@ class Orchestrator:
         messages += self._conversation
 
         try:
-            async with httpx.AsyncClient(timeout=25.0) as client:
+            async with httpx.AsyncClient(timeout=300.0) as client:
                 resp = await client.post(
                     f"{OLLAMA_HOST}/api/chat",
                     json={

@@ -136,7 +136,8 @@ class Orchestrator:
             "1) Escribe exclusivamente en español y en segunda persona ('Tú/Te mueves/Ves...').\n"
             "2) Sé inmersivo y dramático, incorporando sutilmente los resultados mecánicos en las descripciones sin romper la cuarta pared (evita mencionar nombres de variables o tiradas directas de dados en la prosa, traduce el valor numérico a consecuencias narrativas).\n"
             "3) Mantén el tono del narrador de manera constante y no salgas jamás de tu rol.\n"
-            "4) Máximo 3 párrafos descriptivos y envolventes. Termina directamente la historia de esta página."
+            "4) Máximo 3 párrafos descriptivos y envolventes.\n"
+            "5) Obligatorio: Al final de tu narración, escribe la etiqueta exacta '[OPCIONES]' y luego lista de 3 a 4 opciones de acción personalizadas de respuesta para el jugador (una por línea, empezando con guion '- '). Ej:\n[OPCIONES]\n- Opción A\n- Opción B\n- Opción C"
         )
         messages.append({"role": "system", "content": system})
 
@@ -375,7 +376,25 @@ class Orchestrator:
             campaign, character, user_message, mechanics_summary, history, room_desc, campaign_summary, is_boss_cleared, relevant_past_events
         )
 
-        narrative_response = self.ollama.generate_chat(messages)
+        raw_response = self.ollama.generate_chat(messages)
+
+        # Parse narrative and choices out of raw_response
+        narrative_response = raw_response
+        choices = []
+        
+        opciones_match = re.search(r'\[OPCIONES\]', raw_response, re.IGNORECASE)
+        if opciones_match:
+            split_idx = opciones_match.start()
+            narrative_response = raw_response[:split_idx].strip()
+            options_part = raw_response[split_idx + len("[OPCIONES]"):].strip()
+            for line in options_part.split("\n"):
+                line = line.strip()
+                if not line:
+                    continue
+                # Clean leading bullet points or numbers
+                cleaned_line = re.sub(r'^[-*•\d+\.]\s*', '', line).strip()
+                if cleaned_line:
+                    choices.append(cleaned_line)
 
         # Generate and save embedding of the newly generated DM description for future RAG retrieval
         try:
@@ -385,20 +404,20 @@ class Orchestrator:
         except Exception as e:
             print(f"[RAG] Failed to index new narrative event: {e}")
 
-        # ── Step 8: Generate Logical Book Branching Choices ───────────────────
-        choices = []
-        if is_boss_cleared:
-            choices.append("Completar gesta con honor (Fin del Episodio)")
-        else:
-            if y > 0:
-                choices.append("Moverse al Norte")
-            if y < 4:
-                choices.append("Moverse al Sur")
-            if x > 0:
-                choices.append("Moverse al Oeste")
-            if x < 4:
-                choices.append("Moverse al Este")
-            choices.append("Registrar la habitación")
+        # ── Step 8: Generate fallback movement choices if none were parsed ───
+        if not choices:
+            if is_boss_cleared:
+                choices.append("Completar gesta con honor (Fin del Episodio)")
+            else:
+                if y > 0:
+                    choices.append("Moverse al Norte")
+                if y < 4:
+                    choices.append("Moverse al Sur")
+                if x > 0:
+                    choices.append("Moverse al Oeste")
+                if x < 4:
+                    choices.append("Moverse al Este")
+                choices.append("Registrar la habitación")
 
         # ── Step 9: Persist to SQLite ─────────────────────────────────────────
         user_stored = user_message

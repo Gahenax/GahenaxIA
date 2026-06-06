@@ -18,7 +18,7 @@ from memory.db_manager import DatabaseManager
 from memory.repositories import CampaignRepository, CharacterRepository, MessageRepository
 from rules.story_simulator import StorySimulator
 from rules.personality_quiz import PersonalityQuiz
-from rules.orchestrator import Orchestrator
+from orchestrator import Orchestrator
 
 app = FastAPI(
     title="Cripta Sidecar Server",
@@ -80,7 +80,7 @@ def get_status():
         "status": "online",
         "ollama_available": ollama_ok,
         "ollama_model": orchestrator.ollama.default_model,
-        "whisper_available": (orchestrator.whisper.python_model is not None) or os.path.exists(orchestrator.whisper.binary_path),
+        "whisper_available": orchestrator.whisper.model is not None,
         "piper_binary_exists": os.path.exists(orchestrator.piper.binary_path)
     }
 
