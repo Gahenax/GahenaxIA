@@ -12,7 +12,7 @@ use serde_json::Value;
 use tauri::{Manager, State};
 use uuid::Uuid;
 
-use db::{get_connection, init_db, find_data_dir};
+use db::{get_connection, init_db, find_data_dir, load_env_file};
 use repositories::{
     CampaignRepository, CharacterRepository, MessageRepository
 };
@@ -281,6 +281,9 @@ async fn evaluate_quiz(answers: HashMap<String, usize>) -> Result<Value, String>
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // 0. Load environment variables from .env file
+    load_env_file();
+
     // 1. Initialize DB and schema migrations synchronously on startup
     init_db().expect("Failed to initialize offline database schema");
 

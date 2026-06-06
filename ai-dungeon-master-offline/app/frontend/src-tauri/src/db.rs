@@ -194,3 +194,63 @@ pub fn init_db() -> Result<()> {
     
     Ok(())
 }
+
+pub fn load_env_file() {
+    let mut search_paths = Vec::new();
+    if let Ok(cwd) = std::env::current_dir() {
+        search_paths.push(cwd);
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            search_paths.push(parent.to_path_buf());
+        }
+    }
+
+    let mut env_path = None;
+    for mut path in search_paths {
+        for _ in 0..10 {
+            let p1 = path.join("app").join("sidecar").join("python").join(".env");
+            if p1.is_file() {
+                env_path = Some(p1);
+                break;
+            }
+            let p2 = path.join("sidecar").join("python").join(".env");
+            if p2.is_file() {
+                env_path = Some(p2);
+                break;
+            }
+            let p3 = path.join(".env");
+            if p3.is_file() {
+                env_path = Some(p3);
+                break;
+            }
+            if !path.pop() {
+                break;
+            }
+        }
+        if env_path.is_some() {
+            break;
+        }
+    }
+
+    if let Some(path) = env_path {
+        println!("[Tauri] Loading .env file from: {:?}", path);
+        if let Ok(content) = fs::read_to_string(path) {
+            for line in content.lines() {
+                let line_trimmed = line.trim();
+                if line_trimmed.is_empty() || line_trimmed.starts_with('#') {
+                    continue;
+                }
+                if let Some(idx) = line_trimmed.find('=') {
+                    let key = line_trimmed[..idx].trim();
+                    let val = line_trimmed[idx + 1..].trim();
+                    if !key.is_empty() {
+                        std::env::set_var(key, val);
+                    }
+                }
+            }
+        }
+    } else {
+        println!("[Tauri] No .env file found in search paths.");
+    }
+}
