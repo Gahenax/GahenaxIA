@@ -23,3 +23,11 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.11.2", features = [] }
 tauri-plugin-log = "2"
+rusqlite = { version = "0.31", features = ["bundled"] }
+reqwest = { version = "0.12", features = ["json"] }
+uuid = { version = "1.8", features = ["v4"] }
+rand = "0.8"
+regex = "1.10"
+base64 = "0.22"
+md5 = "0.7"
+rayon = "1.10"

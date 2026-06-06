@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
+import { invoke } from '@tauri-apps/api/core';
 
 interface Campaign {
   id: string;
@@ -13,9 +14,15 @@ interface Character {
   name: string;
   class: string;
   race: string;
+  background: string;
   hp_current: number;
   hp_max: number;
   armor_class: number;
+  stats?: Record<string, number>;
+  inventory?: {
+    gold?: number;
+    items?: string[];
+  };
 }
 
 
@@ -27,7 +34,9 @@ function App() {
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+  const [globalCharacters, setGlobalCharacters] = useState<Character[]>([]);
   const [characterXP, setCharacterXP] = useState<{xp: number, level: number}>({xp: 0, level: 1});
+  const [appLoading, setAppLoading] = useState(true);
   
   // Creation Modals State
   const [newCampaignName, setNewCampaignName] = useState('');
@@ -62,9 +71,23 @@ function App() {
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
-    fetchStatus();
-    fetchModelInfo();
-    fetchCampaigns();
+    const initApp = async () => {
+      try {
+        await Promise.all([
+          fetchStatus(),
+          fetchModelInfo(),
+          fetchCampaigns(),
+          fetchGlobalCharacters()
+        ]);
+      } catch (e) {
+        console.error("Error during startup:", e);
+      } finally {
+        setTimeout(() => {
+          setAppLoading(false);
+        }, 2200);
+      }
+    };
+    initApp();
 
     // Initialize Web Speech API for native local browser transcription
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -98,8 +121,7 @@ function App() {
 
   const startQuiz = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/quiz/questions');
-      const data = await res.json();
+      const data = await invoke<any>('get_quiz_questions');
       setQuizQuestions(data);
       setCurrentQuestionIdx(0);
       setQuizAnswers({});
@@ -122,12 +144,7 @@ function App() {
       // Evaluate quiz!
       try {
         setIsProcessing(true);
-        const res = await fetch('http://127.0.0.1:8000/quiz/evaluate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ answers: newAnswers })
-        });
-        const data = await res.json();
+        const data = await invoke<any>('evaluate_quiz', { answers: newAnswers });
         setQuizResult(data);
         setNewCharClass(data.class);
         setNewCharRace(data.race);
@@ -141,44 +158,39 @@ function App() {
 
   const handleConfirmQuizCharacter = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCampaign || !newCharName || !quizResult) return;
+    if (!newCharName || !quizResult) return;
     try {
-      const res = await fetch('http://127.0.0.1:8000/characters', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaign_id: selectedCampaign.id,
-          name: newCharName,
-          class: quizResult.class,
-          race: quizResult.race,
-          background: quizResult.background,
-          hp_max: quizResult.hp_max,
-          armor_class: quizResult.armor_class,
-          stats: quizResult.stats,
-          inventory: { gold: 15, items: ["Espada corta", "Raciones", "Parchamento"] }
-        })
+      const data = await invoke<any>('create_character', {
+        campaignId: selectedCampaign ? selectedCampaign.id : null,
+        name: newCharName,
+        charClass: quizResult.class,
+        race: quizResult.race,
+        background: quizResult.background,
+        hpMax: quizResult.hp_max,
+        armorClass: quizResult.armor_class,
+        stats: quizResult.stats,
+        inventory: { gold: 15, items: ["Espada corta", "Raciones", "Parchamento"] }
       });
-      if (!res.ok) {
-        const errData = await res.json();
-        alert(errData.detail || "Error al crear personaje");
-        return;
+      if (selectedCampaign) {
+        setCharacters([data, ...characters]);
+        setSelectedCharacter(data);
+        await fetchPages(selectedCampaign.id);
+        await fetchMap(selectedCampaign.id);
+      } else {
+        setGlobalCharacters([data, ...globalCharacters]);
       }
-      const data = await res.json();
-      setCharacters([data, ...characters]);
-      setSelectedCharacter(data);
       setNewCharName('');
       setQuizMode(false);
       setQuizResult(null);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      alert(e || "Error al crear personaje");
     }
   };
 
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/status');
-      const data = await res.json();
+      const data = await invoke<any>('get_status');
       setStatus(data);
     } catch (e) {
       console.error("Backend offline", e);
@@ -187,11 +199,8 @@ function App() {
 
   const fetchModelInfo = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/model/status');
-      if (res.ok) {
-        const data = await res.json();
-        setModelInfo(data);
-      }
+      const data = await invoke<any>('get_model_status');
+      setModelInfo(data);
     } catch (e) {
       console.error("Model status check failed", e);
     }
@@ -199,8 +208,7 @@ function App() {
 
   const fetchCampaigns = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/campaigns');
-      const data = await res.json();
+      const data = await invoke<any>('list_campaigns');
       setCampaigns(data);
     } catch (e) {
       console.error(e);
@@ -211,12 +219,7 @@ function App() {
     e.preventDefault();
     if (!newCampaignName) return;
     try {
-      const res = await fetch('http://127.0.0.1:8000/campaigns', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newCampaignName, system: 'D&D 5.5 (2024)', tone: newCampaignTone })
-      });
-      const data = await res.json();
+      const data = await invoke<any>('create_campaign', { name: newCampaignName, system: 'D&D 5.5 (2024)', tone: newCampaignTone });
       setCampaigns([data, ...campaigns]);
       setSelectedCampaign(data);
       setNewCampaignName('');
@@ -227,41 +230,59 @@ function App() {
 
   const handleCreateCharacter = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCampaign || !newCharName) return;
+    if (!newCharName) return;
     try {
-      const res = await fetch('http://127.0.0.1:8000/characters', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaign_id: selectedCampaign.id,
-          name: newCharName,
-          char_class: newCharClass,
-          race: newCharRace,
-          background: 'Outlander',
-          hp_max: 12,
-          armor_class: 15,
-          stats: { STR: 16, DEX: 14, CON: 15, INT: 10, WIS: 12, CHA: 8 },
-          inventory: { gold: 15, items: ["Iron Sword", "Shield", "Parchment Map"] }
-        })
+      const data = await invoke<any>('create_character', {
+        campaignId: selectedCampaign ? selectedCampaign.id : null,
+        name: newCharName,
+        charClass: newCharClass,
+        race: newCharRace,
+        background: 'Outlander',
+        hpMax: 12,
+        armorClass: 15,
+        stats: { STR: 16, DEX: 14, CON: 15, INT: 10, WIS: 12, CHA: 8 },
+        inventory: { gold: 15, items: ["Iron Sword", "Shield", "Parchment Map"] }
       });
-      if (!res.ok) {
-        const errData = await res.json();
-        alert(errData.detail || "Error al crear personaje");
-        return;
+      if (selectedCampaign) {
+        setCharacters([data, ...characters]);
+        setSelectedCharacter(data);
+        await fetchPages(selectedCampaign.id);
+        await fetchMap(selectedCampaign.id);
+      } else {
+        setGlobalCharacters([data, ...globalCharacters]);
       }
-      const data = await res.json();
-      setCharacters([data, ...characters]);
-      setSelectedCharacter(data);
       setNewCharName('');
+      setManualMode(false);
+    } catch (e: any) {
+      alert(e || "Error al crear personaje");
+    }
+  };
+
+  const fetchGlobalCharacters = async () => {
+    try {
+      const data = await invoke<any>('list_all_characters', { campaignId: null, unassignedOnly: true });
+      setGlobalCharacters(data);
     } catch (e) {
       console.error(e);
     }
   };
 
+  const handleAssignCharacter = async (charId: string) => {
+    if (!selectedCampaign) return;
+    try {
+      await invoke('assign_character', { characterId: charId, campaignId: selectedCampaign.id });
+      await fetchCharacters(selectedCampaign.id);
+      await fetchGlobalCharacters();
+      await fetchPages(selectedCampaign.id);
+      await fetchMap(selectedCampaign.id);
+    } catch (e: any) {
+      alert(e || "Error al reclutar héroe");
+    }
+  };
+
   const fetchCharacters = async (campId: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/campaigns/${campId}/characters`);
-      const data = await res.json();
+      const data = await invoke<any>('list_characters', { campaignId: campId });
       setCharacters(data);
       if (data.length > 0) {
         setSelectedCharacter(data[0]);
@@ -275,8 +296,7 @@ function App() {
 
   const fetchPages = async (campId: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/campaigns/${campId}/pages`);
-      const data = await res.json();
+      const data = await invoke<any>('get_campaign_pages', { campaignId: campId });
       if (data && data.length > 0) {
         setBookPages(data);
         setCurrentPageIdx(data.length - 1);
@@ -302,8 +322,7 @@ function App() {
 
   const fetchMap = async (campId: string) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/campaigns/${campId}/map`);
-      const data = await res.json();
+      const data = await invoke<any>('get_campaign_map', { campaignId: campId });
       setDungeonMap(data);
     } catch (e) {
       console.error(e);
@@ -316,6 +335,7 @@ function App() {
     setManualMode(false);
     setQuizResult(null);
     fetchCharacters(camp.id);
+    fetchGlobalCharacters();
     fetchPages(camp.id);
     fetchMap(camp.id);
   };
@@ -325,16 +345,17 @@ function App() {
     setIsProcessing(true);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/turn', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          campaign_id: selectedCampaign.id,
-          character_id: selectedCharacter.id,
-          text_input: text
-        })
+      const data = await invoke<any>('process_turn', {
+        campaignId: selectedCampaign.id,
+        characterId: selectedCharacter.id,
+        textInput: text,
+        audioBytes: null
       });
-      const data = await res.json();
+
+      if (!data || typeof data.page_number === 'undefined' || !data.coordinates) {
+        alert("El servidor retornó una respuesta inválida");
+        return;
+      }
       
       const newPage = {
         page_number: data.page_number,
@@ -368,13 +389,18 @@ function App() {
       }
       
       if (data.audio_file) {
-        const url = `http://127.0.0.1:8000/audio?path=${encodeURIComponent(data.audio_file)}`;
-        setAudioUrl(url);
-        const audio = new Audio(url);
-        audio.play().catch(err => console.error("Audio autoplay failed:", err));
+        try {
+          const audioBase64 = await invoke<string>('get_audio_base64', { path: data.audio_file });
+          setAudioUrl(audioBase64);
+          const audio = new Audio(audioBase64);
+          audio.play().catch(err => console.error("Audio autoplay failed:", err));
+        } catch (audioErr) {
+          console.error("Failed to load audio base64:", audioErr);
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err || "Error al procesar el turno");
     } finally {
       setIsProcessing(false);
     }
@@ -384,8 +410,9 @@ function App() {
     if (!text || isProcessing) return;
     try {
       setIsProcessing(true);
-      const url = `http://127.0.0.1:8000/tts?text=${encodeURIComponent(text)}`;
-      const audio = new Audio(url);
+      const path = await invoke<string>('synthesize_tts', { text });
+      const audioBase64 = await invoke<string>('get_audio_base64', { path });
+      const audio = new Audio(audioBase64);
       await audio.play();
     } catch (e) {
       console.error("TTS playback failed", e);
@@ -409,17 +436,12 @@ function App() {
     if (!window.confirm(`¿Estás seguro de que quieres viajar en el tiempo a la Página ${pageNumber}? Las decisiones posteriores se desactivarán.`)) return;
     setIsProcessing(true);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/campaigns/${selectedCampaign.id}/rollback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ page_number: pageNumber })
-      });
-      if (res.ok) {
-        await fetchPages(selectedCampaign.id);
-        setShowDecisionTree(false);
-      }
-    } catch (e) {
+      await invoke('rollback_campaign', { campaignId: selectedCampaign.id, pageNumber });
+      await fetchPages(selectedCampaign.id);
+      setShowDecisionTree(false);
+    } catch (e: any) {
       console.error("Rollback failed", e);
+      alert(e || "Error al realizar el viaje en el tiempo");
     } finally {
       setIsProcessing(false);
     }
@@ -462,17 +484,22 @@ function App() {
     if (!selectedCampaign || !selectedCharacter) return;
     setIsProcessing(true);
 
-    const formData = new FormData();
-    formData.append('campaign_id', selectedCampaign.id);
-    formData.append('character_id', selectedCharacter.id);
-    formData.append('audio', blob, 'turn_audio.wav');
-
     try {
-      const res = await fetch('http://127.0.0.1:8000/turn/audio', {
-        method: 'POST',
-        body: formData
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const audioBytes = Array.from(uint8Array);
+
+      const data = await invoke<any>('process_turn', {
+        campaignId: selectedCampaign.id,
+        characterId: selectedCharacter.id,
+        textInput: null,
+        audioBytes: audioBytes
       });
-      const data = await res.json();
+
+      if (!data || typeof data.page_number === 'undefined' || !data.coordinates) {
+        alert("El servidor retornó una respuesta inválida");
+        return;
+      }
 
       const newPage = {
         page_number: data.page_number,
@@ -502,17 +529,37 @@ function App() {
       }
 
       if (data.audio_file) {
-        const url = `http://127.0.0.1:8000/audio?path=${encodeURIComponent(data.audio_file)}`;
-        setAudioUrl(url);
-        const audio = new Audio(url);
-        audio.play().catch(err => console.error("Audio autoplay failed:", err));
+        try {
+          const audioBase64 = await invoke<string>('get_audio_base64', { path: data.audio_file });
+          setAudioUrl(audioBase64);
+          const audio = new Audio(audioBase64);
+          audio.play().catch(err => console.error("Audio autoplay failed:", err));
+        } catch (audioErr) {
+          console.error("Failed to load audio base64:", audioErr);
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(err || "Error al procesar el audio");
     } finally {
       setIsProcessing(false);
     }
   };
+
+  if (appLoading) {
+    return (
+      <div className="loading-screen">
+        <h1 className="loading-title">CRIPTA</h1>
+        <div className="loading-subtitle">Dungeon Master AI Offline</div>
+        <div className="loading-bar-container">
+          <div className="loading-bar-progress"></div>
+        </div>
+        <div className="loading-status-text">
+          {status ? "Grimorio cargado y listo" : "Sintonizando energías elementales..."}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -569,7 +616,8 @@ function App() {
       </header>
       {/* Main Campaign Selector / Lobby */}
       {!selectedCampaign ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '30px', marginTop: '40px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr 1fr', gap: '20px', marginTop: '40px' }}>
+          {/* Column 1: Campaigns */}
           <div className="medieval-border" style={{ padding: '20px', backgroundColor: 'var(--color-stone-medium)' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-gold)' }}>Seleccionar Campaña</h2>
             {campaigns.length === 0 ? (
@@ -592,6 +640,146 @@ function App() {
             )}
           </div>
 
+          {/* Column 2: Taberna de Héroes (Global Characters) */}
+          <div className="medieval-border" style={{ padding: '20px', backgroundColor: 'var(--color-stone-medium)', display: 'flex', flexDirection: 'column' }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-gold)' }}>Taberna de Héroes</h2>
+            
+            {!quizMode && !manualMode ? (
+              <>
+                <p style={{ color: 'var(--color-text-muted)', fontSize: '13px' }}>Héroes errantes creados globalmente listos para ser asignados a campañas.</p>
+                {globalCharacters.length === 0 ? (
+                  <p style={{ fontStyle: 'italic', color: 'var(--color-text-muted)', fontSize: '12px', margin: '20px 0' }}>La taberna está vacía. Crea un personaje para iniciar.</p>
+                ) : (
+                  <div style={{ flexGrow: 1, overflowY: 'auto', maxHeight: '250px', marginBottom: '20px' }}>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                      {globalCharacters.map((c) => (
+                        <li key={c.id} style={{ 
+                          padding: '10px', 
+                          border: '1px solid var(--color-gold-dim)', 
+                          backgroundColor: 'var(--color-stone-light)', 
+                          marginBottom: '8px',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}>
+                          <div>
+                            <strong style={{ color: 'var(--color-gold)' }}>{c.name}</strong>
+                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
+                              {c.race} {c.class}
+                            </div>
+                          </div>
+                          <span style={{ fontSize: '11px', color: 'var(--color-gold-dim)' }}>Sin Gesta</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+                  <button className="btn-medieval" onClick={startQuiz} style={{ padding: '8px', fontSize: '12px' }}>
+                    Crear por Entrevista
+                  </button>
+                  <button className="btn-medieval" onClick={() => setManualMode(true)} style={{ padding: '6px', fontSize: '11px', opacity: 0.8 }}>
+                    Crear Ficha Manual
+                  </button>
+                </div>
+              </>
+            ) : quizMode ? (
+              <div style={{ backgroundColor: 'var(--color-stone-light)', padding: '15px', borderRadius: '4px', border: '1px solid var(--color-gold-dim)' }}>
+                {!quizResult ? (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--color-text-muted)', marginBottom: '8px' }}>
+                      <span>ENTREVISTA NARRATIVA</span>
+                      <span>{currentQuestionIdx + 1}/{quizQuestions.length}</span>
+                    </div>
+                    {quizQuestions.length > 0 && (
+                      <div>
+                        <div style={{ fontSize: '13px', marginBottom: '12px', color: '#fff', fontWeight: 'bold' }}>
+                          {quizQuestions[currentQuestionIdx].question}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {quizQuestions[currentQuestionIdx].options.map((opt: any, idx: number) => (
+                            <button
+                              key={idx}
+                              className="btn-medieval"
+                              style={{ textAlign: 'left', padding: '8px 10px', fontSize: '12px', textTransform: 'none' }}
+                              onClick={() => handleAnswerQuizQuestion(idx)}
+                            >
+                              {opt.text}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <form onSubmit={handleConfirmQuizCharacter}>
+                    <h3 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-gold)', margin: '0 0 10px 0', fontSize: '16px' }}>Héroe Destinado</h3>
+                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#f59e0b', marginBottom: '10px' }}>
+                      {quizResult.race_es} {quizResult.class_es}
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', marginBottom: '4px' }}>Escribe el nombre de tu héroe:</label>
+                      <input
+                        type="text"
+                        value={newCharName}
+                        onChange={(e) => setNewCharName(e.target.value)}
+                        placeholder="Nombre del héroe..."
+                        style={{ width: '100%', padding: '8px', backgroundColor: 'var(--color-stone-medium)', border: '1px solid var(--color-gold-dim)', color: '#fff', boxSizing: 'border-box' }}
+                        required
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button type="submit" className="btn-medieval" style={{ flex: 1, padding: '8px', fontSize: '12px' }}>Confirmar</button>
+                      <button type="button" className="btn-medieval" onClick={() => { setQuizMode(false); setQuizResult(null); }} style={{ flex: 1, padding: '8px', fontSize: '12px', opacity: 0.7 }}>Cancelar</button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            ) : (
+              <form onSubmit={handleCreateCharacter} style={{ backgroundColor: 'var(--color-stone-light)', padding: '15px', borderRadius: '4px', border: '1px solid var(--color-gold-dim)' }}>
+                <h3 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-gold)', margin: '0 0 10px 0', fontSize: '16px' }}>Nuevo Personaje</h3>
+                <div style={{ marginBottom: '8px' }}>
+                  <input
+                    type="text"
+                    value={newCharName}
+                    onChange={(e) => setNewCharName(e.target.value)}
+                    placeholder="Nombre del héroe..."
+                    style={{ width: '100%', padding: '8px', backgroundColor: 'var(--color-stone-medium)', border: '1px solid var(--color-gold-dim)', color: '#fff', boxSizing: 'border-box' }}
+                    required
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                  <select
+                    value={newCharClass}
+                    onChange={(e) => setNewCharClass(e.target.value)}
+                    style={{ width: '50%', padding: '8px', backgroundColor: 'var(--color-stone-medium)', border: '1px solid var(--color-gold-dim)', color: '#fff' }}
+                  >
+                    <option value="Fighter">Guerrero</option>
+                    <option value="Wizard">Mago</option>
+                    <option value="Rogue">Pícaro</option>
+                    <option value="Cleric">Clérigo</option>
+                  </select>
+                  <select
+                    value={newCharRace}
+                    onChange={(e) => setNewCharRace(e.target.value)}
+                    style={{ width: '50%', padding: '8px', backgroundColor: 'var(--color-stone-medium)', border: '1px solid var(--color-gold-dim)', color: '#fff' }}
+                  >
+                    <option value="Human">Humano</option>
+                    <option value="Elf">Elfo</option>
+                    <option value="Dwarf">Enano</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="submit" className="btn-medieval" style={{ flex: 1, padding: '8px', fontSize: '12px' }}>Crear Ficha</button>
+                  <button type="button" className="btn-medieval" onClick={() => setManualMode(false)} style={{ flex: 1, padding: '8px', fontSize: '12px', opacity: 0.7 }}>Cancelar</button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Column 3: Nueva Gesta */}
           <div className="medieval-border" style={{ padding: '20px', backgroundColor: 'var(--color-stone-medium)' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', color: 'var(--color-gold)' }}>Nueva Gesta</h2>
             <form onSubmit={handleCreateCampaign}>
@@ -629,7 +817,7 @@ function App() {
             <span style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
               Campaña: <strong style={{ color: 'var(--color-gold)', fontFamily: 'var(--font-serif)' }}>{selectedCampaign.name}</strong>
             </span>
-            <button className="btn-medieval" style={{ padding: '6px 15px', fontSize: '12px' }} onClick={() => setSelectedCampaign(null)}>
+            <button className="btn-medieval" style={{ padding: '6px 15px', fontSize: '12px' }} onClick={() => { setSelectedCampaign(null); fetchGlobalCharacters(); }}>
               Volver al Lobby
             </button>
           </div>
@@ -637,110 +825,357 @@ function App() {
           <div className="book-container">
             <div className="book-spine"></div>
 
-            {/* PAGE LEFT: Narrative, History and Text */}
+            {/* PAGE LEFT: Dungeon Map, Character Sheet, and Mechanics Log */}
             <div className="book-page-left">
               <div className="book-page-header">
-                <span>{selectedCampaign.name}</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {bookPages[currentPageIdx] && (
-                    <button 
-                      onClick={() => playPageTTS(bookPages[currentPageIdx].dm_text)}
-                      className="btn-medieval"
-                      style={{ padding: '2px 8px', fontSize: '10px', textTransform: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
-                      title="Escuchar Narración"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px' }}>
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
-                      </svg>
-                      Escuchar
-                    </button>
-                  )}
-                  <span>Página {currentPageIdx + 1} de {bookPages.length}</span>
-                </div>
+                <span>Estado del Mundo</span>
+                <span>Mecánicas & Estado</span>
               </div>
 
-              {bookPages[currentPageIdx] && (
-                <div style={{ minHeight: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <div>
-                    {!selectedCharacter ? (
-                      <div style={{
-                        padding: '30px 20px',
-                        backgroundColor: 'rgba(140, 110, 51, 0.05)',
-                        border: '1px solid rgba(140, 110, 51, 0.2)',
-                        borderRadius: '6px',
-                        textAlign: 'center',
-                        marginTop: '45px'
-                      }}>
-                        <h3 style={{ fontFamily: 'var(--font-serif)', color: '#8c6e33', margin: '0 0 10px 0', fontSize: '20px' }}>El Libro está Sellado</h3>
-                        <p style={{ fontSize: '14px', lineHeight: '1.6', color: '#5a4a35', margin: '0 0 20px 0' }}>
-                          Antes de cruzar el umbral de la cripta y comenzar tu gesta, debes dar vida a tu héroe. Completa la ficha de personaje o responde a las preguntas del destino en la página derecha.
-                        </p>
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                          <span style={{ 
-                            padding: '4px 12px', 
-                            border: '1px solid #8c6e33', 
-                            fontSize: '11px', 
-                            fontFamily: 'monospace', 
-                            color: '#8c6e33', 
-                            textTransform: 'uppercase', 
-                            letterSpacing: '1px' 
-                          }}>
-                            Esperando Héroe
-                          </span>
-                        </div>
+              {!selectedCharacter ? (
+                /* Character Selection / Creation Form */
+                <div style={{ padding: '10px 0' }}>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', color: '#8c6e33', margin: '0 0 10px 0', fontSize: '18px', textAlign: 'center' }}>Creación de Héroe</h3>
+                  <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#5a4a35', margin: '0 0 20px 0', textAlign: 'center' }}>
+                    Antes de cruzar el umbral de la cripta y comenzar tu gesta, debes dar vida a tu héroe.
+                  </p>
+                  <div style={{ 
+                    backgroundColor: 'rgba(0,0,0,0.03)', 
+                    border: '1px solid rgba(140, 110, 51, 0.2)',
+                    borderRadius: '6px',
+                    padding: '15px'
+                  }}>
+                    {!quizMode && !manualMode ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'center' }}>
+                        <p style={{ fontSize: '12px', color: '#5a4a35', margin: '0' }}>Elige una opción para tu personaje:</p>
+                        <button className="btn-medieval" onClick={startQuiz} style={{ padding: '8px', fontSize: '12px' }}>
+                          Iniciar Entrevista de Destino
+                        </button>
+                        <button className="btn-medieval" onClick={() => setManualMode(true)} style={{ padding: '6px', fontSize: '11px', opacity: 0.9 }}>
+                          Crear Ficha Manualmente
+                        </button>
+                        {globalCharacters.length > 0 && (
+                          <div style={{ marginTop: '12px', borderTop: '1px solid rgba(140, 110, 51, 0.15)', paddingTop: '12px' }}>
+                            <label style={{ display: 'block', fontSize: '12px', marginBottom: '6px', color: '#8c6e33', textAlign: 'left' }}>Reclutar héroe de la Taberna:</label>
+                            <select 
+                              onChange={async (e) => {
+                                if (e.target.value) {
+                                  await handleAssignCharacter(e.target.value);
+                                }
+                              }}
+                              defaultValue=""
+                              style={{ width: '100%', padding: '6px', fontSize: '12px', backgroundColor: '#f7eed7', border: '1px solid rgba(140,110,51,0.3)', color: '#5a4a35' }}
+                            >
+                              <option value="" disabled>Selecciona un héroe...</option>
+                              {globalCharacters.map(c => (
+                                <option key={c.id} value={c.id}>{c.name} ({c.race} {c.class})</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    ) : quizMode ? (
+                      <div>
+                        {!quizResult ? (
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7280', marginBottom: '4px' }}>
+                              <span>ENTREVISTA DE DESTINO</span>
+                              <span>{currentQuestionIdx + 1}/{quizQuestions.length}</span>
+                            </div>
+                            {quizQuestions.length > 0 && (
+                              <div>
+                                <div style={{ fontSize: '12px', marginBottom: '8px', color: '#1a1815' }}>
+                                  {quizQuestions[currentQuestionIdx].question}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {quizQuestions[currentQuestionIdx].options.map((opt: any, idx: number) => (
+                                    <button
+                                      key={idx}
+                                      className="btn-medieval"
+                                      style={{ textAlign: 'left', padding: '6px 8px', fontSize: '11px', textTransform: 'none' }}
+                                      onClick={() => handleAnswerQuizQuestion(idx)}
+                                    >
+                                      {opt.text}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <form onSubmit={handleConfirmQuizCharacter}>
+                            <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#b45309', marginBottom: '4px' }}>
+                              {quizResult.race_es} {quizResult.class_es}
+                            </div>
+                            <input
+                              type="text"
+                              value={newCharName}
+                              onChange={(e) => setNewCharName(e.target.value)}
+                              placeholder="Nombre..."
+                              style={{ width: '100%', padding: '4px', boxSizing: 'border-box', marginBottom: '8px' }}
+                              required
+                            />
+                            <button type="submit" className="btn-medieval" style={{ width: '100%', padding: '4px', fontSize: '11px' }}>Confirmar</button>
+                          </form>
+                        )}
                       </div>
                     ) : (
-                      <>
-                        {bookPages[currentPageIdx].player_text && (
-                          <div style={{ 
-                            fontStyle: 'italic', 
-                            color: 'rgba(30, 29, 26, 0.6)', 
-                            marginBottom: '20px',
-                            borderLeft: '3px solid var(--color-gold-dim)',
-                            paddingLeft: '12px',
-                            fontSize: '14px'
-                          }}>
-                            &ldquo;{bookPages[currentPageIdx].player_text}&rdquo;
-                          </div>
-                        )}
-                        
-                        <div style={{ 
-                          fontSize: '17px', 
-                          lineHeight: '1.6', 
-                          fontFamily: 'var(--font-readable)',
-                          color: '#1a1815',
-                          whiteSpace: 'pre-line'
-                        }}>
-                          {bookPages[currentPageIdx].dm_text}
+                      <form onSubmit={handleCreateCharacter}>
+                        <input
+                          type="text"
+                          value={newCharName}
+                          onChange={(e) => setNewCharName(e.target.value)}
+                          placeholder="Nombre del héroe..."
+                          style={{ width: '100%', padding: '4px', boxSizing: 'border-box', marginBottom: '4px' }}
+                          required
+                        />
+                        <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                          <select
+                            value={newCharClass}
+                            onChange={(e) => setNewCharClass(e.target.value)}
+                            style={{ width: '50%', padding: '4px' }}
+                          >
+                            <option value="Fighter">Guerrero</option>
+                            <option value="Wizard">Mago</option>
+                            <option value="Rogue">Pícaro</option>
+                            <option value="Cleric">Clérigo</option>
+                          </select>
+                          <select
+                            value={newCharRace}
+                            onChange={(e) => setNewCharRace(e.target.value)}
+                            style={{ width: '50%', padding: '4px' }}
+                          >
+                            <option value="Human">Humano</option>
+                            <option value="Elf">Elfo</option>
+                            <option value="Dwarf">Enano</option>
+                          </select>
                         </div>
+                        <button type="submit" className="btn-medieval" style={{ width: '100%', padding: '4px', fontSize: '11px' }}>Crear Ficha</button>
+                        <button type="button" className="btn-medieval" onClick={() => setManualMode(false)} style={{ width: '100%', padding: '4px', fontSize: '10px', opacity: 0.8, marginTop: '4px' }}>
+                          Cancelar
+                        </button>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Active Game State: Map, Character stats, and Dice rolls */
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minHeight: '440px' }}>
+                  {/* Row 1: Map and Quick Stats side by side */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '15px' }}>
+                    {/* Procedural Map */}
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: '11px', color: '#8c6e33', marginBottom: '8px', letterSpacing: '1px' }}>
+                        MAPA PROCEDURAL
+                      </div>
+                      <div className="dungeon-map-grid">
+                        {Array.from({ length: 5 }).map((_, yIdx) => (
+                          Array.from({ length: 5 }).map((_, xIdx) => {
+                            const isCurrent = playerCoords && playerCoords.x === xIdx && playerCoords.y === yIdx;
+                            const isVisited = bookPages.some(p => p.coordinates && p.coordinates.x === xIdx && p.coordinates.y === yIdx);
+                            const roomInfo = dungeonMap.find(r => r.x === xIdx && r.y === yIdx);
 
-                        {bookPages[currentPageIdx].mechanics && (
-                          <div style={{ 
-                            marginTop: '25px', 
-                            padding: '10px 15px',
-                            backgroundColor: 'rgba(140, 110, 51, 0.08)',
-                            borderRadius: '4px',
-                            fontSize: '12px', 
-                            fontFamily: 'monospace', 
-                            color: '#5a4a35',
-                            border: '1px solid rgba(140, 110, 51, 0.15)'
-                          }}>
-                            <strong>
-                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '14px', height: '14px', display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
-                                <circle cx="12" cy="12" r="3" />
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                              </svg>
-                              Mecánicas:
-                            </strong> {bookPages[currentPageIdx].mechanics}
+                            let symbol = "";
+                            if (isVisited && roomInfo) {
+                              if (roomInfo.type === "start") symbol = "IN";
+                              else if (roomInfo.type === "boss") symbol = "BS";
+                              else if (roomInfo.type === "combat") symbol = "CBT";
+                              else if (roomInfo.type === "trap") symbol = "TRP";
+                              else if (roomInfo.type === "loot") symbol = "Loot";
+                              else symbol = ".";
+                            }
+
+                            return (
+                              <div
+                                key={`${xIdx}-${yIdx}`}
+                                className={`dungeon-map-cell ${isCurrent ? 'current' : isVisited ? 'visited' : 'unvisited'}`}
+                                style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 'bold' }}
+                                title={isVisited && roomInfo ? `${roomInfo.name} (${roomInfo.type})` : 'Sin explorar'}
+                                onClick={() => {
+                                  if (isVisited && roomInfo) {
+                                    alert(`Habitación: ${roomInfo.name}\nTipo: ${roomInfo.type}\nDescripción: ${roomInfo.description}`);
+                                  }
+                                }}
+                              >
+                                {isCurrent ? "POS" : symbol}
+                              </div>
+                            );
+                          })
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Character Card info */}
+                    <div style={{ 
+                      backgroundColor: 'rgba(0,0,0,0.02)', 
+                      border: '1px solid rgba(140, 110, 51, 0.15)',
+                      borderRadius: '6px',
+                      padding: '10px',
+                      fontSize: '12px'
+                    }}>
+                      <div style={{ 
+                        fontFamily: 'var(--font-serif)', 
+                        fontSize: '10px', 
+                        color: '#8c6e33', 
+                        borderBottom: '1px solid rgba(140,110,51,0.15)', 
+                        paddingBottom: '4px', 
+                        marginBottom: '6px', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center' 
+                      }}>
+                        <span>FICHA DEL HÉROE</span>
+                        {characters.length > 1 && (
+                          <select
+                            value={selectedCharacter.id}
+                            onChange={(e) => {
+                              const found = characters.find(c => c.id === e.target.value);
+                              if (found) setSelectedCharacter(found);
+                            }}
+                            style={{ padding: '2px', fontSize: '10px', backgroundColor: '#f7eed7', border: '1px solid rgba(140,110,51,0.2)' }}
+                          >
+                            {characters.map(c => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+
+                      <strong style={{ fontSize: '14px', color: '#1e1d1a', fontFamily: 'var(--font-serif)' }}>{selectedCharacter.name}</strong>
+                      <div style={{ color: '#8c6e33', fontSize: '11px', marginBottom: '4px', fontWeight: 'bold' }}>
+                        {selectedCharacter.race} {selectedCharacter.class} (Nv. {characterXP.level})
+                      </div>
+                      <div style={{ color: '#6b7280', fontSize: '10px', marginBottom: '8px', fontStyle: 'italic' }}>
+                        Trasfondo: {selectedCharacter.background}
+                      </div>
+
+                      {/* Health, AC, XP block */}
+                      <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', fontSize: '11px' }}>
+                        <div style={{ flex: 1, backgroundColor: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '4px', padding: '4px 6px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '9px', color: '#b91c1c' }}>VIDA</div>
+                          <strong>{selectedCharacter.hp_current} / {selectedCharacter.hp_max} HP</strong>
+                        </div>
+                        <div style={{ flex: 1, backgroundColor: 'rgba(59, 130, 246, 0.08)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '4px', padding: '4px 6px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '9px', color: '#1d4ed8' }}>ARMADURA</div>
+                          <strong>{selectedCharacter.armor_class} CA</strong>
+                        </div>
+                        <div style={{ flex: 1, backgroundColor: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '4px', padding: '4px 6px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '9px', color: '#047857' }}>EXP</div>
+                          <strong>{characterXP.xp} XP</strong>
+                        </div>
+                      </div>
+
+                      {/* Attributes Grid (STR, DEX, CON, INT, WIS, CHA) */}
+                      {selectedCharacter.stats && (
+                        <div style={{ 
+                          display: 'grid', 
+                          gridTemplateColumns: 'repeat(3, 1fr)', 
+                          gap: '6px', 
+                          marginBottom: '10px' 
+                        }}>
+                          {Object.entries(selectedCharacter.stats).map(([statName, val]) => {
+                            const mod = Math.floor((val - 10) / 2);
+                            const modSign = mod >= 0 ? `+${mod}` : `${mod}`;
+                            return (
+                              <div key={statName} style={{
+                                backgroundColor: '#f7eed7',
+                                border: '1px solid rgba(140, 110, 51, 0.18)',
+                                borderRadius: '4px',
+                                padding: '4px',
+                                textAlign: 'center'
+                              }}>
+                                <div style={{ fontSize: '9px', color: '#8c6e33', fontWeight: 'bold' }}>{statName}</div>
+                                <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e1d1a' }}>{val}</div>
+                                <div style={{ fontSize: '9px', color: '#6b7280' }}>{modSign}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Inventory Block */}
+                      <div style={{ 
+                        borderTop: '1px solid rgba(140,110,51,0.12)', 
+                        paddingTop: '6px', 
+                        fontSize: '11px',
+                        color: '#5a4a35'
+                      }}>
+                        <div style={{ fontSize: '9px', color: '#8c6e33', fontWeight: 'bold', marginBottom: '2px' }}>INVENTARIO</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
+                          <span>Oro:</span>
+                          <strong>{selectedCharacter.inventory?.gold || 0} PO</strong>
+                        </div>
+                        {selectedCharacter.inventory?.items && selectedCharacter.inventory.items.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
+                            {selectedCharacter.inventory.items.map((item, idx) => (
+                              <span key={idx} style={{
+                                fontSize: '9px',
+                                backgroundColor: 'rgba(140, 110, 51, 0.08)',
+                                border: '1px solid rgba(140, 110, 51, 0.15)',
+                                color: '#5a4a35',
+                                padding: '1px 4px',
+                                borderRadius: '2px'
+                              }}>
+                                {item}
+                              </span>
+                            ))}
                           </div>
                         )}
-                      </>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Mechanics & Dice roll log */}
+                  <div style={{ flexGrow: 1 }}>
+                    <div style={{ fontFamily: 'var(--font-serif)', fontSize: '11px', color: '#8c6e33', marginBottom: '8px', letterSpacing: '1px' }}>
+                      REGISTRO DE COMBATE Y EVENTOS
+                    </div>
+
+                    {/* Dice roll visual */}
+                    {diceRollResult && (
+                      <div style={{ 
+                        padding: '6px 12px', 
+                        backgroundColor: 'rgba(229, 193, 125, 0.12)', 
+                        borderRadius: '4px', 
+                        border: '1px solid rgba(193, 154, 75, 0.25)',
+                        marginBottom: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <span style={{ fontSize: '11px', color: '#5a4a35' }}>Tirada ({diceRollResult.formula}):</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '10px', color: '#6b7280' }}>[{diceRollResult.rolls.join(', ')}] + {diceRollResult.modifier}</span>
+                          <strong style={{ fontSize: '16px', color: '#8c6e33', fontFamily: 'var(--font-serif)' }}>{diceRollResult.total}</strong>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Text Mechanics */}
+                    {bookPages[currentPageIdx] && bookPages[currentPageIdx].mechanics ? (
+                      <div style={{ 
+                        padding: '10px 12px',
+                        backgroundColor: 'rgba(140, 110, 51, 0.06)',
+                        borderRadius: '4px',
+                        fontSize: '12px', 
+                        fontFamily: 'monospace', 
+                        color: '#5a4a35',
+                        border: '1px solid rgba(140, 110, 51, 0.12)',
+                        minHeight: '80px',
+                        whiteSpace: 'pre-line'
+                      }}>
+                        {bookPages[currentPageIdx].mechanics}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#6b7280', fontSize: '11px', fontStyle: 'italic', padding: '10px', textAlign: 'center' }}>
+                        Sin novedades mecánicas en esta página.
+                      </div>
                     )}
                   </div>
                 </div>
               )}
 
+              {/* Book footer at the bottom of the Left Page */}
               <div className="book-page-footer">
                 <button 
                   className="btn-medieval" 
@@ -762,257 +1197,61 @@ function App() {
               </div>
             </div>
 
-            {/* PAGE RIGHT: Map, Controls, Choices & Characters */}
+            {/* PAGE RIGHT: AI Narration, customized choices, and text input */}
             <div className="book-page-right">
               <div className="book-page-header">
-                <span>El Destino del Héroe</span>
-                <span>Exploración</span>
-              </div>
-              {/* Navigation Tabs (Map vs Decision Tree) */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                <button
-                  className="btn-medieval"
-                  style={{ 
-                    flex: 1, 
-                    padding: '8px', 
-                    fontSize: '11px',
-                    backgroundColor: !showDecisionTree ? 'var(--color-gold-dim)' : '#f7eed7',
-                    color: !showDecisionTree ? '#fff' : '#5a4a35'
-                  }}
-                  onClick={() => setShowDecisionTree(false)}
-                >
-                  Ver Mapa
-                </button>
-                <button
-                  className="btn-medieval"
-                  style={{ 
-                    flex: 1, 
-                    padding: '8px', 
-                    fontSize: '11px',
-                    backgroundColor: showDecisionTree ? 'var(--color-gold-dim)' : '#f7eed7',
-                    color: showDecisionTree ? '#fff' : '#5a4a35'
-                  }}
-                  onClick={() => setShowDecisionTree(true)}
-                >
-                  Árbol de Decisiones
-                </button>
-              </div>
-
-              {/* Side-by-side Layout or Decision Tree on the right page */}
-              {!showDecisionTree ? (
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                  {/* Procedural Map */}
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontFamily: 'var(--font-serif)', fontSize: '11px', color: '#8c6e33', marginBottom: '8px', letterSpacing: '1px' }}>
-                      MAPA PROCEDURAL (REJILLA)
-                    </div>
-                    <div className="dungeon-map-grid">
-                      {Array.from({ length: 5 }).map((_, yIdx) => (
-                        Array.from({ length: 5 }).map((_, xIdx) => {
-                          const isCurrent = playerCoords.x === xIdx && playerCoords.y === yIdx;
-                          const isVisited = bookPages.some(p => p.coordinates && p.coordinates.x === xIdx && p.coordinates.y === yIdx);
-                          const roomInfo = dungeonMap.find(r => r.x === xIdx && r.y === yIdx);
-
-                          let symbol = "";
-                          if (isVisited && roomInfo) {
-                            if (roomInfo.type === "start") symbol = "IN";
-                            else if (roomInfo.type === "boss") symbol = "BS";
-                            else if (roomInfo.type === "combat") symbol = "CBT";
-                            else if (roomInfo.type === "trap") symbol = "TRP";
-                            else if (roomInfo.type === "loot") symbol = "Loot";
-                            else symbol = ".";
-                          }
-
-                          return (
-                            <div
-                              key={`${xIdx}-${yIdx}`}
-                              className={`dungeon-map-cell ${isCurrent ? 'current' : isVisited ? 'visited' : 'unvisited'}`}
-                              style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: 'bold' }}
-                              title={isVisited && roomInfo ? `${roomInfo.name} (${roomInfo.type})` : 'Sin explorar'}
-                              onClick={() => {
-                                if (isVisited && roomInfo) {
-                                  alert(`Habitación: ${roomInfo.name}\nTipo: ${roomInfo.type}\nDescripción: ${roomInfo.description}`);
-                                }
-                              }}
-                            >
-                              {isCurrent ? "POS" : symbol}
-                            </div>
-                          );
-                        })
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Character Status Card */}
-                  <div style={{ 
-                    backgroundColor: 'rgba(0,0,0,0.03)', 
-                    border: '1px solid rgba(140, 110, 51, 0.2)',
-                    borderRadius: '6px',
-                    padding: '12px',
-                    fontSize: '13px'
-                  }}>
-                    <div style={{ fontFamily: 'var(--font-serif)', fontSize: '11px', color: '#8c6e33', borderBottom: '1px solid rgba(140,110,51,0.15)', paddingBottom: '4px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span>FICHA SIMPLIFICADA</span>
-                      {characters.length > 0 && selectedCharacter && characters.length < 6 && (
-                        <button 
-                          onClick={() => setSelectedCharacter(null)}
-                          className="btn-medieval"
-                          style={{ padding: '2px 6px', fontSize: '9px', textTransform: 'none' }}
-                        >
-                          + Nuevo
-                        </button>
-                      )}
-                    </div>
-                    {characters.length > 0 && selectedCharacter && (
-                      <div style={{ marginBottom: '10px' }}>
-                        <select
-                          value={selectedCharacter.id}
-                          onChange={(e) => {
-                            const found = characters.find(c => c.id === e.target.value);
-                            if (found) setSelectedCharacter(found);
-                          }}
-                          style={{ width: '100%', padding: '4px', fontSize: '11px', backgroundColor: '#f7eed7', border: '1px solid rgba(140,110,51,0.3)', color: '#5a4a35' }}
-                        >
-                          {characters.map(c => (
-                            <option key={c.id} value={c.id}>{c.name} ({c.race} {c.class})</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    {selectedCharacter ? (
-                      <div>
-                        <strong style={{ fontSize: '14px', color: '#1e1d1a' }}>{selectedCharacter.name}</strong>
-                        <div style={{ color: '#6b7280', fontSize: '11px', marginBottom: '8px' }}>
-                          {selectedCharacter.race} {selectedCharacter.class} (Nv. {characterXP.level})
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span>Puntos de Vida:</span>
-                          <strong>{selectedCharacter.hp_current} / {selectedCharacter.hp_max} HP</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span>Armadura (CA):</span>
-                          <strong>{selectedCharacter.armor_class} CA</strong>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>Experiencia:</span>
-                          <strong>{characterXP.xp} XP</strong>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {!quizMode && !manualMode ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', textAlign: 'center' }}>
-                            <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 5px 0' }}>Crea tu héroe por entrevista o manualmente.</p>
-                            <button className="btn-medieval" onClick={startQuiz} style={{ padding: '6px', fontSize: '11px' }}>
-                              Iniciar Entrevista
-                            </button>
-                            <button className="btn-medieval" onClick={() => setManualMode(true)} style={{ padding: '4px', fontSize: '10px', opacity: 0.8 }}>
-                              Crear Ficha Manualmente
-                            </button>
-                            {characters.length > 0 && (
-                              <button className="btn-medieval" onClick={() => setSelectedCharacter(characters[0])} style={{ padding: '4px', fontSize: '10px', opacity: 0.8 }}>
-                                Cancelar
-                              </button>
-                            )}
-                          </div>
-                        ) : quizMode ? (
-                          <div>
-                            {!quizResult ? (
-                              <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#6b7280', marginBottom: '4px' }}>
-                                  <span>ENTREVISTA</span>
-                                  <span>{currentQuestionIdx + 1}/{quizQuestions.length}</span>
-                                </div>
-                                {quizQuestions.length > 0 && (
-                                  <div>
-                                    <div style={{ fontSize: '12px', marginBottom: '8px', color: '#1a1815' }}>
-                                      {quizQuestions[currentQuestionIdx].question}
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                      {quizQuestions[currentQuestionIdx].options.map((opt: any, idx: number) => (
-                                        <button
-                                          key={idx}
-                                          className="btn-medieval"
-                                          style={{ textAlign: 'left', padding: '6px 8px', fontSize: '11px', textTransform: 'none' }}
-                                          onClick={() => handleAnswerQuizQuestion(idx)}
-                                        >
-                                          {opt.text}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <form onSubmit={handleConfirmQuizCharacter}>
-                                <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#b45309', marginBottom: '4px' }}>
-                                  {quizResult.race_es} {quizResult.class_es}
-                                </div>
-                                <input
-                                  type="text"
-                                  value={newCharName}
-                                  onChange={(e) => setNewCharName(e.target.value)}
-                                  placeholder="Nombre..."
-                                  style={{ width: '100%', padding: '4px', boxSizing: 'border-box', marginBottom: '8px' }}
-                                  required
-                                />
-                                <button type="submit" className="btn-medieval" style={{ width: '100%', padding: '4px', fontSize: '11px' }}>Confirmar</button>
-                              </form>
-                            )}
-                          </div>
-                        ) : (
-                          <form onSubmit={handleCreateCharacter}>
-                            <input
-                              type="text"
-                              value={newCharName}
-                              onChange={(e) => setNewCharName(e.target.value)}
-                              placeholder="Nombre..."
-                              style={{ width: '100%', padding: '4px', boxSizing: 'border-box', marginBottom: '4px' }}
-                              required
-                            />
-                            <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-                              <select
-                                value={newCharClass}
-                                onChange={(e) => setNewCharClass(e.target.value)}
-                                style={{ width: '50%', padding: '4px' }}
-                              >
-                                <option value="Fighter">Guerrero</option>
-                                <option value="Wizard">Mago</option>
-                                <option value="Rogue">Pícaro</option>
-                                <option value="Cleric">Clérigo</option>
-                              </select>
-                              <select
-                                value={newCharRace}
-                                onChange={(e) => setNewCharRace(e.target.value)}
-                                style={{ width: '50%', padding: '4px' }}
-                              >
-                                <option value="Human">Humano</option>
-                                <option value="Elf">Elfo</option>
-                                <option value="Dwarf">Enano</option>
-                              </select>
-                            </div>
-                            <button type="submit" className="btn-medieval" style={{ width: '100%', padding: '4px', fontSize: '11px' }}>Crear Ficha</button>
-                          </form>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                <span>{selectedCampaign.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    className="btn-medieval"
+                    style={{ 
+                      padding: '2px 8px', 
+                      fontSize: '10px', 
+                      textTransform: 'none',
+                      backgroundColor: !showDecisionTree ? 'var(--color-gold-dim)' : 'transparent',
+                      color: !showDecisionTree ? '#fff' : '#8c6e33',
+                      border: '1px solid #8c6e33'
+                    }}
+                    onClick={() => setShowDecisionTree(false)}
+                  >
+                    Gesta
+                  </button>
+                  <button
+                    className="btn-medieval"
+                    style={{ 
+                      padding: '2px 8px', 
+                      fontSize: '10px', 
+                      textTransform: 'none',
+                      backgroundColor: showDecisionTree ? 'var(--color-gold-dim)' : 'transparent',
+                      color: showDecisionTree ? '#fff' : '#8c6e33',
+                      border: '1px solid #8c6e33'
+                    }}
+                    onClick={() => setShowDecisionTree(true)}
+                  >
+                    Checkpoints
+                  </button>
                 </div>
-              ) : (
-                /* Decision Tree Timeline View */
-                <div style={{ 
-                  maxHeight: '260px', 
-                  overflowY: 'auto', 
-                  backgroundColor: 'rgba(0,0,0,0.03)', 
-                  border: '1px solid rgba(140, 110, 51, 0.2)',
-                  borderRadius: '6px',
-                  padding: '15px',
-                  marginBottom: '20px'
-                }}>
-                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: '11px', color: '#8c6e33', borderBottom: '1px solid rgba(140,110,51,0.15)', paddingBottom: '4px', marginBottom: '10px' }}>
-                    ÁRBOL NARRATIVO Y CHECKPOINTS
+              </div>
+
+              {!selectedCharacter ? (
+                /* Cover Page of the sealed book */
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '400px', textAlign: 'center' }}>
+                  <h2 style={{ fontFamily: 'var(--font-serif-dec)', color: '#8c6e33', fontSize: '36px', marginBottom: '10px' }}>CRIPTA</h2>
+                  <div style={{ width: '60px', height: '2px', backgroundColor: '#8c6e33', marginBottom: '20px' }}></div>
+                  <p style={{ fontFamily: 'var(--font-serif)', fontSize: '13px', color: '#5a4a35', letterSpacing: '2px', textTransform: 'uppercase' }}>
+                    Grimorio de Aventuras
+                  </p>
+                  <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '30px' }}>
+                    Crea un personaje en la página izquierda para abrir las páginas del libro.
+                  </p>
+                </div>
+              ) : showDecisionTree ? (
+                /* Checkpoints timeline view */
+                <div style={{ minHeight: '400px' }}>
+                  <div style={{ fontFamily: 'var(--font-serif)', fontSize: '12px', color: '#8c6e33', borderBottom: '1px solid rgba(140,110,51,0.15)', paddingBottom: '4px', marginBottom: '15px', letterSpacing: '1px' }}>
+                    ÁRBOL NARRATIVO & REGRESIONES
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '380px', overflowY: 'auto', paddingRight: '4px' }}>
                     {bookPages.map((page) => (
                       <div 
                         key={page.page_number} 
@@ -1028,13 +1267,13 @@ function App() {
                       >
                         <div>
                           <div style={{ fontWeight: 'bold', fontSize: '12px', color: '#8c6e33' }}>Página {page.page_number}</div>
-                          <div style={{ fontSize: '11px', color: '#6b7280', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontSize: '11px', color: '#6b7280', maxWidth: '220px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {page.player_text || 'Entrada / Inicio'}
                           </div>
                         </div>
                         <button
                           className="btn-medieval"
-                          style={{ padding: '4px 10px', fontSize: '10px', textTransform: 'none' }}
+                          style={{ padding: '4px 8px', fontSize: '10px', textTransform: 'none' }}
                           disabled={isProcessing || page.page_number === bookPages.length}
                           onClick={() => handleRollback(page.page_number)}
                         >
@@ -1044,117 +1283,156 @@ function App() {
                     ))}
                   </div>
                 </div>
-              )}
-
-              {/* RPG Dice Rolls Result */}
-              {diceRollResult && (
-                <div style={{ 
-                  padding: '8px 15px', 
-                  backgroundColor: 'rgba(229, 193, 125, 0.15)', 
-                  borderRadius: '4px', 
-                  border: '1px solid rgba(193, 154, 75, 0.3)',
-                  marginBottom: '15px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between'
-                }}>
-                  <span style={{ fontSize: '12px', color: '#5a4a35' }}>Dado del Destino ({diceRollResult.formula}):</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '11px', color: '#6b7280' }}>[{diceRollResult.rolls.join(', ')}] + {diceRollResult.modifier}</span>
-                    <strong style={{ fontSize: '20px', color: '#8c6e33', fontFamily: 'var(--font-serif)' }}>{diceRollResult.total}</strong>
-                  </div>
-                </div>
-              )}
-
-              {/* Branching choices (Infinite Book Style) */}
-              <div style={{ borderTop: '1px solid rgba(140, 110, 51, 0.2)', paddingTop: '15px' }}>
-                <div style={{ fontFamily: 'var(--font-serif)', fontSize: '12px', color: '#8c6e33', marginBottom: '10px', letterSpacing: '1px' }}>
-                  DECISIONES DE LA PÁGINA
-                </div>
-                
-                {bookPages[currentPageIdx] && bookPages[currentPageIdx].choices && bookPages[currentPageIdx].choices.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '15px' }}>
-                    {bookPages[currentPageIdx].choices.map((choice: string, idx: number) => (
-                      <button
-                        key={idx}
+              ) : bookPages[currentPageIdx] ? (
+                /* Main Game Play & Narration Page */
+                <div style={{ minHeight: '400px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    {/* Header bar within narration with TTS Escuchar */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                      <div style={{ fontSize: '12px', fontStyle: 'italic', color: '#8c6e33', fontFamily: 'var(--font-serif)' }}>
+                        NARRACIÓN DEL MASTER
+                      </div>
+                      <button 
+                        onClick={() => playPageTTS(bookPages[currentPageIdx].dm_text)}
                         className="btn-medieval"
-                        style={{ 
-                          textAlign: 'left', 
-                          padding: '10px 15px', 
-                          fontSize: '13px', 
-                          textTransform: 'none',
-                          backgroundColor: '#f7eed7',
-                          color: '#5a4a35',
-                          border: '1px solid rgba(140, 110, 51, 0.3)'
-                        }}
-                        disabled={isProcessing || currentPageIdx !== bookPages.length - 1}
-                        onClick={() => {
-                          setTextInput('');
-                          submitPlayerAction(choice);
-                        }}
+                        style={{ padding: '2px 8px', fontSize: '10px', textTransform: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        title="Escuchar Narración"
                       >
-                        {idx + 1}. {choice}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '12px', height: '12px' }}>
+                          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        </svg>
+                        Escuchar
                       </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }}>No hay opciones predefinidas para esta página.</p>
-                )}
-              </div>
+                    </div>
 
-              {/* Dynamic Console Input */}
-              {currentPageIdx === bookPages.length - 1 && (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginTop: '15px' }}>
-                  <button
-                    className="btn-medieval"
-                    style={{
-                      borderRadius: '50%',
-                      width: '45px',
-                      height: '45px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: isRecording ? '#ef4444' : '#f7eed7',
-                      borderColor: isRecording ? '#ef4444' : '#8c6e33',
-                      flexShrink: 0
-                    }}
-                    onMouseDown={startRecording}
-                    onMouseUp={stopRecording}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '18px', height: '18px' }}>
-                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                      <line x1="12" y1="19" x2="12" y2="23" />
-                      <line x1="8" y1="23" x2="16" y2="23" />
-                    </svg>
-                  </button>
-
-                  <form onSubmit={handleSendText} style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                    <input
-                      type="text"
-                      value={textInput}
-                      onChange={(e) => setTextInput(e.target.value)}
-                      placeholder="Escribe otra acción personalizada..."
-                      style={{
-                        flexGrow: 1,
-                        padding: '10px 12px',
-                        backgroundColor: '#f7eed7',
-                        border: '1px solid rgba(140, 110, 51, 0.3)',
-                        color: '#1a1815',
-                        borderRadius: '4px',
+                    {/* Previous Player Action text */}
+                    {bookPages[currentPageIdx].player_text && (
+                      <div style={{ 
+                        fontStyle: 'italic', 
+                        color: 'rgba(30, 29, 26, 0.6)', 
+                        marginBottom: '15px',
+                        borderLeft: '3px solid var(--color-gold-dim)',
+                        paddingLeft: '12px',
                         fontSize: '13px'
-                      }}
-                      disabled={isProcessing}
-                    />
-                    <button 
-                      type="submit" 
-                      className="btn-medieval" 
-                      style={{ padding: '0 15px', fontSize: '12px' }} 
-                      disabled={isProcessing}
-                    >
-                      Enviar
-                    </button>
-                  </form>
+                      }}>
+                        &ldquo;{bookPages[currentPageIdx].player_text}&rdquo;
+                      </div>
+                    )}
+
+                    {/* AI Narration Body */}
+                    <div style={{ 
+                      fontSize: '16px', 
+                      lineHeight: '1.6', 
+                      fontFamily: 'var(--font-readable)',
+                      color: '#1a1815',
+                      whiteSpace: 'pre-line',
+                      marginBottom: '20px'
+                    }}>
+                      {bookPages[currentPageIdx].dm_text}
+                    </div>
+                  </div>
+
+                  {/* Choices & Text Input */}
+                  <div>
+                    {/* customized Choices buttons list */}
+                    <div style={{ borderTop: '1px solid rgba(140, 110, 51, 0.15)', paddingTop: '12px', marginBottom: '12px' }}>
+                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: '11px', color: '#8c6e33', marginBottom: '8px', letterSpacing: '1px' }}>
+                        DECISIONES NARRATIVAS
+                      </div>
+                      
+                      {bookPages[currentPageIdx].choices && bookPages[currentPageIdx].choices.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {bookPages[currentPageIdx].choices.map((choice: string, idx: number) => (
+                            <button
+                              key={idx}
+                              className="btn-medieval"
+                              style={{ 
+                                textAlign: 'left', 
+                                padding: '8px 12px', 
+                                fontSize: '12px', 
+                                textTransform: 'none',
+                                backgroundColor: '#f7eed7',
+                                color: '#5a4a35',
+                                border: '1px solid rgba(140, 110, 51, 0.25)',
+                                transition: 'all 0.15s ease'
+                              }}
+                              disabled={isProcessing || currentPageIdx !== bookPages.length - 1}
+                              onClick={() => {
+                                setTextInput('');
+                                submitPlayerAction(choice);
+                              }}
+                            >
+                              {idx + 1}. {choice}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <p style={{ fontSize: '11px', color: '#6b7280', fontStyle: 'italic', margin: '5px 0 0 0' }}>No hay opciones predefinidas para esta página.</p>
+                      )}
+                    </div>
+
+                    {/* Customized Custom Action input bar */}
+                    {currentPageIdx === bookPages.length - 1 && (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px' }}>
+                        <button
+                          className="btn-medieval"
+                          style={{
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: isRecording ? '#ef4444' : '#f7eed7',
+                            borderColor: isRecording ? '#ef4444' : '#8c6e33',
+                            flexShrink: 0
+                          }}
+                          onMouseDown={startRecording}
+                          onMouseUp={stopRecording}
+                          title="Grabar Voz"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: '16px', height: '16px' }}>
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                          </svg>
+                        </button>
+
+                        <form onSubmit={handleSendText} style={{ display: 'flex', gap: '6px', width: '100%' }}>
+                          <input
+                            type="text"
+                            value={textInput}
+                            onChange={(e) => setTextInput(e.target.value)}
+                            placeholder="Describe tu acción personalizada..."
+                            style={{
+                              flexGrow: 1,
+                              padding: '8px 10px',
+                              backgroundColor: '#f7eed7',
+                              border: '1px solid rgba(140, 110, 51, 0.25)',
+                              color: '#1a1815',
+                              borderRadius: '4px',
+                              fontSize: '12px'
+                            }}
+                            disabled={isProcessing}
+                          />
+                          <button 
+                            type="submit" 
+                            className="btn-medieval" 
+                            style={{ padding: '0 12px', fontSize: '11px' }} 
+                            disabled={isProcessing}
+                          >
+                            Enviar
+                          </button>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ color: '#5a4a35', fontStyle: 'italic', textAlign: 'center', marginTop: '60px', fontSize: '12px' }}>
+                  El libro aguarda las decisiones del héroe...
                 </div>
               )}
             </div>
