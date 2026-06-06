@@ -793,6 +793,92 @@ pub struct ProceduralDungeon {
 }
 
 impl ProceduralDungeon {
+    fn build_procedural_description(
+        r_type: &str,
+        enemy_name: &str,
+        loot_item: &str,
+        rng: &mut StdRng,
+    ) -> String {
+        let atmospheres_combat = vec![
+            "El aire está impregnado de un hedor metálico a sangre fresca.",
+            "Un frío antinatural te cala hasta los huesos al cruzar el umbral.",
+            "El sonido de cadenas arrastrándose resuena desde las esquinas oscuras.",
+            "Un murmullo de rezos blasfemos parece flotar en el aire estancado.",
+            "La visibilidad es casi nula debido a una neblina densa y húmeda."
+        ];
+        let atmospheres_trap = vec![
+            "Un silencio tenso e inquietante gobierna cada rincón de la estancia.",
+            "Una corriente de aire helado sopla de forma intermitente desde el techo.",
+            "El goteo constante de agua ácida corroe lentamente las losas del suelo.",
+            "Una extraña quietud te eriza la piel, alertando tus sentidos de explorador.",
+            "El ambiente se siente cargado, como si el propio aire contuviera la respiración."
+        ];
+        let atmospheres_loot = vec![
+            "Una tenue luminiscencia dorada se filtra a través de las grietas de la mampostería.",
+            "Un reconfortante aroma a sándalo y cera antigua perfuma el ambiente.",
+            "El eco del silencio se siente diferente aquí, casi pacífico.",
+            "Un rayo de luz espectral ilumina el centro de la cámara, disipando las sombras.",
+            "El polvo aquí está removido, revelando marcas de antiguos viajeros mercenarios."
+        ];
+        let atmospheres_empty = vec![
+            "Las sombras parecen estirarse y bailar al ritmo de la llama de tu antorcha.",
+            "El polvo acumulado de décadas cubre las baldosas agrietadas.",
+            "El viento susurra lamentos incomprensibles a través de las rendijas de los muros.",
+            "Una bóveda de columnas rotas y telarañas gruesas se extiende sobre ti.",
+            "El eco de tus propios pasos es el único sonido que llena este vacío sepulcral."
+        ];
+
+        let structures = vec![
+            "Los muros de sillería muestran inscripciones rúnicas desgastadas por el tiempo.",
+            "Columnas de mármol negro fracturadas sostienen un techo abovedado a punto de colapsar.",
+            "Un canal poco profundo de agua estancada cruza la sala de lado a lado.",
+            "El suelo está cubierto de escombros de antiguas estatuas de guerreros decapitados.",
+            "Grandes rejas de hierro oxidado cuelgan de las paredes laterales.",
+            "Las paredes están cubiertas de una densa capa de líquenes fosforescentes de color azul pálido.",
+            "La estancia presenta un relieve tallado en el techo que representa una constelación olvidada."
+        ];
+
+        let atmospheres = match r_type {
+            "combat" => &atmospheres_combat,
+            "trap" => &atmospheres_trap,
+            "loot" => &atmospheres_loot,
+            _ => &atmospheres_empty,
+        };
+
+        let threats = match r_type {
+            "combat" => vec![
+                format!("Frente a ti, {} emerge de la penumbra listo para atacar.", enemy_name),
+                format!("Sientes unos ojos hambrientos observándote; {} te corta el paso.", enemy_name),
+                format!("El descanso eterno de {} ha sido interrumpido por tu presencia y ruge furioso.", enemy_name),
+                format!("Una figura hostil identificada como {} custodia el centro de la sala alzando sus armas.", enemy_name)
+            ],
+            "trap" => vec![
+                "Percibes una ligera inclinación en las baldosas bajo tus pies y marcas sospechosas en la pared.".to_string(),
+                "Finísimos hilos de alambre casi invisibles cruzan a la altura de tus tobillos.".to_string(),
+                "Agujeros diminutos en las paredes sugieren un mecanismo de disparo listo para activarse.".to_string(),
+                "El suelo en el centro de la sala vibra ligeramente al menor peso.".to_string()
+            ],
+            "loot" => vec![
+                format!("Entre las ruinas, descansa {} junto a un saco de monedas.", loot_item),
+                "Un cofre con el escudo de Valdrath se encuentra medio enterrado bajo los escombros.".to_string(),
+                format!("Un pedestal de piedra sostiene {} que brilla bajo la penumbra.", loot_item),
+                "En una hornacina en la pared, localizas un alijo con provisiones y un cofre de madera.".to_string()
+            ],
+            _ => vec![
+                "A pesar de registrar cada rincón, no encuentras más que ruinas vacías y ecos del pasado.".to_string(),
+                "No parece haber amenazas inmediatas aquí, solo el peso del olvido.".to_string(),
+                "Una búsqueda rápida confirma que esta cámara fue saqueada hace mucho tiempo.".to_string(),
+                "Es un lugar desolado, ideal para recuperar el aliento si el peligro no acechara afuera.".to_string()
+            ],
+        };
+
+        let atm = atmospheres[rng.gen_range(0..atmospheres.len())];
+        let struc = structures[rng.gen_range(0..structures.len())];
+        let thr = &threats[rng.gen_range(0..threats.len())];
+
+        format!("{} {} {}", atm, struc, thr)
+    }
+
     pub fn new(campaign_id: &str, tone: &str, name: &str) -> Self {
         // Derive numerical seed from MD5 of campaign_id
         let digest = md5::compute(campaign_id.as_bytes());
@@ -958,7 +1044,8 @@ impl ProceduralDungeon {
                         room["type"] = Value::String("combat".to_string());
                         room["name"] = Value::String(name_str.to_string());
                         room["enemies"] = serde_json::json!([enemy]);
-                        room["description"] = Value::String(format!("Un olor a muerte inunda la sala. {} te corta el paso.", enemy["name"].as_str().unwrap_or("")));
+                        let desc = Self::build_procedural_description("combat", enemy["name"].as_str().unwrap_or(""), "", &mut rng);
+                        room["description"] = Value::String(desc);
                     } else if roll < 0.60 {
                         let t_idx = rng.gen_range(0..trap_names.len());
                         let name_str = trap_names[t_idx].clone();
@@ -971,7 +1058,8 @@ impl ProceduralDungeon {
                         room["type"] = Value::String("trap".to_string());
                         room["name"] = Value::String(name_str.to_string());
                         room["trap_dc"] = Value::Number(dc.into());
-                        room["description"] = Value::String("Tus instintos te alertan. Hay algo sospechoso en la disposición de esta sala.".to_string());
+                        let desc = Self::build_procedural_description("trap", "", "", &mut rng);
+                        room["description"] = Value::String(desc);
                     } else if roll < 0.80 {
                         let l_idx = rng.gen_range(0..loot_names.len());
                         let name_str = loot_names[l_idx].clone();
@@ -983,13 +1071,15 @@ impl ProceduralDungeon {
                         room["name"] = Value::String(name_str.to_string());
                         room["loot"] = serde_json::json!([item]);
                         room["gold"] = Value::Number(gold.into());
-                        room["description"] = Value::String("Una rara sensación de seguridad te inunda. Ves restos de un tesoro o alijo.".to_string());
+                        let desc = Self::build_procedural_description("loot", "", &item, &mut rng);
+                        room["description"] = Value::String(desc);
                     } else {
                         let e_idx = rng.gen_range(0..empty_names.len());
                         let name_str = empty_names[e_idx].clone();
                         room["type"] = Value::String("empty".to_string());
                         room["name"] = Value::String(name_str.to_string());
-                        room["description"] = Value::String("Una sala vacía pero llena de sombras susurrantes.".to_string());
+                        let desc = Self::build_procedural_description("empty", "", "", &mut rng);
+                        room["description"] = Value::String(desc);
                     }
                 }
 
