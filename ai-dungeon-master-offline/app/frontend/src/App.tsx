@@ -289,12 +289,14 @@ function App() {
     }
   };
 
-  const fetchCharacters = async (campId: string) => {
+  const fetchCharacters = async (campId: string, activeCharId?: string) => {
     try {
       const data = await invoke<any>('list_characters', { campaignId: campId });
       setCharacters(data);
       if (data.length > 0) {
-        setSelectedCharacter(data[0]);
+        const targetId = activeCharId || (selectedCharacter ? selectedCharacter.id : data[0].id);
+        const updated = data.find((c: any) => c.id === targetId) || data[0];
+        setSelectedCharacter(updated);
       } else {
         setSelectedCharacter(null);
       }
@@ -388,6 +390,7 @@ function App() {
 
       setCurrentPageIdx(data.page_number - 1);
       setPlayerCoords(data.coordinates);
+      await fetchCharacters(selectedCampaign.id, selectedCharacter.id);
       
       if (data.xp_gained && data.xp_gained > 0) {
         setCharacterXP(prev => ({ xp: prev.xp + data.xp_gained, level: prev.level }));
@@ -532,6 +535,7 @@ function App() {
 
       setCurrentPageIdx(data.page_number - 1);
       setPlayerCoords(data.coordinates);
+      await fetchCharacters(selectedCampaign.id, selectedCharacter.id);
 
       if (data.roll) {
         setDiceRollResult(data.roll);
